@@ -1,0 +1,65 @@
+import { render, screen, fireEvent } from "@testing-library/react";
+import { CalendarGrid } from "./CalendarGrid";
+import { generateCalendar } from "@/lib/dateUtils";
+import type { DayColorResult } from "@/lib/scheduleTypes";
+
+const today = new Date(2026, 2, 1);
+
+describe("CalendarGrid", () => {
+  const calendar = generateCalendar(today);
+
+  it("renders all 15 months", () => {
+    render(<CalendarGrid months={calendar} />);
+    expect(screen.getByText("December 2025")).toBeInTheDocument();
+    expect(screen.getByText("March 2026")).toBeInTheDocument();
+    expect(screen.getByText("February 2027")).toBeInTheDocument();
+  });
+
+  it("uses a responsive grid container", () => {
+    render(<CalendarGrid months={calendar} />);
+    const grid = screen.getByTestId("calendar-grid");
+    expect(grid).toBeInTheDocument();
+  });
+
+  it("passes colorMap through to MonthGrid children", () => {
+    const colorMap = new Map<string, DayColorResult>([
+      [
+        "2026-03-02",
+        {
+          labelId: "mom",
+          labelName: "Mom",
+          color: "#bbf7d0",
+          isOverride: false,
+        },
+      ],
+    ]);
+    render(<CalendarGrid months={calendar} colorMap={colorMap} />);
+    // At least one cell should have a background-color style applied
+    const allCells = screen.getAllByTestId("day-current-month");
+    const coloredCells = allCells.filter(
+      (c) => c.style.backgroundColor !== ""
+    );
+    expect(coloredCells.length).toBeGreaterThan(0);
+  });
+
+  it("passes onDayClick through to MonthGrid children", () => {
+    const colorMap = new Map<string, DayColorResult>([
+      [
+        "2026-03-02",
+        {
+          labelId: "mom",
+          labelName: "Mom",
+          color: "#bbf7d0",
+          isOverride: false,
+        },
+      ],
+    ]);
+    const onClick = jest.fn();
+    render(
+      <CalendarGrid months={calendar} colorMap={colorMap} onDayClick={onClick} />
+    );
+    const buttons = screen.getAllByRole("button");
+    fireEvent.click(buttons[0]);
+    expect(onClick).toHaveBeenCalledWith("2026-03-02");
+  });
+});
