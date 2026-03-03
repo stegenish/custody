@@ -68,7 +68,7 @@ export default function Home() {
       {selectedDate && selectedDayColor && (
         <DayOverrideBar
           dateKey={selectedDate}
-          currentLabelId={selectedDayColor.labelId}
+          currentLabelId={selectedDayColor.label.id}
           isOverride={selectedDayColor.isOverride}
           labels={scheduleData.labels}
           onSetOverride={(date, labelId) =>

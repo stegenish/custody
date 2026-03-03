@@ -26,9 +26,7 @@ describe("CalendarGrid", () => {
       [
         "2026-03-02",
         {
-          labelId: "mom",
-          labelName: "Mom",
-          color: "#bbf7d0",
+          label: { id: "mom", name: "Mom", color: "#bbf7d0" },
           isOverride: false,
         },
       ],
@@ -47,9 +45,7 @@ describe("CalendarGrid", () => {
       [
         "2026-03-02",
         {
-          labelId: "mom",
-          labelName: "Mom",
-          color: "#bbf7d0",
+          label: { id: "mom", name: "Mom", color: "#bbf7d0" },
           isOverride: false,
         },
       ],

@@ -1,6 +1,4 @@
 import {
-  formatDateKey,
-  parseDateKey,
   findActiveSchedule,
   resolveScheduleLabel,
   resolveDayColor,
@@ -12,25 +10,6 @@ import type {
   DayOverride,
   ScheduleData,
 } from "./scheduleTypes";
-
-// --- formatDateKey / parseDateKey ---
-
-describe("formatDateKey", () => {
-  it("formats a date as YYYY-MM-DD", () => {
-    expect(formatDateKey(new Date(2026, 2, 1))).toBe("2026-03-01");
-  });
-});
-
-describe("parseDateKey", () => {
-  it("round-trips with formatDateKey", () => {
-    const original = new Date(2026, 0, 15);
-    const key = formatDateKey(original);
-    const parsed = parseDateKey(key);
-    expect(parsed.getFullYear()).toBe(2026);
-    expect(parsed.getMonth()).toBe(0);
-    expect(parsed.getDate()).toBe(15);
-  });
-});
 
 // --- findActiveSchedule ---
 
@@ -164,9 +143,7 @@ describe("resolveDayColor", () => {
       labels
     );
     expect(result).toEqual({
-      labelId: "mom",
-      labelName: "Mom",
-      color: "#bbf7d0",
+      label: { id: "mom", name: "Mom", color: "#bbf7d0" },
       isOverride: false,
     });
   });
@@ -182,9 +159,7 @@ describe("resolveDayColor", () => {
       labels
     );
     expect(result).toEqual({
-      labelId: "dad",
-      labelName: "Dad",
-      color: "#fef08a",
+      label: { id: "dad", name: "Dad", color: "#fef08a" },
       isOverride: true,
     });
   });
@@ -203,9 +178,7 @@ describe("resolveDayColor", () => {
       labels
     );
     expect(result).toEqual({
-      labelId: "dad",
-      labelName: "Dad",
-      color: "#fef08a",
+      label: { id: "dad", name: "Dad", color: "#fef08a" },
       isOverride: false,
     });
   });
@@ -245,10 +218,10 @@ describe("buildColorMap", () => {
       new Date(2026, 2, 8),
       data
     );
-    expect(map.get("2026-02-23")?.labelId).toBe("mom");
-    expect(map.get("2026-03-01")?.labelId).toBe("mom");
-    expect(map.get("2026-03-02")?.labelId).toBe("dad");
-    expect(map.get("2026-03-08")?.labelId).toBe("dad");
+    expect(map.get("2026-02-23")?.label.id).toBe("mom");
+    expect(map.get("2026-03-01")?.label.id).toBe("mom");
+    expect(map.get("2026-03-02")?.label.id).toBe("dad");
+    expect(map.get("2026-03-08")?.label.id).toBe("dad");
   });
 
   it("handles schedule transitions mid-range", () => {
@@ -276,12 +249,12 @@ describe("buildColorMap", () => {
       data
     );
     // Under schedule s1 (2-week cycle, mom first): Feb 23 → mom
-    expect(map.get("2026-02-23")?.labelId).toBe("mom");
+    expect(map.get("2026-02-23")?.label.id).toBe("mom");
     // Under schedule s2 (starts Mar 9, 1-week cycle, dad first): Mar 9 → dad
-    expect(map.get("2026-03-09")?.labelId).toBe("dad");
+    expect(map.get("2026-03-09")?.label.id).toBe("dad");
   });
 
-  it("sets splitColor on changeover days", () => {
+  it("sets outgoingLabel on changeover days", () => {
     // 1-week cycle: mom weeks alternate with dad weeks
     const data: ScheduleData = {
       labels,
@@ -301,17 +274,19 @@ describe("buildColorMap", () => {
       data
     );
     // Feb 23 (Mon) is the first day — no previous label, no split
-    expect(map.get("2026-02-23")?.splitColor).toBeUndefined();
+    expect(map.get("2026-02-23")?.outgoingLabel).toBeUndefined();
     // Feb 28 (Sat) is mid-cycle — same label, no split
-    expect(map.get("2026-02-28")?.splitColor).toBeUndefined();
+    expect(map.get("2026-02-28")?.outgoingLabel).toBeUndefined();
     // Mar 2 (Mon) is the changeover day — dad starts, mom was outgoing
-    expect(map.get("2026-03-02")?.splitColor).toBe("#bbf7d0"); // mom's color
-    expect(map.get("2026-03-02")?.color).toBe("#fef08a"); // dad's color
+    expect(map.get("2026-03-02")?.outgoingLabel).toEqual(
+      { id: "mom", name: "Mom", color: "#bbf7d0" }
+    );
+    expect(map.get("2026-03-02")?.label.color).toBe("#fef08a"); // dad's color
     // Mar 3 (Tue) is not a changeover — no split
-    expect(map.get("2026-03-03")?.splitColor).toBeUndefined();
+    expect(map.get("2026-03-03")?.outgoingLabel).toBeUndefined();
   });
 
-  it("does not set splitColor on override days", () => {
+  it("does not set outgoingLabel on override days", () => {
     const data: ScheduleData = {
       labels,
       schedules: [
@@ -330,8 +305,8 @@ describe("buildColorMap", () => {
       new Date(2026, 2, 8),
       data
     );
-    // Mar 2 is overridden — should NOT get splitColor even though labels would differ
+    // Mar 2 is overridden — should NOT get outgoingLabel even though labels would differ
     expect(map.get("2026-03-02")?.isOverride).toBe(true);
-    expect(map.get("2026-03-02")?.splitColor).toBeUndefined();
+    expect(map.get("2026-03-02")?.outgoingLabel).toBeUndefined();
   });
 });

@@ -42,9 +42,7 @@ describe("MonthGrid", () => {
       [
         "2026-03-02",
         {
-          labelId: "mom",
-          labelName: "Mom",
-          color: "#bbf7d0",
+          label: { id: "mom", name: "Mom", color: "#bbf7d0" },
           isOverride: false,
         },
       ],
@@ -67,9 +65,7 @@ describe("MonthGrid", () => {
       [
         "2026-03-02",
         {
-          labelId: "mom",
-          labelName: "Mom",
-          color: "#bbf7d0",
+          label: { id: "mom", name: "Mom", color: "#bbf7d0" },
           isOverride: false,
         },
       ],
@@ -86,11 +82,9 @@ describe("MonthGrid", () => {
       [
         "2026-03-02",
         {
-          labelId: "dad",
-          labelName: "Dad",
-          color: "#fef08a",
+          label: { id: "dad", name: "Dad", color: "#fef08a" },
           isOverride: false,
-          splitColor: "#bbf7d0",
+          outgoingLabel: { id: "mom", name: "Mom", color: "#bbf7d0" },
         },
       ],
     ]);

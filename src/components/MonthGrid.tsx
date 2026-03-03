@@ -1,8 +1,19 @@
+import type { CSSProperties } from "react";
 import type { CalendarMonth } from "@/lib/dateUtils";
 import type { DayColorResult } from "@/lib/scheduleTypes";
-import { formatDateKey } from "@/lib/scheduleResolver";
+import { formatDateKey } from "@/lib/dateUtils";
 
 const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+function cellStyle(dayColor?: DayColorResult): CSSProperties | undefined {
+  if (!dayColor) return undefined;
+  if (dayColor.outgoingLabel) {
+    return {
+      background: `linear-gradient(to bottom, ${dayColor.outgoingLabel.color} 50%, ${dayColor.label.color} 50%)`,
+    };
+  }
+  return { backgroundColor: dayColor.label.color };
+}
 
 interface MonthGridProps {
   month: CalendarMonth;
@@ -64,13 +75,7 @@ export function MonthGrid({ month, colorMap, onDayClick }: MonthGridProps) {
                         ? () => onDayClick(dateKey)
                         : undefined
                     }
-                    style={
-                      dayColor
-                        ? dayColor.splitColor
-                          ? { background: `linear-gradient(to bottom, ${dayColor.splitColor} 50%, ${dayColor.color} 50%)` }
-                          : { backgroundColor: dayColor.color }
-                        : undefined
-                    }
+                    style={cellStyle(dayColor)}
                     className={`text-center tabular-nums ${
                       clickable ? "cursor-pointer" : ""
                     } ${

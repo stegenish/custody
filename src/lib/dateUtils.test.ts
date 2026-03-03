@@ -1,5 +1,8 @@
 import {
   isSameDay,
+  startOfDay,
+  formatDateKey,
+  parseDateKey,
   getISOWeekNumber,
   getMonthRange,
   generateMonthGrid,
@@ -25,6 +28,44 @@ describe("isSameDay", () => {
     const a = new Date(2026, 2, 1);
     const b = new Date(2026, 2, 2);
     expect(isSameDay(a, b)).toBe(false);
+  });
+});
+
+// --- formatDateKey / parseDateKey ---
+
+describe("formatDateKey", () => {
+  it("formats a date as YYYY-MM-DD", () => {
+    expect(formatDateKey(new Date(2026, 2, 1))).toBe("2026-03-01");
+  });
+});
+
+describe("parseDateKey", () => {
+  it("round-trips with formatDateKey", () => {
+    const original = new Date(2026, 0, 15);
+    const key = formatDateKey(original);
+    const parsed = parseDateKey(key);
+    expect(parsed.getFullYear()).toBe(2026);
+    expect(parsed.getMonth()).toBe(0);
+    expect(parsed.getDate()).toBe(15);
+  });
+});
+
+// --- startOfDay ---
+
+describe("startOfDay", () => {
+  it("strips time from a date", () => {
+    const d = startOfDay(new Date(2026, 2, 1, 14, 30, 45));
+    expect(d.getHours()).toBe(0);
+    expect(d.getMinutes()).toBe(0);
+    expect(d.getSeconds()).toBe(0);
+    expect(d.getFullYear()).toBe(2026);
+    expect(d.getMonth()).toBe(2);
+    expect(d.getDate()).toBe(1);
+  });
+
+  it("returns a new Date object", () => {
+    const original = new Date(2026, 2, 1);
+    expect(startOfDay(original)).not.toBe(original);
   });
 });
 

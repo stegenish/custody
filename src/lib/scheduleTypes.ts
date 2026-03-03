@@ -28,10 +28,8 @@ export interface ScheduleData {
 
 /** Resolved color for a single day */
 export interface DayColorResult {
-  labelId: string;
-  labelName: string;
-  color: string;
+  label: CustodyLabel;
   isOverride: boolean;
-  /** When present, top half = splitColor (outgoing), bottom half = color (incoming) */
-  splitColor?: string;
+  /** When present, top half = outgoingLabel.color, bottom half = label.color */
+  outgoingLabel?: CustodyLabel;
 }

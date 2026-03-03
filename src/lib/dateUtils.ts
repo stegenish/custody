@@ -40,9 +40,25 @@ export function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
+export function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+export function formatDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function parseDateKey(key: string): Date {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export function getISOWeekNumber(date: Date): number {
   // ISO 8601: week starts Monday, week 1 contains Jan 4th
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const d = startOfDay(date);
   // Set to nearest Thursday: current date + 4 - current day number (Mon=1..Sun=7)
   const dayOfWeek = d.getDay() || 7; // Convert Sunday from 0 to 7
   d.setDate(d.getDate() + 4 - dayOfWeek);
@@ -71,7 +87,7 @@ export function getMonthRange(
 }
 
 export function getMondayBefore(date: Date): Date {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const d = startOfDay(date);
   const day = d.getDay() || 7; // Convert Sunday from 0 to 7
   d.setDate(d.getDate() - (day - 1));
   return d;
