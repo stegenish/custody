@@ -5,6 +5,11 @@ import type { DayColorResult } from "@/lib/scheduleTypes";
 
 const today = new Date(2026, 2, 1); // March 1, 2026
 
+// Helper: generate a month grid with specific holidays
+function gridWithHolidays(holidays: Set<string>) {
+  return generateMonthGrid(2026, 2, today, holidays);
+}
+
 describe("MonthGrid", () => {
   const month = generateMonthGrid(2026, 2, today);
 
@@ -96,5 +101,31 @@ describe("MonthGrid", () => {
     expect(mar2Cell?.style.background).toContain("#fef08a");
     // Should NOT have a flat backgroundColor
     expect(mar2Cell?.style.backgroundColor).toBe("");
+  });
+
+  it("renders red text for a holiday in the current month", () => {
+    // March 8, 2026 is a Sunday (holiday)
+    const monthWithHolidays = gridWithHolidays(new Set(["2026-03-08"]));
+    render(<MonthGrid month={monthWithHolidays} />);
+    const cells = screen.getAllByTestId("day-current-month");
+    const mar8 = cells.find((c) => c.textContent === "8");
+    expect(mar8?.className).toContain("text-red-600");
+  });
+
+  it("does not render red text for a non-holiday day", () => {
+    const monthWithHolidays = gridWithHolidays(new Set(["2026-03-08"]));
+    render(<MonthGrid month={monthWithHolidays} />);
+    const cells = screen.getAllByTestId("day-current-month");
+    const mar9 = cells.find((c) => c.textContent === "9");
+    expect(mar9?.className).not.toContain("text-red-600");
+  });
+
+  it("does not render red text for other-month holidays", () => {
+    // Feb 23 is in the grid but not current month
+    const monthWithHolidays = gridWithHolidays(new Set(["2026-02-23"]));
+    render(<MonthGrid month={monthWithHolidays} />);
+    const otherCells = screen.getAllByTestId("day-other-month");
+    const feb23 = otherCells.find((c) => c.textContent === "23");
+    expect(feb23?.className).not.toContain("text-red-600");
   });
 });

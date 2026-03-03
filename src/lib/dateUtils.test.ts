@@ -8,6 +8,7 @@ import {
   generateMonthGrid,
   generateCalendar,
 } from "./dateUtils";
+import { getHolidaySet } from "./holidays";
 
 // --- isSameDay ---
 
@@ -215,5 +216,49 @@ describe("generateCalendar", () => {
     const calendar = generateCalendar(today);
     expect(calendar[14].label).toBe("February");
     expect(calendar[14].year).toBe(2027);
+  });
+
+  it("marks Jan 1 as a holiday", () => {
+    const calendar = generateCalendar(new Date(2026, 0, 15));
+    // January 2026 is at index 3 (current month)
+    const janMonth = calendar[3];
+    expect(janMonth.label).toBe("January");
+    const allDays = janMonth.weeks.flatMap((w) => w.days);
+    const jan1 = allDays.find(
+      (d) => d.isCurrentMonth && d.dayOfMonth === 1
+    );
+    expect(jan1?.isHoliday).toBe(true);
+  });
+});
+
+// --- isHoliday in generateMonthGrid ---
+
+describe("generateMonthGrid isHoliday", () => {
+  const today = new Date(2026, 2, 1);
+
+  it("defaults to false when no holidays param is provided", () => {
+    const grid = generateMonthGrid(2026, 2, today);
+    const allDays = grid.weeks.flatMap((w) => w.days);
+    expect(allDays.every((d) => d.isHoliday === false)).toBe(true);
+  });
+
+  it("marks matching days as holidays when holidays set is provided", () => {
+    const holidays = new Set(["2026-03-01"]);
+    const grid = generateMonthGrid(2026, 2, today, holidays);
+    const allDays = grid.weeks.flatMap((w) => w.days);
+    const mar1 = allDays.find(
+      (d) => d.isCurrentMonth && d.dayOfMonth === 1
+    );
+    expect(mar1?.isHoliday).toBe(true);
+  });
+
+  it("does not mark non-holiday days", () => {
+    const holidays = new Set(["2026-03-01"]);
+    const grid = generateMonthGrid(2026, 2, today, holidays);
+    const allDays = grid.weeks.flatMap((w) => w.days);
+    const mar2 = allDays.find(
+      (d) => d.isCurrentMonth && d.dayOfMonth === 2
+    );
+    expect(mar2?.isHoliday).toBe(false);
   });
 });

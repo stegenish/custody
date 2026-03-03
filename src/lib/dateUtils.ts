@@ -1,8 +1,11 @@
+import { getHolidaySet } from "./holidays";
+
 export interface CalendarDay {
   date: Date;
   dayOfMonth: number;
   isToday: boolean;
   isCurrentMonth: boolean;
+  isHoliday: boolean;
 }
 
 export interface CalendarWeek {
@@ -96,7 +99,8 @@ export function getMondayBefore(date: Date): Date {
 export function generateMonthGrid(
   year: number,
   month: number,
-  today: Date
+  today: Date,
+  holidays?: Set<string>
 ): CalendarMonth {
   const firstOfMonth = new Date(year, month, 1);
   const lastOfMonth = new Date(year, month + 1, 0);
@@ -125,6 +129,7 @@ export function generateMonthGrid(
         dayOfMonth: cursor.getDate(),
         isToday: isSameDay(cursor, today),
         isCurrentMonth: cursor.getMonth() === month,
+        isHoliday: holidays ? holidays.has(formatDateKey(cursor)) : false,
       });
       cursor.setDate(cursor.getDate() + 1);
     }
@@ -144,7 +149,10 @@ export function generateMonthGrid(
 }
 
 export function generateCalendar(today: Date): CalendarMonth[] {
-  return getMonthRange(today).map(({ year, month }) =>
-    generateMonthGrid(year, month, today)
+  const months = getMonthRange(today);
+  const years = [...new Set(months.map((m) => m.year))];
+  const holidays = getHolidaySet(years);
+  return months.map(({ year, month }) =>
+    generateMonthGrid(year, month, today, holidays)
   );
 }

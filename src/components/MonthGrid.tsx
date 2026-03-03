@@ -80,10 +80,12 @@ export function MonthGrid({ month, colorMap, onDayClick }: MonthGridProps) {
                       clickable ? "cursor-pointer" : ""
                     } ${
                       isToday
-                        ? "rounded-full ring-2 ring-blue-600 font-bold"
+                        ? `rounded-full ring-2 ring-blue-600 font-bold ${day.isHoliday ? "text-red-600" : ""}`
                         : isOtherMonth
                           ? "opacity-30"
-                          : "text-gray-700"
+                          : day.isHoliday
+                            ? "text-red-600"
+                            : "text-gray-700"
                     }`}
                   >
                     {day.dayOfMonth}
