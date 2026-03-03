@@ -280,4 +280,58 @@ describe("buildColorMap", () => {
     // Under schedule s2 (starts Mar 9, 1-week cycle, dad first): Mar 9 → dad
     expect(map.get("2026-03-09")?.labelId).toBe("dad");
   });
+
+  it("sets splitColor on changeover days", () => {
+    // 1-week cycle: mom weeks alternate with dad weeks
+    const data: ScheduleData = {
+      labels,
+      schedules: [
+        {
+          id: "s1",
+          startDate: "2026-02-23", // Monday
+          cycleWeeks: 1,
+          labelIds: ["mom", "dad"],
+        },
+      ],
+      overrides: [],
+    };
+    const map = buildColorMap(
+      new Date(2026, 1, 23),
+      new Date(2026, 2, 8),
+      data
+    );
+    // Feb 23 (Mon) is the first day — no previous label, no split
+    expect(map.get("2026-02-23")?.splitColor).toBeUndefined();
+    // Feb 28 (Sat) is mid-cycle — same label, no split
+    expect(map.get("2026-02-28")?.splitColor).toBeUndefined();
+    // Mar 2 (Mon) is the changeover day — dad starts, mom was outgoing
+    expect(map.get("2026-03-02")?.splitColor).toBe("#bbf7d0"); // mom's color
+    expect(map.get("2026-03-02")?.color).toBe("#fef08a"); // dad's color
+    // Mar 3 (Tue) is not a changeover — no split
+    expect(map.get("2026-03-03")?.splitColor).toBeUndefined();
+  });
+
+  it("does not set splitColor on override days", () => {
+    const data: ScheduleData = {
+      labels,
+      schedules: [
+        {
+          id: "s1",
+          startDate: "2026-02-23",
+          cycleWeeks: 1,
+          labelIds: ["mom", "dad"],
+        },
+      ],
+      // Override on the changeover day
+      overrides: [{ date: "2026-03-02", labelId: "mom" }],
+    };
+    const map = buildColorMap(
+      new Date(2026, 1, 23),
+      new Date(2026, 2, 8),
+      data
+    );
+    // Mar 2 is overridden — should NOT get splitColor even though labels would differ
+    expect(map.get("2026-03-02")?.isOverride).toBe(true);
+    expect(map.get("2026-03-02")?.splitColor).toBeUndefined();
+  });
 });

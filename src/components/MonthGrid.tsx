@@ -64,7 +64,13 @@ export function MonthGrid({ month, colorMap, onDayClick }: MonthGridProps) {
                         ? () => onDayClick(dateKey)
                         : undefined
                     }
-                    style={dayColor ? { backgroundColor: dayColor.color } : undefined}
+                    style={
+                      dayColor
+                        ? dayColor.splitColor
+                          ? { background: `linear-gradient(to bottom, ${dayColor.splitColor} 50%, ${dayColor.color} 50%)` }
+                          : { backgroundColor: dayColor.color }
+                        : undefined
+                    }
                     className={`text-center tabular-nums ${
                       clickable ? "cursor-pointer" : ""
                     } ${

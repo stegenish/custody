@@ -32,4 +32,6 @@ export interface DayColorResult {
   labelName: string;
   color: string;
   isOverride: boolean;
+  /** When present, top half = splitColor (outgoing), bottom half = color (incoming) */
+  splitColor?: string;
 }

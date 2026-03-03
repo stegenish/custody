@@ -80,4 +80,27 @@ describe("MonthGrid", () => {
     fireEvent.click(buttons[0]);
     expect(onClick).toHaveBeenCalledWith("2026-03-02");
   });
+
+  it("renders a gradient background for split-color changeover days", () => {
+    const colorMap = new Map<string, DayColorResult>([
+      [
+        "2026-03-02",
+        {
+          labelId: "dad",
+          labelName: "Dad",
+          color: "#fef08a",
+          isOverride: false,
+          splitColor: "#bbf7d0",
+        },
+      ],
+    ]);
+    render(<MonthGrid month={month} colorMap={colorMap} />);
+    const cells = screen.getAllByTestId("day-current-month");
+    const mar2Cell = cells.find((c) => c.textContent === "2");
+    expect(mar2Cell?.style.background).toContain("linear-gradient");
+    expect(mar2Cell?.style.background).toContain("#bbf7d0");
+    expect(mar2Cell?.style.background).toContain("#fef08a");
+    // Should NOT have a flat backgroundColor
+    expect(mar2Cell?.style.backgroundColor).toBe("");
+  });
 });

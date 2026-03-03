@@ -112,6 +112,8 @@ export function buildColorMap(
     endDate.getDate()
   );
 
+  let prevResult: DayColorResult | null = null;
+
   while (cursor <= end) {
     const dateKey = formatDateKey(cursor);
     const override = overrideMap.get(dateKey);
@@ -144,10 +146,16 @@ export function buildColorMap(
       }
     }
 
+    // Detect changeover: labels differ and today is not an override
+    if (result && !result.isOverride && prevResult && prevResult.labelId !== result.labelId) {
+      result.splitColor = prevResult.color;
+    }
+
     if (result) {
       map.set(dateKey, result);
     }
 
+    prevResult = result;
     cursor.setDate(cursor.getDate() + 1);
   }
 
