@@ -5,7 +5,12 @@
       "WebFetch(domain:github.com)",
       "Bash(pnpm create:*)",
       "Bash(node:*)",
-      "Bash(export:*)"
+      "Bash(export:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npx jest:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm build:*)"
     ]
   }
 }
