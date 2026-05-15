@@ -1,3 +1,5 @@
+import { formatDateKey, parseDateKey } from "./dateKeys";
+
 interface DateRange {
   start: string;
   end: string;
@@ -25,18 +27,6 @@ const BODO_SCHOOL_HOLIDAY_RANGES: DateRange[] = [
   { start: "2028-04-10", end: "2028-04-18" },
   { start: "2028-05-26", end: "2028-05-26" },
 ];
-
-function parseDateKey(key: string): Date {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function formatDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function expandRange(range: DateRange): string[] {
   const dates: string[] = [];
