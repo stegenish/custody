@@ -8,6 +8,7 @@ import type {
   ProposalRow,
   SharedDateNoteRow,
 } from "./sharedCalendarRows";
+import type { ScheduleData } from "@/lib/scheduleTypes";
 import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
 
 interface RpcClient {
@@ -143,4 +144,16 @@ export async function createSharedDraftProposal(
     target_group_id: groupId,
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to create draft proposal");
+}
+
+export async function saveSharedDraftProposal(
+  supabase: RpcClient,
+  groupId: string,
+  scheduleData: ScheduleData
+): Promise<string> {
+  const result = (await supabase.rpc("save_draft_proposal", {
+    target_group_id: groupId,
+    proposed_schedule_data: scheduleData,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to save draft proposal");
 }

@@ -1,6 +1,7 @@
 import {
   createSharedDraftProposal,
   loadSharedCalendarState,
+  saveSharedDraftProposal,
 } from "./sharedCalendarRepository";
 
 function createQueryBuilder(result: unknown) {
@@ -234,5 +235,44 @@ describe("createSharedDraftProposal", () => {
     await expect(
       createSharedDraftProposal(supabase, "group-1")
     ).rejects.toThrow("Parent already has a draft proposal");
+  });
+});
+
+describe("saveSharedDraftProposal", () => {
+  it("saves the current draft proposal as a new revision", async () => {
+    const scheduleData = {
+      labels: [],
+      schedules: [],
+      overrides: [{ date: "2026-06-01", labelId: "dad" }],
+    };
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "revision-2", error: null }),
+    };
+
+    await expect(
+      saveSharedDraftProposal(supabase, "group-1", scheduleData)
+    ).resolves.toBe("revision-2");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("save_draft_proposal", {
+      target_group_id: "group-1",
+      proposed_schedule_data: scheduleData,
+    });
+  });
+
+  it("throws save errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Draft proposal not found" },
+      }),
+    };
+
+    await expect(
+      saveSharedDraftProposal(supabase, "group-1", {
+        labels: [],
+        schedules: [],
+        overrides: [],
+      })
+    ).rejects.toThrow("Draft proposal not found");
   });
 });

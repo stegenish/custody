@@ -12,12 +12,14 @@ interface SharedCalendarAppProps {
   state: CustodyGroupState;
   currentParentId: string;
   startDraftAction?: () => void | Promise<void>;
+  saveDraftAction?: (formData: FormData) => void | Promise<void>;
 }
 
 export function SharedCalendarApp({
   state,
   currentParentId,
   startDraftAction,
+  saveDraftAction,
 }: SharedCalendarAppProps) {
   const [today, setToday] = useState<Date | null>(null);
   const currentDraft = useMemo(
@@ -46,6 +48,7 @@ export function SharedCalendarApp({
           today={today}
           agreedScheduleData={state.agreedCalendar.scheduleData}
           initialScheduleData={currentDraftRevision.scheduleData}
+          saveDraftAction={saveDraftAction}
         />
       );
     }
@@ -70,6 +73,7 @@ export function SharedCalendarApp({
     );
   }, [
     currentDraftRevision,
+    saveDraftAction,
     startDraftAction,
     state.agreedCalendar.scheduleData,
     today,
@@ -80,12 +84,14 @@ interface EditableDraftProposalProps {
   today: Date;
   agreedScheduleData: ScheduleData;
   initialScheduleData: ScheduleData;
+  saveDraftAction?: (formData: FormData) => void | Promise<void>;
 }
 
 function EditableDraftProposal({
   today,
   agreedScheduleData,
   initialScheduleData,
+  saveDraftAction,
 }: EditableDraftProposalProps) {
   const [draftScheduleData, setDraftScheduleData] =
     useState<ScheduleData>(initialScheduleData);
@@ -96,6 +102,20 @@ function EditableDraftProposal({
       agreedScheduleData={agreedScheduleData}
       proposedScheduleData={draftScheduleData}
       onUpdateProposedScheduleData={setDraftScheduleData}
+      toolbar={
+        saveDraftAction ? (
+          <AppToolbar>
+            <form action={saveDraftAction}>
+              <input
+                type="hidden"
+                name="scheduleData"
+                value={JSON.stringify(draftScheduleData)}
+              />
+              <AppToolbarSubmitButton>Save Draft</AppToolbarSubmitButton>
+            </form>
+          </AppToolbar>
+        ) : undefined
+      }
     />
   );
 }
