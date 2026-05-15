@@ -159,18 +159,32 @@ create policy "parents can read calendar versions"
   on public.calendar_versions for select
   using (public.is_group_parent(group_id));
 
-create policy "parents can insert calendar versions"
-  on public.calendar_versions for insert
-  with check (public.is_group_parent(group_id));
-
 create policy "parents can read proposals"
   on public.proposals for select
   using (public.is_group_parent(group_id));
 
-create policy "parents can write proposals"
-  on public.proposals for all
-  using (public.is_group_parent(group_id))
-  with check (public.is_group_parent(group_id));
+create policy "parents can create their own draft proposals"
+  on public.proposals for insert
+  with check (
+    public.is_group_parent(group_id)
+    and status = 'draft'
+    and created_by_user_id = auth.uid()
+    and current_author_user_id = auth.uid()
+    and receiver_user_id is null
+  );
+
+create policy "parents can update their own draft proposals"
+  on public.proposals for update
+  using (
+    public.is_group_parent(group_id)
+    and status = 'draft'
+    and current_author_user_id = auth.uid()
+  )
+  with check (
+    public.is_group_parent(group_id)
+    and status = 'draft'
+    and current_author_user_id = auth.uid()
+  );
 
 create policy "parents can read proposal revisions"
   on public.proposal_revisions for select
@@ -182,20 +196,17 @@ create policy "parents can read proposal revisions"
     )
   );
 
-create policy "parents can write proposal revisions"
-  on public.proposal_revisions for all
-  using (
-    exists (
-      select 1 from public.proposals
-      where proposals.id = proposal_revisions.proposal_id
-        and public.is_group_parent(proposals.group_id)
-    )
-  )
+create policy "current authors can create proposal revisions"
+  on public.proposal_revisions for insert
   with check (
+    author_user_id = auth.uid()
+    and
     exists (
       select 1 from public.proposals
       where proposals.id = proposal_revisions.proposal_id
         and public.is_group_parent(proposals.group_id)
+        and proposals.current_author_user_id = auth.uid()
+        and proposals.status = 'draft'
     )
   );
 
@@ -209,19 +220,61 @@ create policy "parents can read proposal comments"
     )
   );
 
-create policy "comment authors can write comments"
-  on public.proposal_comments for all
-  using (author_user_id = auth.uid())
-  with check (author_user_id = auth.uid());
+create policy "parents can create proposal comments"
+  on public.proposal_comments for insert
+  with check (
+    author_user_id = auth.uid()
+    and deleted_at is null
+    and exists (
+      select 1 from public.proposals
+      where proposals.id = proposal_comments.proposal_id
+        and public.is_group_parent(proposals.group_id)
+    )
+  );
+
+create policy "comment authors can update active comments"
+  on public.proposal_comments for update
+  using (
+    author_user_id = auth.uid()
+    and deleted_at is null
+    and exists (
+      select 1 from public.proposals
+      where proposals.id = proposal_comments.proposal_id
+        and public.is_group_parent(proposals.group_id)
+    )
+  )
+  with check (
+    author_user_id = auth.uid()
+    and exists (
+      select 1 from public.proposals
+      where proposals.id = proposal_comments.proposal_id
+        and public.is_group_parent(proposals.group_id)
+    )
+  );
 
 create policy "parents can read shared notes"
   on public.shared_date_notes for select
   using (public.is_group_parent(group_id));
 
-create policy "note authors can write shared notes"
-  on public.shared_date_notes for all
-  using (author_user_id = auth.uid())
-  with check (author_user_id = auth.uid());
+create policy "parents can create shared notes"
+  on public.shared_date_notes for insert
+  with check (
+    author_user_id = auth.uid()
+    and deleted_at is null
+    and public.is_group_parent(group_id)
+  );
+
+create policy "note authors can update active shared notes"
+  on public.shared_date_notes for update
+  using (
+    author_user_id = auth.uid()
+    and deleted_at is null
+    and public.is_group_parent(group_id)
+  )
+  with check (
+    author_user_id = auth.uid()
+    and public.is_group_parent(group_id)
+  );
 
 create or replace function public.ensure_initial_group()
 returns uuid
@@ -232,6 +285,10 @@ as $$
 declare
   current_user_id uuid := auth.uid();
   current_email text := lower(coalesce(auth.jwt() ->> 'email', ''));
+  initial_parent_email text := lower(coalesce(
+    nullif(current_setting('app.initial_parent_email', true), ''),
+    'thomas.stegen@gmail.com'
+  ));
   existing_group_id uuid;
   created_group_id uuid;
 begin
@@ -239,7 +296,7 @@ begin
     raise exception 'Not authenticated';
   end if;
 
-  if current_email <> 'thomas.stegen@gmail.com' then
+  if current_email <> initial_parent_email then
     raise exception 'Only the initial parent can create the custody group';
   end if;
 

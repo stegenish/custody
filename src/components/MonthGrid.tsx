@@ -15,6 +15,43 @@ function cellStyle(dayColor?: DayColorResult): CSSProperties | undefined {
   return { backgroundColor: dayColor.label.color };
 }
 
+function custodyDescription(dayColor?: DayColorResult): string | null {
+  if (!dayColor) return null;
+  if (dayColor.outgoingLabel) {
+    return `Changeover: ${dayColor.outgoingLabel.name} to ${dayColor.label.name}`;
+  }
+  return `Custody: ${dayColor.label.name}`;
+}
+
+function DayIndicators({
+  dayColor,
+  isSchoolHoliday,
+  isChanged,
+}: {
+  dayColor?: DayColorResult;
+  isSchoolHoliday: boolean;
+  isChanged: boolean;
+}) {
+  const description = custodyDescription(dayColor);
+  return (
+    <>
+      {description && <span className="sr-only">{description}</span>}
+      {isSchoolHoliday && (
+        <span
+          data-testid="school-holiday-indicator"
+          className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
+        />
+      )}
+      {isChanged && (
+        <span
+          data-testid="proposal-change-indicator"
+          className="absolute inset-0 rounded-sm ring-2 ring-inset ring-gray-900/40"
+        />
+      )}
+    </>
+  );
+}
+
 interface MonthGridProps {
   month: CalendarMonth;
   colorMap?: Map<string, DayColorResult>;
@@ -58,7 +95,7 @@ export function MonthGrid({
               >
                 {week.isoWeekNumber}
               </td>
-              {week.days.map((day, i) => {
+              {week.days.map((day) => {
                 const isToday = day.isToday;
                 const isOtherMonth = !day.isCurrentMonth;
                 const dateKey = formatDateKey(day.date);
@@ -103,34 +140,24 @@ export function MonthGrid({
                         className="relative block h-full min-h-5 w-full rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-700"
                       >
                         {day.dayOfMonth}
-                        {day.isCurrentMonth && day.isSchoolHoliday && (
-                          <span
-                            data-testid="school-holiday-indicator"
-                            className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
-                          />
-                        )}
-                        {day.isCurrentMonth && isChanged && (
-                          <span
-                            data-testid="proposal-change-indicator"
-                            className="absolute inset-0 rounded-sm ring-2 ring-inset ring-gray-900/40"
-                          />
-                        )}
+                        <DayIndicators
+                          dayColor={dayColor}
+                          isSchoolHoliday={
+                            day.isCurrentMonth && day.isSchoolHoliday
+                          }
+                          isChanged={day.isCurrentMonth && isChanged}
+                        />
                       </button>
                     ) : (
                       <>
                         {day.dayOfMonth}
-                        {day.isCurrentMonth && day.isSchoolHoliday && (
-                          <span
-                            data-testid="school-holiday-indicator"
-                            className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
-                          />
-                        )}
-                        {day.isCurrentMonth && isChanged && (
-                          <span
-                            data-testid="proposal-change-indicator"
-                            className="absolute inset-0 rounded-sm ring-2 ring-inset ring-gray-900/40"
-                          />
-                        )}
+                        <DayIndicators
+                          dayColor={dayColor}
+                          isSchoolHoliday={
+                            day.isCurrentMonth && day.isSchoolHoliday
+                          }
+                          isChanged={day.isCurrentMonth && isChanged}
+                        />
                       </>
                     )}
                   </td>

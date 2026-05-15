@@ -31,6 +31,7 @@ export function resolveScheduleLabel(
 ): string {
   const scheduleStart = parseDateKey(schedule.startDate);
   const d = startOfDay(date);
+  // Math.round keeps week math stable across daylight-saving midnight shifts.
   const diffDays = Math.round(
     (d.getTime() - scheduleStart.getTime()) / (24 * 60 * 60 * 1000)
   );
@@ -88,14 +89,19 @@ export function buildColorMap(
 
   while (cursor <= end) {
     const result = resolveDayColor(cursor, schedules, overrides, labels);
-
-    // Detect changeover: labels differ and today is not an override
-    if (result && !result.isOverride && prevResult && prevResult.label.id !== result.label.id) {
-      result.outgoingLabel = prevResult.label;
-    }
+    const outgoingLabel =
+      result &&
+      !result.isOverride &&
+      prevResult &&
+      prevResult.label.id !== result.label.id
+        ? prevResult.label
+        : undefined;
 
     if (result) {
-      map.set(formatDateKey(cursor), result);
+      map.set(formatDateKey(cursor), {
+        ...result,
+        outgoingLabel,
+      });
     }
 
     prevResult = result;

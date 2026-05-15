@@ -1,8 +1,23 @@
 import { signInWithGoogle } from "@/app/auth/actions";
+import { sanitizeNextPath } from "@/lib/auth/redirects";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
-export default function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{
+    error?: string | string[];
+    next?: string | string[];
+  }>;
+}
+
+function firstSearchParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
   const isConfigured = hasSupabaseEnv();
+  const nextPath = sanitizeNextPath(firstSearchParam(params.next));
+  const error = firstSearchParam(params.error);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
@@ -12,6 +27,7 @@ export default function LoginPage() {
           Use the Google account connected to this custody calendar.
         </p>
         <form action={signInWithGoogle} className="mt-6">
+          <input type="hidden" name="next" value={nextPath} />
           <button
             type="submit"
             disabled={!isConfigured}
@@ -20,6 +36,11 @@ export default function LoginPage() {
             Continue with Google
           </button>
         </form>
+        {error && (
+          <p className="mt-4 text-sm text-red-700">
+            Sign-in failed. Please try again.
+          </p>
+        )}
         {!isConfigured && (
           <p className="mt-4 text-sm text-red-700">
             Supabase environment variables are not configured.

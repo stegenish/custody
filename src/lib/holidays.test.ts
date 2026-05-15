@@ -72,6 +72,11 @@ describe("getNorwegianHolidays", () => {
     // March 3, 2026 is a Tuesday
     expect(keys2026).not.toContain("2026-03-03");
   });
+
+  it("does not duplicate fixed holidays that fall on Sundays", () => {
+    const uniqueKeys = new Set(keys2026);
+    expect(uniqueKeys.size).toBe(keys2026.length);
+  });
 });
 
 // --- getHolidaySet ---

@@ -3,13 +3,17 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/supabase/env";
+import { sanitizeNextPath } from "@/lib/auth/redirects";
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(formData?: FormData) {
+  const nextPath = sanitizeNextPath(formData?.get("next")?.toString());
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${getSiteUrl()}/auth/callback`,
+      redirectTo: `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(
+        nextPath
+      )}`,
     },
   });
 

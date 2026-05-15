@@ -5,7 +5,7 @@ export interface CustodyLabel {
   color: string; // CSS color, e.g., "#bbf7d0"
 }
 
-/** A repeating custody pattern starting on a given Monday */
+/** A repeating custody pattern starting on the given start date */
 export interface CustodySchedule {
   id: string;
   startDate: string; // ISO date "YYYY-MM-DD", cycle boundary aligns to this day of week

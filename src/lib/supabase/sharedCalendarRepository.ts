@@ -1,4 +1,5 @@
 import { mapSharedCalendarRows } from "./sharedCalendarRows";
+import { requireSupabaseData, type SupabaseResult } from "./queryResult";
 import type {
   CalendarVersionRow,
   ParentMembershipRow,
@@ -9,12 +10,7 @@ import type {
 } from "./sharedCalendarRows";
 import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
 
-interface QueryResult<T> {
-  data: T | null;
-  error: { message: string } | null;
-}
-
-interface QueryBuilder<T> extends PromiseLike<QueryResult<T>> {
+interface QueryBuilder<T> extends PromiseLike<SupabaseResult<T>> {
   select(columns?: string): QueryBuilder<T>;
   eq(column: string, value: unknown): QueryBuilder<T>;
   in(column: string, values: unknown[]): QueryBuilder<T>;
@@ -23,21 +19,11 @@ interface QueryBuilder<T> extends PromiseLike<QueryResult<T>> {
     options?: { ascending?: boolean }
   ): QueryBuilder<T>;
   limit(count: number): QueryBuilder<T>;
-  single(): Promise<QueryResult<T>>;
+  single(): Promise<SupabaseResult<T>>;
 }
 
 interface SharedCalendarSupabaseClient {
   from<T>(table: string): QueryBuilder<T>;
-}
-
-function requireData<T>(result: QueryResult<T>, fallback: string): T {
-  if (result.error) {
-    throw new Error(result.error.message);
-  }
-  if (result.data === null) {
-    throw new Error(fallback);
-  }
-  return result.data;
 }
 
 async function loadProposalChildren(
@@ -65,8 +51,14 @@ async function loadProposalChildren(
   ]);
 
   return {
-    revisions: requireData(revisionsResult, "Unable to load proposal revisions"),
-    comments: requireData(commentsResult, "Unable to load proposal comments"),
+    revisions: requireSupabaseData(
+      revisionsResult,
+      "Unable to load proposal revisions"
+    ),
+    comments: requireSupabaseData(
+      commentsResult,
+      "Unable to load proposal comments"
+    ),
   };
 }
 
@@ -100,16 +92,19 @@ export async function loadSharedCalendarState(
         .order("created_at", { ascending: true }),
     ]);
 
-  const memberships = requireData(
+  const memberships = requireSupabaseData(
     membershipsResult,
     "Unable to load parent memberships"
   );
-  const latestCalendarVersion = requireData(
+  const latestCalendarVersion = requireSupabaseData(
     calendarResult,
     "Unable to load calendar"
   );
-  const proposals = requireData(proposalsResult, "Unable to load proposals");
-  const notes = requireData(notesResult, "Unable to load shared notes");
+  const proposals = requireSupabaseData(
+    proposalsResult,
+    "Unable to load proposals"
+  );
+  const notes = requireSupabaseData(notesResult, "Unable to load shared notes");
   const proposalIds = proposals.map((proposal) => proposal.id);
   const { revisions, comments } = await loadProposalChildren(
     supabase,

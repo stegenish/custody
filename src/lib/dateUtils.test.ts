@@ -7,6 +7,7 @@ import {
   getMonthRange,
   generateMonthGrid,
   generateCalendar,
+  getCalendarVisibleRange,
 } from "./dateUtils";
 
 // --- isSameDay ---
@@ -246,6 +247,14 @@ describe("generateCalendar", () => {
       (d) => d.isCurrentMonth && d.dayOfMonth === 2
     );
     expect(mar2?.isSchoolHoliday).toBe(true);
+  });
+
+  it("returns its full visible date range", () => {
+    const calendar = generateCalendar(today);
+    const range = getCalendarVisibleRange(calendar);
+
+    expect(formatDateKey(range.firstDay)).toBe("2025-12-01");
+    expect(formatDateKey(range.lastDay)).toBe("2027-02-28");
   });
 });
 

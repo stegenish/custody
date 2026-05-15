@@ -21,6 +21,12 @@ export async function createInviteLink(): Promise<string> {
 
 export async function acceptInvite(token: string): Promise<void> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(`/invite/${token}`)}`);
+  }
   await joinGroupWithInvite(supabase, token);
   redirect("/");
 }

@@ -121,6 +121,18 @@ function mapNote(row: SharedDateNoteRow): SharedDateNote {
   };
 }
 
+function groupByProposalId<T extends { proposal_id: string }>(
+  rows: T[]
+): Map<string, T[]> {
+  const grouped = new Map<string, T[]>();
+  for (const row of rows) {
+    const group = grouped.get(row.proposal_id) ?? [];
+    group.push(row);
+    grouped.set(row.proposal_id, group);
+  }
+  return grouped;
+}
+
 function mapProposal(
   row: ProposalRow,
   revisions: ProposalRevisionRow[],
@@ -134,12 +146,8 @@ function mapProposal(
     receiverParentId: row.receiver_user_id ?? undefined,
     baseCalendarVersion: row.base_calendar_version,
     currentRevisionId: row.current_revision_id,
-    revisions: revisions
-      .filter((revision) => revision.proposal_id === row.id)
-      .map(mapRevision),
-    comments: comments
-      .filter((comment) => comment.proposal_id === row.id && !comment.deleted_at)
-      .map(mapComment),
+    revisions: revisions.map(mapRevision),
+    comments: comments.filter((comment) => !comment.deleted_at).map(mapComment),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -148,8 +156,14 @@ function mapProposal(
 export function mapSharedCalendarRows(
   rows: SharedCalendarRows
 ): CustodyGroupState {
+  const revisionsByProposalId = groupByProposalId(rows.revisions);
+  const commentsByProposalId = groupByProposalId(rows.comments);
   const proposals = rows.proposals.map((proposal) =>
-    mapProposal(proposal, rows.revisions, rows.comments)
+    mapProposal(
+      proposal,
+      revisionsByProposalId.get(proposal.id) ?? [],
+      commentsByProposalId.get(proposal.id) ?? []
+    )
   );
 
   return {

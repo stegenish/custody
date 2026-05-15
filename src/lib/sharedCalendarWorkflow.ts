@@ -1,4 +1,5 @@
 import type { ScheduleData } from "./scheduleTypes";
+import { cloneScheduleData } from "./scheduleData";
 import type {
   CalendarProposal,
   CustodyGroupState,
@@ -8,17 +9,6 @@ import type {
   ProposalStatus,
   SharedDateNote,
 } from "./sharedCalendarTypes";
-
-function cloneScheduleData(data: ScheduleData): ScheduleData {
-  return {
-    labels: data.labels.map((label) => ({ ...label })),
-    schedules: data.schedules.map((schedule) => ({
-      ...schedule,
-      labelIds: [...schedule.labelIds],
-    })),
-    overrides: data.overrides.map((override) => ({ ...override })),
-  };
-}
 
 function requireParent(state: CustodyGroupState, parentId: string): void {
   if (!state.parents.some((parent) => parent.id === parentId)) {

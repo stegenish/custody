@@ -52,7 +52,9 @@ export function getNorwegianHolidays(year: number): Date[] {
     cursor.setDate(cursor.getDate() + 7);
   }
 
-  return dates;
+  return Array.from(
+    new Map(dates.map((date) => [formatDateKey(date), date])).values()
+  );
 }
 
 /** Union of holiday date keys for multiple years */

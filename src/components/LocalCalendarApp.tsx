@@ -10,21 +10,11 @@ import {
   saveDraftScheduleData,
   saveScheduleData,
 } from "@/lib/storage";
+import { cloneScheduleData } from "@/lib/scheduleData";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 
 interface LocalCalendarAppProps {
   today: Date;
-}
-
-function cloneScheduleData(data: ScheduleData): ScheduleData {
-  return {
-    labels: data.labels.map((label) => ({ ...label })),
-    schedules: data.schedules.map((schedule) => ({
-      ...schedule,
-      labelIds: [...schedule.labelIds],
-    })),
-    overrides: data.overrides.map((override) => ({ ...override })),
-  };
 }
 
 function Toolbar({

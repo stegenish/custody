@@ -4,7 +4,11 @@ import { type ReactNode, useMemo, useState } from "react";
 import { CalendarGrid } from "@/components/CalendarGrid";
 import { DayOverrideBar } from "@/components/DayOverrideBar";
 import { ScheduleEditor } from "@/components/ScheduleEditor";
-import { generateCalendar } from "@/lib/dateUtils";
+import {
+  type CalendarMonth,
+  generateCalendar,
+  getCalendarVisibleRange,
+} from "@/lib/dateUtils";
 import { buildColorMap } from "@/lib/scheduleResolver";
 import { removeDayOverride, setDayOverride } from "@/lib/scheduleMutations";
 import type { ScheduleData } from "@/lib/scheduleTypes";
@@ -12,6 +16,7 @@ import type { ScheduleData } from "@/lib/scheduleTypes";
 interface CalendarWorkspaceProps {
   title: string;
   today: Date;
+  calendar?: CalendarMonth[];
   scheduleData: ScheduleData;
   changedDateKeys?: Set<string>;
   toolbar?: ReactNode;
@@ -19,31 +24,22 @@ interface CalendarWorkspaceProps {
   onUpdateScheduleData: (data: ScheduleData) => void;
 }
 
-function getCalendarBounds(calendar: ReturnType<typeof generateCalendar>): {
-  firstDay: Date;
-  lastDay: Date;
-} {
-  const firstDay = calendar[0].weeks[0].days[0].date;
-  const lastMonth = calendar[calendar.length - 1];
-  const lastWeek = lastMonth.weeks[lastMonth.weeks.length - 1];
-  const lastDay = lastWeek.days[6].date;
-  return { firstDay, lastDay };
-}
-
 export function CalendarWorkspace({
   title,
   today,
+  calendar,
   scheduleData,
   changedDateKeys,
   toolbar,
   readOnly = false,
   onUpdateScheduleData,
 }: CalendarWorkspaceProps) {
-  const calendar = useMemo(() => generateCalendar(today), [today]);
+  const generatedCalendar = useMemo(() => generateCalendar(today), [today]);
+  const visibleCalendar = calendar ?? generatedCalendar;
   const colorMap = useMemo(() => {
-    const { firstDay, lastDay } = getCalendarBounds(calendar);
+    const { firstDay, lastDay } = getCalendarVisibleRange(visibleCalendar);
     return buildColorMap(firstDay, lastDay, scheduleData);
-  }, [calendar, scheduleData]);
+  }, [visibleCalendar, scheduleData]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const selectedDayColor = selectedDate ? colorMap.get(selectedDate) : null;
 
@@ -60,7 +56,7 @@ export function CalendarWorkspace({
         />
       )}
       <CalendarGrid
-        months={calendar}
+        months={visibleCalendar}
         colorMap={colorMap}
         changedDateKeys={changedDateKeys}
         onDayClick={readOnly ? undefined : setSelectedDate}

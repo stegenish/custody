@@ -174,3 +174,17 @@ export function generateCalendar(today: Date): CalendarMonth[] {
     generateMonthGrid(year, month, today, holidays, schoolHolidays)
   );
 }
+
+export function getCalendarVisibleRange(calendar: CalendarMonth[]): {
+  firstDay: Date;
+  lastDay: Date;
+} {
+  if (calendar.length === 0) {
+    throw new Error("Calendar must contain at least one month");
+  }
+  const firstDay = calendar[0].weeks[0].days[0].date;
+  const lastMonth = calendar[calendar.length - 1];
+  const lastWeek = lastMonth.weeks[lastMonth.weeks.length - 1];
+  const lastDay = lastWeek.days[lastWeek.days.length - 1].date;
+  return { firstDay, lastDay };
+}

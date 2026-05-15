@@ -53,9 +53,39 @@ describe("MonthGrid", () => {
       ],
     ]);
     render(<MonthGrid month={month} colorMap={colorMap} />);
-    const cells = screen.getAllByTestId("day-current-month");
-    const mar2Cell = cells.find((c) => c.textContent === "2");
+    const mar2Cell = screen.getByText("Custody: Mom").closest("td");
     expect(mar2Cell?.style.backgroundColor).toBeTruthy();
+  });
+
+  it("renders non-color custody text for colored days", () => {
+    const colorMap = new Map<string, DayColorResult>([
+      [
+        "2026-03-02",
+        {
+          label: { id: "mom", name: "Mom", color: "#bbf7d0" },
+          isOverride: false,
+        },
+      ],
+    ]);
+    render(<MonthGrid month={month} colorMap={colorMap} />);
+
+    expect(screen.getByText("Custody: Mom")).toBeInTheDocument();
+  });
+
+  it("renders non-color changeover text for split-color days", () => {
+    const colorMap = new Map<string, DayColorResult>([
+      [
+        "2026-03-02",
+        {
+          label: { id: "dad", name: "Dad", color: "#fef08a" },
+          isOverride: false,
+          outgoingLabel: { id: "mom", name: "Mom", color: "#bbf7d0" },
+        },
+      ],
+    ]);
+    render(<MonthGrid month={month} colorMap={colorMap} />);
+
+    expect(screen.getByText("Changeover: Mom to Dad")).toBeInTheDocument();
   });
 
   it("renders without background color when colorMap is empty", () => {
@@ -108,8 +138,7 @@ describe("MonthGrid", () => {
       ],
     ]);
     render(<MonthGrid month={month} colorMap={colorMap} />);
-    const cells = screen.getAllByTestId("day-current-month");
-    const mar2Cell = cells.find((c) => c.textContent === "2");
+    const mar2Cell = screen.getByText("Changeover: Mom to Dad").closest("td");
     expect(mar2Cell?.style.background).toContain("linear-gradient");
     expect(mar2Cell?.style.background).toContain("#bbf7d0");
     expect(mar2Cell?.style.background).toContain("#fef08a");
