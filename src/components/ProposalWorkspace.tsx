@@ -8,17 +8,21 @@ import type { ScheduleData } from "@/lib/scheduleTypes";
 
 interface ProposalWorkspaceProps {
   today: Date;
+  title?: string;
   agreedScheduleData: ScheduleData;
   proposedScheduleData: ScheduleData;
   toolbar?: ReactNode;
+  readOnly?: boolean;
   onUpdateProposedScheduleData: (data: ScheduleData) => void;
 }
 
 export function ProposalWorkspace({
   today,
+  title = "Draft Proposal",
   agreedScheduleData,
   proposedScheduleData,
   toolbar,
+  readOnly = false,
   onUpdateProposedScheduleData,
 }: ProposalWorkspaceProps) {
   const calendar = useMemo(() => generateCalendar(today), [today]);
@@ -36,12 +40,13 @@ export function ProposalWorkspace({
 
   return (
     <CalendarWorkspace
-      title="Draft Proposal"
+      title={title}
       today={today}
       calendar={calendar}
       scheduleData={proposedScheduleData}
       changedDateKeys={changedDateKeys}
       toolbar={toolbar}
+      readOnly={readOnly}
       onUpdateScheduleData={onUpdateProposedScheduleData}
     />
   );

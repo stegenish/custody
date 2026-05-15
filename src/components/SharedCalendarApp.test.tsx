@@ -1,6 +1,10 @@
 import { act, render, screen } from "@testing-library/react";
 import { SharedCalendarApp } from "./SharedCalendarApp";
-import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
+import type {
+  CalendarProposal,
+  CustodyGroupState,
+} from "@/lib/sharedCalendarTypes";
+import type { ScheduleData } from "@/lib/scheduleTypes";
 
 const state: CustodyGroupState = {
   groupId: "group-1",
@@ -32,6 +36,34 @@ const state: CustodyGroupState = {
   proposalHistory: [],
   notes: [],
 };
+
+function createActiveProposal(
+  scheduleData: ScheduleData = state.agreedCalendar.scheduleData
+): CalendarProposal {
+  return {
+    id: "proposal-1",
+    status: "sent",
+    createdByParentId: "parent-a",
+    currentAuthorParentId: "parent-a",
+    receiverParentId: "parent-b",
+    baseCalendarVersion: 1,
+    currentRevisionId: "revision-1",
+    revisions: [
+      {
+        id: "revision-1",
+        proposalId: "proposal-1",
+        revisionNumber: 1,
+        authorParentId: "parent-a",
+        baseCalendarVersion: 1,
+        scheduleData,
+        createdAt: "2026-05-16T00:00:00.000Z",
+      },
+    ],
+    comments: [],
+    createdAt: "2026-05-16T00:00:00.000Z",
+    updatedAt: "2026-05-16T00:00:00.000Z",
+  };
+}
 
 describe("SharedCalendarApp", () => {
   beforeEach(() => {
@@ -126,5 +158,72 @@ describe("SharedCalendarApp", () => {
         'input[name="scheduleData"]'
       )[0]?.value
     ).toContain('"date":"2026-03-02"');
+  });
+
+  it("renders an active proposal for receiver review", () => {
+    const proposedScheduleData = {
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    };
+    const stateWithActiveProposal: CustodyGroupState = {
+      ...state,
+      activeProposal: createActiveProposal(proposedScheduleData),
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithActiveProposal}
+        currentParentId="parent-b"
+        startDraftAction={jest.fn()}
+        acceptProposalAction={jest.fn()}
+        rejectProposalAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByText("Review Proposal")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Accept Proposal" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Reject Proposal" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Start Draft" })
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="revisionId"]')
+        ?.value
+    ).toBe("revision-1");
+  });
+
+  it("renders an active proposal for sender withdrawal", () => {
+    const stateWithActiveProposal: CustodyGroupState = {
+      ...state,
+      activeProposal: createActiveProposal(),
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithActiveProposal}
+        currentParentId="parent-a"
+        withdrawProposalAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByText("Sent Proposal")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Withdraw Proposal" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
   });
 });
