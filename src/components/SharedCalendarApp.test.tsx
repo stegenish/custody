@@ -44,7 +44,7 @@ describe("SharedCalendarApp", () => {
   });
 
   it("renders the agreed shared calendar read-only", () => {
-    render(<SharedCalendarApp state={state} />);
+    render(<SharedCalendarApp state={state} currentParentId="parent-a" />);
 
     act(() => {
       jest.runOnlyPendingTimers();
@@ -55,5 +55,51 @@ describe("SharedCalendarApp", () => {
     expect(
       screen.queryByRole("button", { name: "2026-03-02" })
     ).not.toBeInTheDocument();
+  });
+
+  it("renders the current parent's draft proposal as editable", () => {
+    const draftScheduleData = {
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    };
+    const stateWithDraft: CustodyGroupState = {
+      ...state,
+      draftProposals: [
+        {
+          id: "proposal-1",
+          status: "draft",
+          createdByParentId: "parent-a",
+          currentAuthorParentId: "parent-a",
+          baseCalendarVersion: 1,
+          currentRevisionId: "revision-1",
+          revisions: [
+            {
+              id: "revision-1",
+              proposalId: "proposal-1",
+              revisionNumber: 1,
+              authorParentId: "parent-a",
+              baseCalendarVersion: 1,
+              scheduleData: draftScheduleData,
+              createdAt: "2026-05-16T00:00:00.000Z",
+            },
+          ],
+          comments: [],
+          createdAt: "2026-05-16T00:00:00.000Z",
+          updatedAt: "2026-05-16T00:00:00.000Z",
+        },
+      ],
+    };
+
+    render(
+      <SharedCalendarApp state={stateWithDraft} currentParentId="parent-a" />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByText("Draft Proposal")).toBeInTheDocument();
+    expect(screen.getByText("Schedule Editor")).toBeInTheDocument();
+    expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
   });
 });

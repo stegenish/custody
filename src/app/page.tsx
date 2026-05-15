@@ -30,7 +30,8 @@ export default async function Home() {
 
   const state = await loadSharedCalendarState(
     supabase as unknown as SharedCalendarSupabaseClient,
-    groupId
+    groupId,
+    user.id
   );
-  return <SharedCalendarApp state={state} />;
+  return <SharedCalendarApp state={state} currentParentId={user.id} />;
 }

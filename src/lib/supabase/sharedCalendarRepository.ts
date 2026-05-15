@@ -64,7 +64,8 @@ async function loadProposalChildren(
 
 export async function loadSharedCalendarState(
   supabase: SharedCalendarSupabaseClient,
-  groupId: string
+  groupId: string,
+  currentParentId: string
 ): Promise<CustodyGroupState> {
   const [membershipsResult, calendarResult, proposalsResult, notesResult] =
     await Promise.all([
@@ -104,8 +105,13 @@ export async function loadSharedCalendarState(
     proposalsResult,
     "Unable to load proposals"
   );
+  const visibleProposals = proposals.filter(
+    (proposal) =>
+      proposal.status !== "draft" ||
+      proposal.current_author_user_id === currentParentId
+  );
   const notes = requireSupabaseData(notesResult, "Unable to load shared notes");
-  const proposalIds = proposals.map((proposal) => proposal.id);
+  const proposalIds = visibleProposals.map((proposal) => proposal.id);
   const { revisions, comments } = await loadProposalChildren(
     supabase,
     proposalIds
@@ -115,7 +121,7 @@ export async function loadSharedCalendarState(
     groupId,
     memberships,
     latestCalendarVersion,
-    proposals,
+    proposals: visibleProposals,
     revisions,
     comments,
     notes,

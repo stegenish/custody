@@ -61,7 +61,11 @@ describe("loadSharedCalendarState", () => {
       },
     });
 
-    const state = await loadSharedCalendarState(supabase, "group-1");
+    const state = await loadSharedCalendarState(
+      supabase,
+      "group-1",
+      "parent-a"
+    );
 
     expect(state.groupId).toBe("group-1");
     expect(state.parents[0].isInviteAdmin).toBe(true);
@@ -85,7 +89,7 @@ describe("loadSharedCalendarState", () => {
       shared_date_notes: { data: [], error: null },
     });
 
-    await loadSharedCalendarState(supabase, "group-1");
+    await loadSharedCalendarState(supabase, "group-1", "parent-a");
 
     expect(supabase.from).not.toHaveBeenCalledWith("proposal_revisions");
     expect(supabase.from).not.toHaveBeenCalledWith("proposal_comments");
@@ -99,8 +103,104 @@ describe("loadSharedCalendarState", () => {
       shared_date_notes: { data: [], error: null },
     });
 
-    await expect(loadSharedCalendarState(supabase, "group-1")).rejects.toThrow(
-      "No access"
+    await expect(
+      loadSharedCalendarState(supabase, "group-1", "parent-a")
+    ).rejects.toThrow("No access");
+  });
+
+  it("hides draft proposals owned by other parents", async () => {
+    const scheduleData = { labels: [], schedules: [], overrides: [] };
+    const supabase = createSupabase({
+      parent_memberships: {
+        data: [
+          {
+            user_id: "parent-a",
+            email: "a@example.com",
+            role: "admin",
+          },
+          {
+            user_id: "parent-b",
+            email: "b@example.com",
+            role: "parent",
+          },
+        ],
+        error: null,
+      },
+      calendar_versions: {
+        data: {
+          version: 1,
+          schedule_data: scheduleData,
+          created_at: "2026-05-15T12:00:00.000Z",
+        },
+        error: null,
+      },
+      proposals: {
+        data: [
+          {
+            id: "proposal-a",
+            status: "draft",
+            created_by_user_id: "parent-a",
+            current_author_user_id: "parent-a",
+            receiver_user_id: null,
+            base_calendar_version: 1,
+            current_revision_id: "revision-a",
+            created_at: "2026-05-15T12:00:00.000Z",
+            updated_at: "2026-05-15T12:00:00.000Z",
+          },
+          {
+            id: "proposal-b",
+            status: "draft",
+            created_by_user_id: "parent-b",
+            current_author_user_id: "parent-b",
+            receiver_user_id: null,
+            base_calendar_version: 1,
+            current_revision_id: "revision-b",
+            created_at: "2026-05-15T12:00:00.000Z",
+            updated_at: "2026-05-15T12:00:00.000Z",
+          },
+        ],
+        error: null,
+      },
+      proposal_revisions: {
+        data: [
+          {
+            id: "revision-a",
+            proposal_id: "proposal-a",
+            revision_number: 1,
+            author_user_id: "parent-a",
+            base_calendar_version: 1,
+            schedule_data: scheduleData,
+            created_at: "2026-05-15T12:00:00.000Z",
+          },
+          {
+            id: "revision-b",
+            proposal_id: "proposal-b",
+            revision_number: 1,
+            author_user_id: "parent-b",
+            base_calendar_version: 1,
+            schedule_data: scheduleData,
+            created_at: "2026-05-15T12:00:00.000Z",
+          },
+        ],
+        error: null,
+      },
+      proposal_comments: {
+        data: [],
+        error: null,
+      },
+      shared_date_notes: {
+        data: [],
+        error: null,
+      },
+    });
+
+    const state = await loadSharedCalendarState(
+      supabase,
+      "group-1",
+      "parent-a"
     );
+
+    expect(state.draftProposals).toHaveLength(1);
+    expect(state.draftProposals[0].id).toBe("proposal-a");
   });
 });
