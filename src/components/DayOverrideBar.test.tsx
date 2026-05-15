@@ -23,6 +23,25 @@ describe("DayOverrideBar", () => {
     expect(screen.getByText("2026-03-05")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mom" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Dad" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mom" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+  });
+
+  it("focuses the current label when opened", () => {
+    render(
+      <DayOverrideBar
+        dateKey="2026-03-05"
+        currentLabelId="a"
+        isOverride={false}
+        labels={labels}
+        onSetOverride={jest.fn()}
+        onRemoveOverride={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+    expect(screen.getByRole("button", { name: "Mom" })).toHaveFocus();
   });
 
   it("calls onSetOverride when a label button is clicked", () => {

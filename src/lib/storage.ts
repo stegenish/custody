@@ -7,11 +7,22 @@ export function createDefaultScheduleData(): ScheduleData {
   return { labels: [], schedules: [], overrides: [] };
 }
 
+function isScheduleData(value: unknown): value is ScheduleData {
+  if (!value || typeof value !== "object") return false;
+  const data = value as Partial<ScheduleData>;
+  return (
+    Array.isArray(data.labels) &&
+    Array.isArray(data.schedules) &&
+    Array.isArray(data.overrides)
+  );
+}
+
 export function loadScheduleData(): ScheduleData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return createDefaultScheduleData();
-    return JSON.parse(raw) as ScheduleData;
+    const parsed = JSON.parse(raw);
+    return isScheduleData(parsed) ? parsed : createDefaultScheduleData();
   } catch {
     return createDefaultScheduleData();
   }
@@ -24,7 +35,9 @@ export function saveScheduleData(data: ScheduleData): void {
 export function loadDraftScheduleData(): ScheduleData | null {
   try {
     const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as ScheduleData) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return isScheduleData(parsed) ? parsed : null;
   } catch {
     return null;
   }

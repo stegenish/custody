@@ -52,6 +52,13 @@ describe("findActiveSchedule", () => {
       scheduleB
     );
   });
+
+  it("returns the latest active schedule when input is unsorted", () => {
+    const schedules = [scheduleB, scheduleA];
+    expect(findActiveSchedule(new Date(2026, 2, 5), schedules)).toBe(
+      scheduleB
+    );
+  });
 });
 
 // --- resolveScheduleLabel ---

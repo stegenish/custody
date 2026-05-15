@@ -215,6 +215,33 @@ describe("proposal comments", () => {
       updateProposalComment(state, proposalId, commentId, "parent-b", "No", ctx)
     ).toThrow("Only the author can edit this comment");
   });
+
+  it("prevents editing a deleted proposal comment", () => {
+    const ctx = makeContext();
+    let state = createDraftProposal(makeState(), "parent-a", changedSchedule, ctx);
+    const proposalId = state.draftProposals[0].id;
+    state = addProposalComment(
+      state,
+      proposalId,
+      "parent-a",
+      "2026-06-01",
+      "Comment",
+      ctx
+    );
+    const commentId = state.draftProposals[0].comments[0].id;
+    state = deleteProposalComment(state, proposalId, commentId, "parent-a", ctx);
+
+    expect(() =>
+      updateProposalComment(
+        state,
+        proposalId,
+        commentId,
+        "parent-a",
+        "Edited",
+        ctx
+      )
+    ).toThrow("Deleted comments cannot be edited");
+  });
 });
 
 describe("shared date notes", () => {

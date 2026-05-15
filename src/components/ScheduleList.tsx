@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { CustodyLabel, CustodySchedule } from "@/lib/scheduleTypes";
+import { validateSchedule } from "@/lib/scheduleMutations";
 
 interface ScheduleListProps {
   schedules: CustodySchedule[];
@@ -26,6 +27,7 @@ export function ScheduleList({
   const [cycleWeeks, setCycleWeeks] = useState<1 | 2 | 3>(2);
   const [labelA, setLabelA] = useState("");
   const [labelB, setLabelB] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const hasEnoughLabels = labels.length >= 2;
 
@@ -35,8 +37,19 @@ export function ScheduleList({
 
   function handleAdd() {
     if (!startDate || !effectiveLabelA || !effectiveLabelB) return;
+    const validationError = validateSchedule(
+      startDate,
+      cycleWeeks,
+      [effectiveLabelA, effectiveLabelB],
+      labels
+    );
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     onAddSchedule(startDate, cycleWeeks, [effectiveLabelA, effectiveLabelB]);
     setStartDate("");
+    setError(null);
   }
 
   return (
@@ -54,6 +67,7 @@ export function ScheduleList({
               {labelName(s.labelIds[0], labels)} / {labelName(s.labelIds[1], labels)}
             </span>
             <button
+              type="button"
               onClick={() => onDeleteSchedule(s.id)}
               className="text-xs text-red-600"
             >
@@ -119,11 +133,15 @@ export function ScheduleList({
             </select>
           </label>
           <button
+            type="button"
             onClick={handleAdd}
             className="rounded bg-green-600 px-3 py-1 text-xs text-white"
           >
             Add Schedule
           </button>
+          {error && (
+            <p className="basis-full text-sm text-red-700">{error}</p>
+          )}
         </div>
       )}
     </div>

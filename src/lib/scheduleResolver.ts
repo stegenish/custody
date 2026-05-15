@@ -11,10 +11,14 @@ export function findActiveSchedule(
   date: Date,
   schedules: CustodySchedule[]
 ): CustodySchedule | null {
+  const d = startOfDay(date);
   let active: CustodySchedule | null = null;
-  for (const schedule of schedules) {
+  const orderedSchedules = [...schedules].sort((a, b) =>
+    a.startDate.localeCompare(b.startDate)
+  );
+  for (const schedule of orderedSchedules) {
     const start = parseDateKey(schedule.startDate);
-    if (date >= start) {
+    if (d >= start) {
       active = schedule;
     }
   }

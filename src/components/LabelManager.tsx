@@ -63,12 +63,14 @@ export function LabelManager({
                   className="rounded border px-1 py-0.5 text-sm"
                 />
                 <button
+                  type="button"
                   onClick={handleSave}
                   className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white"
                 >
                   Save
                 </button>
                 <button
+                  type="button"
                   onClick={() => setEditingId(null)}
                   className="text-xs text-gray-500"
                 >
@@ -83,12 +85,14 @@ export function LabelManager({
                 />
                 <span>{label.name}</span>
                 <button
+                  type="button"
                   onClick={() => startEdit(label)}
                   className="text-xs text-blue-600"
                 >
                   Edit
                 </button>
                 <button
+                  type="button"
                   onClick={() => onDeleteLabel(label.id)}
                   className="text-xs text-red-600"
                 >
@@ -115,6 +119,7 @@ export function LabelManager({
           className="rounded border px-2 py-1 text-sm"
         />
         <button
+          type="button"
           onClick={handleAdd}
           className="rounded bg-green-600 px-3 py-1 text-xs text-white"
         >

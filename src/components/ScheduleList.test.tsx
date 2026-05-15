@@ -46,6 +46,28 @@ describe("ScheduleList", () => {
     ]);
   });
 
+  it("does not add a schedule when the same label is selected twice", () => {
+    const onAdd = jest.fn();
+    render(
+      <ScheduleList
+        schedules={[]}
+        labels={labels}
+        onAddSchedule={onAdd}
+        onDeleteSchedule={jest.fn()}
+      />
+    );
+    fireEvent.change(screen.getByLabelText("Start date"), {
+      target: { value: "2026-03-13" },
+    });
+    fireEvent.change(screen.getByLabelText("Label B"), {
+      target: { value: "a" },
+    });
+    fireEvent.click(screen.getByText("Add Schedule"));
+
+    expect(onAdd).not.toHaveBeenCalled();
+    expect(screen.getByText("Labels must be different")).toBeInTheDocument();
+  });
+
   it("shows disabled message when fewer than 2 labels", () => {
     render(
       <ScheduleList

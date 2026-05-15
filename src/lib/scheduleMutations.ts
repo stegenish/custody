@@ -2,6 +2,7 @@ import type {
   CustodyLabel,
   ScheduleData,
 } from "./scheduleTypes";
+import { parseDateKey } from "./dateUtils";
 
 export function validateLabel(name: string, color: string): string | null {
   if (!name.trim()) return "Label name is required";
@@ -15,6 +16,14 @@ export function validateSchedule(
   labelIds: [string, string],
   existingLabels: CustodyLabel[]
 ): string | null {
+  try {
+    parseDateKey(startDate);
+  } catch {
+    return "Start date must be a valid YYYY-MM-DD date";
+  }
+  if (![1, 2, 3].includes(cycleWeeks)) {
+    return "Cycle must be 1, 2, or 3 weeks";
+  }
   const labelSet = new Set(existingLabels.map((l) => l.id));
   if (!labelSet.has(labelIds[0]) || !labelSet.has(labelIds[1])) {
     return "Both labels must exist";
@@ -69,6 +78,15 @@ export function addSchedule(
   cycleWeeks: 1 | 2 | 3,
   labelIds: [string, string]
 ): ScheduleData {
+  const validationError = validateSchedule(
+    startDate,
+    cycleWeeks,
+    labelIds,
+    data.labels
+  );
+  if (validationError) {
+    throw new Error(validationError);
+  }
   const newSchedule = {
     id: crypto.randomUUID(),
     startDate,

@@ -54,8 +54,7 @@ describe("CalendarGrid", () => {
     render(
       <CalendarGrid months={calendar} colorMap={colorMap} onDayClick={onClick} />
     );
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[0]);
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
     expect(onClick).toHaveBeenCalledWith("2026-03-02");
   });
 

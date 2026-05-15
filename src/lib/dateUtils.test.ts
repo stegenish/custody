@@ -48,6 +48,15 @@ describe("parseDateKey", () => {
     expect(parsed.getMonth()).toBe(0);
     expect(parsed.getDate()).toBe(15);
   });
+
+  it("throws for malformed date keys", () => {
+    expect(() => parseDateKey("not-a-date")).toThrow(
+      "Invalid date key: not-a-date"
+    );
+    expect(() => parseDateKey("2026-02-30")).toThrow(
+      "Invalid date key: 2026-02-30"
+    );
+  });
 });
 
 // --- startOfDay ---

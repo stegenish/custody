@@ -63,24 +63,18 @@ export function MonthGrid({
                 const isOtherMonth = !day.isCurrentMonth;
                 const dateKey = formatDateKey(day.date);
                 const dayColor = colorMap?.get(dateKey);
-                const clickable = dayColor && onDayClick;
+                const clickable = Boolean(onDayClick);
                 const isChanged = changedDateKeys?.has(dateKey) ?? false;
 
                 return (
                   <td
-                    key={i}
+                    key={dateKey}
                     data-testid={
                       isToday
                         ? "today"
                         : isOtherMonth
                           ? "day-other-month"
                           : "day-current-month"
-                    }
-                    role={clickable ? "button" : undefined}
-                    onClick={
-                      clickable
-                        ? () => onDayClick(dateKey)
-                        : undefined
                     }
                     style={cellStyle(dayColor)}
                     className={`relative text-center tabular-nums ${
@@ -95,18 +89,49 @@ export function MonthGrid({
                             : "text-gray-700"
                     }`}
                   >
-                      {day.dayOfMonth}
-                    {day.isCurrentMonth && day.isSchoolHoliday && (
-                      <span
-                        data-testid="school-holiday-indicator"
-                        className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
-                      />
-                    )}
-                    {day.isCurrentMonth && isChanged && (
-                      <span
-                        data-testid="proposal-change-indicator"
-                        className="absolute inset-0 rounded-sm ring-2 ring-inset ring-gray-900/40"
-                      />
+                    {clickable ? (
+                      <button
+                        type="button"
+                        aria-label={dateKey}
+                        onClick={() => onDayClick?.(dateKey)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            onDayClick?.(dateKey);
+                          }
+                        }}
+                        className="relative block h-full min-h-5 w-full rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-700"
+                      >
+                        {day.dayOfMonth}
+                        {day.isCurrentMonth && day.isSchoolHoliday && (
+                          <span
+                            data-testid="school-holiday-indicator"
+                            className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
+                          />
+                        )}
+                        {day.isCurrentMonth && isChanged && (
+                          <span
+                            data-testid="proposal-change-indicator"
+                            className="absolute inset-0 rounded-sm ring-2 ring-inset ring-gray-900/40"
+                          />
+                        )}
+                      </button>
+                    ) : (
+                      <>
+                        {day.dayOfMonth}
+                        {day.isCurrentMonth && day.isSchoolHoliday && (
+                          <span
+                            data-testid="school-holiday-indicator"
+                            className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
+                          />
+                        )}
+                        {day.isCurrentMonth && isChanged && (
+                          <span
+                            data-testid="proposal-change-indicator"
+                            className="absolute inset-0 rounded-sm ring-2 ring-inset ring-gray-900/40"
+                          />
+                        )}
+                      </>
                     )}
                   </td>
                 );

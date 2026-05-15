@@ -28,6 +28,11 @@ describe("loadScheduleData", () => {
     localStorage.setItem("custody-calendar-schedules", "not-json{{{");
     expect(loadScheduleData()).toEqual(createDefaultScheduleData());
   });
+
+  it("returns default data when localStorage contains the wrong shape", () => {
+    localStorage.setItem("custody-calendar-schedules", "{}");
+    expect(loadScheduleData()).toEqual(createDefaultScheduleData());
+  });
 });
 
 describe("saveScheduleData + loadScheduleData", () => {
@@ -57,6 +62,11 @@ describe("draft schedule storage", () => {
   };
 
   it("returns null when no draft exists", () => {
+    expect(loadDraftScheduleData()).toBeNull();
+  });
+
+  it("returns null when draft storage contains the wrong shape", () => {
+    localStorage.setItem("custody-calendar-draft-schedule", "{}");
     expect(loadDraftScheduleData()).toBeNull();
   });
 

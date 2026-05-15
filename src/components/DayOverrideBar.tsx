@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { CustodyLabel } from "@/lib/scheduleTypes";
 
 interface DayOverrideBarProps {
@@ -19,6 +20,13 @@ export function DayOverrideBar({
   onRemoveOverride,
   onClose,
 }: DayOverrideBarProps) {
+  const firstButtonRef = useRef<HTMLButtonElement | null>(null);
+  const currentButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    (currentButtonRef.current ?? firstButtonRef.current)?.focus();
+  }, []);
+
   return (
     <div
       data-testid="day-override-bar"
@@ -31,6 +39,16 @@ export function DayOverrideBar({
           {labels.map((label) => (
             <button
               key={label.id}
+              type="button"
+              ref={(element) => {
+                if (!firstButtonRef.current) {
+                  firstButtonRef.current = element;
+                }
+                if (label.id === currentLabelId) {
+                  currentButtonRef.current = element;
+                }
+              }}
+              aria-pressed={label.id === currentLabelId}
               onClick={() => onSetOverride(dateKey, label.id)}
               className={`rounded px-3 py-2 text-sm ${
                 label.id === currentLabelId
@@ -46,6 +64,7 @@ export function DayOverrideBar({
 
         {isOverride && (
           <button
+            type="button"
             onClick={() => onRemoveOverride(dateKey)}
             className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700"
           >
@@ -54,6 +73,7 @@ export function DayOverrideBar({
         )}
 
         <button
+          type="button"
           onClick={onClose}
           className="ml-auto rounded px-3 py-2 text-sm text-gray-500"
         >

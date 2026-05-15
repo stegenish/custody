@@ -57,8 +57,19 @@ export function formatDateKey(date: Date): string {
 }
 
 export function parseDateKey(key: string): Date {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+    throw new Error(`Invalid date key: ${key}`);
+  }
   const [y, m, d] = key.split("-").map(Number);
-  return new Date(y, m - 1, d);
+  const date = new Date(y, m - 1, d);
+  if (
+    date.getFullYear() !== y ||
+    date.getMonth() !== m - 1 ||
+    date.getDate() !== d
+  ) {
+    throw new Error(`Invalid date key: ${key}`);
+  }
+  return date;
 }
 
 export function getISOWeekNumber(date: Date): number {

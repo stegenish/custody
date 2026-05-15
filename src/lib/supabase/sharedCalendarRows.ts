@@ -138,7 +138,7 @@ function mapProposal(
       .filter((revision) => revision.proposal_id === row.id)
       .map(mapRevision),
     comments: comments
-      .filter((comment) => comment.proposal_id === row.id)
+      .filter((comment) => comment.proposal_id === row.id && !comment.deleted_at)
       .map(mapComment),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -166,6 +166,6 @@ export function mapSharedCalendarRows(
     proposalHistory: proposals.filter(
       (proposal) => proposal.status !== "draft" && proposal.status !== "sent"
     ),
-    notes: rows.notes.map(mapNote),
+    notes: rows.notes.filter((note) => !note.deleted_at).map(mapNote),
   };
 }

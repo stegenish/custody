@@ -30,6 +30,7 @@ describe("LocalCalendarApp", () => {
 
     expect(screen.getByText("Custody Calendar")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start Draft" })).toBeInTheDocument();
+    expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
   });
 
   it("starts and persists a draft proposal", () => {
@@ -55,11 +56,7 @@ describe("LocalCalendarApp", () => {
     render(<LocalCalendarApp today={new Date(2026, 2, 1)} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Start Draft" }));
-    const dayButton = screen
-      .getAllByRole("button")
-      .find((button) => button.textContent === "2");
-    if (!dayButton) throw new Error("March 2 button not found");
-    fireEvent.click(dayButton);
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
     fireEvent.click(within(screen.getByTestId("day-override-bar")).getByText("Dad"));
     fireEvent.click(screen.getByRole("button", { name: "Apply Draft Locally" }));
 

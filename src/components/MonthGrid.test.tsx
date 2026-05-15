@@ -77,8 +77,22 @@ describe("MonthGrid", () => {
     ]);
     const onClick = jest.fn();
     render(<MonthGrid month={month} colorMap={colorMap} onDayClick={onClick} />);
-    const buttons = screen.getAllByRole("button");
-    fireEvent.click(buttons[0]);
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    expect(onClick).toHaveBeenCalledWith("2026-03-02");
+  });
+
+  it("calls onDayClick for uncolored days", () => {
+    const onClick = jest.fn();
+    render(<MonthGrid month={month} colorMap={new Map()} onDayClick={onClick} />);
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    expect(onClick).toHaveBeenCalledWith("2026-03-02");
+  });
+
+  it("handles keyboard selection for days", () => {
+    const onClick = jest.fn();
+    render(<MonthGrid month={month} colorMap={new Map()} onDayClick={onClick} />);
+    const mar2 = screen.getByRole("button", { name: "2026-03-02" });
+    fireEvent.keyDown(mar2, { key: "Enter" });
     expect(onClick).toHaveBeenCalledWith("2026-03-02");
   });
 

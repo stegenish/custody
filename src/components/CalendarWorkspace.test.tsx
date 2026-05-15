@@ -20,11 +20,7 @@ const scheduleData: ScheduleData = {
 
 describe("CalendarWorkspace", () => {
   function clickMarchSecond() {
-    const dayButton = screen
-      .getAllByRole("button")
-      .find((button) => button.textContent === "2");
-    if (!dayButton) throw new Error("March 2 button not found");
-    fireEvent.click(dayButton);
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
   }
 
   it("renders the title, editor, and calendar", () => {
@@ -59,6 +55,39 @@ describe("CalendarWorkspace", () => {
     expect(within(overrideBar).getByText("2026-03-02")).toBeInTheDocument();
   });
 
+  it("opens the override bar for uncolored days in editable mode", () => {
+    render(
+      <CalendarWorkspace
+        title="Custody Calendar"
+        today={new Date(2026, 2, 1)}
+        scheduleData={{ ...scheduleData, schedules: [] }}
+        onUpdateScheduleData={jest.fn()}
+      />
+    );
+
+    clickMarchSecond();
+
+    expect(screen.getByTestId("day-override-bar")).toBeInTheDocument();
+  });
+
+  it("can render read-only without editor or override bar", () => {
+    render(
+      <CalendarWorkspace
+        title="Custody Calendar"
+        today={new Date(2026, 2, 1)}
+        scheduleData={scheduleData}
+        readOnly
+        onUpdateScheduleData={jest.fn()}
+      />
+    );
+
+    expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "2026-03-02" })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("day-override-bar")).not.toBeInTheDocument();
+  });
+
   it("applies day override updates", () => {
     const onUpdate = jest.fn();
     render(
@@ -71,7 +100,9 @@ describe("CalendarWorkspace", () => {
     );
 
     clickMarchSecond();
-    fireEvent.click(within(screen.getByTestId("day-override-bar")).getByText("Dad"));
+    fireEvent.click(
+      within(screen.getByTestId("day-override-bar")).getByText("Dad")
+    );
 
     expect(onUpdate).toHaveBeenCalledWith({
       ...scheduleData,

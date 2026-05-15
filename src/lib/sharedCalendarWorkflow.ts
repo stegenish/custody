@@ -351,6 +351,9 @@ export function updateProposalComment(
   if (comment.authorParentId !== authorParentId) {
     throw new Error("Only the author can edit this comment");
   }
+  if (comment.deletedAt) {
+    throw new Error("Deleted comments cannot be edited");
+  }
 
   return replaceProposal(state, {
     ...proposal,

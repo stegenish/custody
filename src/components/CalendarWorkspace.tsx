@@ -15,6 +15,7 @@ interface CalendarWorkspaceProps {
   scheduleData: ScheduleData;
   changedDateKeys?: Set<string>;
   toolbar?: ReactNode;
+  readOnly?: boolean;
   onUpdateScheduleData: (data: ScheduleData) => void;
 }
 
@@ -35,6 +36,7 @@ export function CalendarWorkspace({
   scheduleData,
   changedDateKeys,
   toolbar,
+  readOnly = false,
   onUpdateScheduleData,
 }: CalendarWorkspaceProps) {
   const calendar = useMemo(() => generateCalendar(today), [today]);
@@ -51,21 +53,23 @@ export function CalendarWorkspace({
         {title}
       </h1>
       {toolbar}
-      <ScheduleEditor
-        scheduleData={scheduleData}
-        onUpdateScheduleData={onUpdateScheduleData}
-      />
+      {!readOnly && (
+        <ScheduleEditor
+          scheduleData={scheduleData}
+          onUpdateScheduleData={onUpdateScheduleData}
+        />
+      )}
       <CalendarGrid
         months={calendar}
         colorMap={colorMap}
         changedDateKeys={changedDateKeys}
-        onDayClick={setSelectedDate}
+        onDayClick={readOnly ? undefined : setSelectedDate}
       />
-      {selectedDate && selectedDayColor && (
+      {!readOnly && selectedDate && (
         <DayOverrideBar
           dateKey={selectedDate}
-          currentLabelId={selectedDayColor.label.id}
-          isOverride={selectedDayColor.isOverride}
+          currentLabelId={selectedDayColor?.label.id ?? null}
+          isOverride={selectedDayColor?.isOverride ?? false}
           labels={scheduleData.labels}
           onSetOverride={(date, labelId) =>
             onUpdateScheduleData(setDayOverride(scheduleData, date, labelId))

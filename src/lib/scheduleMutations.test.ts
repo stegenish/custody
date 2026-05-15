@@ -47,6 +47,18 @@ describe("validateSchedule", () => {
     );
   });
 
+  it("returns error when start date is invalid", () => {
+    expect(validateSchedule("not-a-date", 2, ["a", "b"], labels)).toBe(
+      "Start date must be a valid YYYY-MM-DD date"
+    );
+  });
+
+  it("returns error when cycle weeks is invalid", () => {
+    expect(validateSchedule("2026-03-02", 4, ["a", "b"], labels)).toBe(
+      "Cycle must be 1, 2, or 3 weeks"
+    );
+  });
+
   it("returns null for valid inputs", () => {
     expect(validateSchedule("2026-03-02", 2, ["a", "b"], labels)).toBeNull();
   });
@@ -109,6 +121,16 @@ describe("addSchedule", () => {
     expect(data.schedules).toHaveLength(2);
     expect(data.schedules[0].startDate).toBe("2026-03-02");
     expect(data.schedules[1].startDate).toBe("2026-06-01");
+  });
+
+  it("throws for invalid schedule input", () => {
+    let data = addLabel(emptyData(), "Mom", "#bbf7d0");
+    data = addLabel(data, "Dad", "#fef08a");
+    const [momId] = data.labels.map((l) => l.id);
+
+    expect(() =>
+      addSchedule(data, "2026-03-02", 2, [momId, momId])
+    ).toThrow("Labels must be different");
   });
 });
 

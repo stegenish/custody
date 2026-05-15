@@ -179,4 +179,60 @@ describe("mapSharedCalendarRows", () => {
     expect(state.draftProposals[0].comments[0].date).toBe("2026-06-01");
     expect(state.notes[0].date).toBe("2026-06-02");
   });
+
+  it("hides soft-deleted comments and notes from normal state", () => {
+    const state = mapSharedCalendarRows({
+      ...baseRows,
+      proposals: [
+        {
+          id: "draft-1",
+          status: "draft",
+          created_by_user_id: "parent-a",
+          current_author_user_id: "parent-a",
+          receiver_user_id: null,
+          base_calendar_version: 2,
+          current_revision_id: "rev-1",
+          created_at: "2026-05-15T12:00:00.000Z",
+          updated_at: "2026-05-15T12:00:00.000Z",
+        },
+      ],
+      revisions: [
+        {
+          id: "rev-1",
+          proposal_id: "draft-1",
+          revision_number: 1,
+          author_user_id: "parent-a",
+          base_calendar_version: 2,
+          schedule_data: baseRows.latestCalendarVersion.schedule_data,
+          created_at: "2026-05-15T12:00:00.000Z",
+        },
+      ],
+      comments: [
+        {
+          id: "comment-1",
+          proposal_id: "draft-1",
+          author_user_id: "parent-a",
+          date_key: "2026-06-01",
+          body: "Deleted comment",
+          created_at: "2026-05-15T12:00:00.000Z",
+          updated_at: "2026-05-15T12:00:00.000Z",
+          deleted_at: "2026-05-16T12:00:00.000Z",
+        },
+      ],
+      notes: [
+        {
+          id: "note-1",
+          author_user_id: "parent-b",
+          date_key: "2026-06-02",
+          body: "Deleted note",
+          created_at: "2026-05-15T12:00:00.000Z",
+          updated_at: "2026-05-15T12:00:00.000Z",
+          deleted_at: "2026-05-16T12:00:00.000Z",
+        },
+      ],
+    });
+
+    expect(state.draftProposals[0].comments).toEqual([]);
+    expect(state.notes).toEqual([]);
+  });
 });
