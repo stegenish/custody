@@ -236,7 +236,7 @@ describe("generateCalendar", () => {
     const jan1 = allDays.find(
       (d) => d.isCurrentMonth && d.dayOfMonth === 1
     );
-    expect(jan1?.isHoliday).toBe(true);
+    expect(jan1?.isRedDay).toBe(true);
   });
 
   it("marks Bodo school holidays", () => {
@@ -258,15 +258,15 @@ describe("generateCalendar", () => {
   });
 });
 
-// --- isHoliday in generateMonthGrid ---
+// --- isRedDay in generateMonthGrid ---
 
-describe("generateMonthGrid isHoliday", () => {
+describe("generateMonthGrid isRedDay", () => {
   const today = new Date(2026, 2, 1);
 
   it("defaults to false when no holidays param is provided", () => {
     const grid = generateMonthGrid(2026, 2, today);
     const allDays = grid.weeks.flatMap((w) => w.days);
-    expect(allDays.every((d) => d.isHoliday === false)).toBe(true);
+    expect(allDays.every((d) => d.isRedDay === false)).toBe(true);
     expect(allDays.every((d) => d.isSchoolHoliday === false)).toBe(true);
   });
 
@@ -277,7 +277,7 @@ describe("generateMonthGrid isHoliday", () => {
     const mar1 = allDays.find(
       (d) => d.isCurrentMonth && d.dayOfMonth === 1
     );
-    expect(mar1?.isHoliday).toBe(true);
+    expect(mar1?.isRedDay).toBe(true);
   });
 
   it("does not mark non-holiday days", () => {
@@ -287,7 +287,7 @@ describe("generateMonthGrid isHoliday", () => {
     const mar2 = allDays.find(
       (d) => d.isCurrentMonth && d.dayOfMonth === 2
     );
-    expect(mar2?.isHoliday).toBe(false);
+    expect(mar2?.isRedDay).toBe(false);
   });
 
   it("marks matching school holidays when school holiday set is provided", () => {

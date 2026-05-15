@@ -63,11 +63,11 @@ function dayCellClassName(
 ): string {
   const dateClass = day.isToday
     ? `rounded-full ring-2 ring-blue-600 font-bold ${
-        day.isHoliday ? "text-red-600" : ""
+        day.isRedDay ? "text-red-600" : ""
       }`
     : !day.isCurrentMonth
       ? "opacity-30"
-      : day.isHoliday
+      : day.isRedDay
         ? "text-red-600"
         : "text-gray-700";
   return `relative text-center tabular-nums ${

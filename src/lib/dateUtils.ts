@@ -8,7 +8,7 @@ export interface CalendarDay {
   dayOfMonth: number;
   isToday: boolean;
   isCurrentMonth: boolean;
-  isHoliday: boolean;
+  isRedDay: boolean;
   isSchoolHoliday: boolean;
 }
 
@@ -122,7 +122,7 @@ export function generateMonthGrid(
         dayOfMonth: cursor.getDate(),
         isToday: isSameDay(cursor, today),
         isCurrentMonth: cursor.getMonth() === month,
-        isHoliday: holidays ? holidays.has(formatDateKey(cursor)) : false,
+        isRedDay: holidays ? holidays.has(formatDateKey(cursor)) : false,
         isSchoolHoliday: schoolHolidays
           ? schoolHolidays.has(formatDateKey(cursor))
           : false,
