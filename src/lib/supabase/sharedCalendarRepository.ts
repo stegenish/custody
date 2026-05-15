@@ -22,8 +22,8 @@ interface QueryBuilder<T> extends PromiseLike<SupabaseResult<T>> {
   single(): Promise<SupabaseResult<T>>;
 }
 
-interface SharedCalendarSupabaseClient {
-  from<T>(table: string): QueryBuilder<T>;
+export interface SharedCalendarSupabaseClient {
+  from<T>(table: string): { select(columns?: string): QueryBuilder<T> };
 }
 
 async function loadProposalChildren(

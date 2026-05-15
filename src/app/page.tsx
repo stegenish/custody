@@ -1,20 +1,36 @@
-"use client";
+import { redirect } from "next/navigation";
+import { LocalCalendarShell } from "@/components/LocalCalendarShell";
+import { SharedCalendarApp } from "@/components/SharedCalendarApp";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
+import { getMyGroupId } from "@/lib/supabase/onboarding";
+import {
+  loadSharedCalendarState,
+  type SharedCalendarSupabaseClient,
+} from "@/lib/supabase/sharedCalendarRepository";
+import { createClient } from "@/lib/supabase/server";
 
-import { useEffect, useMemo, useState } from "react";
-import { LocalCalendarApp } from "@/components/LocalCalendarApp";
+export default async function Home() {
+  if (!hasSupabaseEnv()) {
+    return <LocalCalendarShell />;
+  }
 
-export default function Home() {
-  const [today, setToday] = useState<Date | null>(null);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setToday(new Date()), 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
+  if (!user) {
+    redirect("/login?next=/");
+  }
 
-  const workspace = useMemo(() => {
-    if (!today) return null;
-    return <LocalCalendarApp today={today} />;
-  }, [today]);
+  const groupId = await getMyGroupId(supabase);
+  if (!groupId) {
+    redirect("/onboarding");
+  }
 
-  return workspace;
+  const state = await loadSharedCalendarState(
+    supabase as unknown as SharedCalendarSupabaseClient,
+    groupId
+  );
+  return <SharedCalendarApp state={state} />;
 }
