@@ -7,6 +7,7 @@ import {
   createSharedDraftProposal,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
+  withdrawSharedProposal,
 } from "@/lib/supabase/sharedCalendarRepository";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,6 +20,17 @@ function parseScheduleData(value: FormDataEntryValue | null): ScheduleData {
     throw new Error("Invalid schedule data");
   }
   return parsed as ScheduleData;
+}
+
+function requireFormString(
+  formData: FormData,
+  fieldName: string
+): string {
+  const value = formData.get(fieldName);
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`Missing ${fieldName}`);
+  }
+  return value;
 }
 
 export async function startSharedDraftProposal(): Promise<void> {
@@ -47,6 +59,25 @@ export async function saveSharedDraftProposalAction(
     supabase,
     groupId,
     parseScheduleData(formData.get("scheduleData"))
+  );
+  redirect("/");
+}
+
+export async function withdrawSharedProposalAction(
+  formData: FormData
+): Promise<void> {
+  const supabase = await createClient();
+  const groupId = await getMyGroupId(supabase);
+
+  if (!groupId) {
+    redirect("/onboarding");
+  }
+
+  await withdrawSharedProposal(
+    supabase,
+    groupId,
+    requireFormString(formData, "proposalId"),
+    requireFormString(formData, "revisionId")
   );
   redirect("/");
 }

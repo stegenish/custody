@@ -5,6 +5,7 @@ import {
   saveSharedDraftProposalAction,
   sendSharedDraftProposalAction,
   startSharedDraftProposal,
+  withdrawSharedProposalAction,
 } from "@/app/proposals/actions";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { getMyGroupId } from "@/lib/supabase/onboarding";
@@ -45,6 +46,7 @@ export default async function Home() {
       startDraftAction={startSharedDraftProposal}
       saveDraftAction={saveSharedDraftProposalAction}
       sendDraftAction={sendSharedDraftProposalAction}
+      withdrawProposalAction={withdrawSharedProposalAction}
     />
   );
 }

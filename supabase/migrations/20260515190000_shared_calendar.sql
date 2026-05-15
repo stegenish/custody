@@ -74,6 +74,17 @@ create table if not exists public.proposal_revisions (
   unique (proposal_id, revision_number)
 );
 
+create table if not exists public.proposal_status_events (
+  id uuid primary key default gen_random_uuid(),
+  proposal_id uuid not null references public.proposals(id) on delete cascade,
+  status text not null check (
+    status in ('draft', 'sent', 'withdrawn', 'rejected', 'countered', 'accepted')
+  ),
+  actor_user_id uuid references auth.users(id) on delete set null,
+  revision_id uuid references public.proposal_revisions(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
 alter table public.proposals
   add constraint proposals_current_revision_fk
   foreign key (current_revision_id)
@@ -108,6 +119,7 @@ alter table public.group_invites enable row level security;
 alter table public.calendar_versions enable row level security;
 alter table public.proposals enable row level security;
 alter table public.proposal_revisions enable row level security;
+alter table public.proposal_status_events enable row level security;
 alter table public.proposal_comments enable row level security;
 alter table public.shared_date_notes enable row level security;
 
@@ -192,6 +204,16 @@ create policy "parents can read proposal revisions"
     exists (
       select 1 from public.proposals
       where proposals.id = proposal_revisions.proposal_id
+        and public.is_group_parent(proposals.group_id)
+    )
+  );
+
+create policy "parents can read proposal status events"
+  on public.proposal_status_events for select
+  using (
+    exists (
+      select 1 from public.proposals
+      where proposals.id = proposal_status_events.proposal_id
         and public.is_group_parent(proposals.group_id)
     )
   );
@@ -705,7 +727,96 @@ begin
       updated_at = now()
   where id = draft_proposal.id;
 
+  insert into public.proposal_status_events (
+    proposal_id,
+    status,
+    actor_user_id,
+    revision_id
+  )
+  values (
+    draft_proposal.id,
+    'sent',
+    current_user_id,
+    created_revision_id
+  );
+
   return draft_proposal.id;
+end;
+$$;
+
+create or replace function public.withdraw_active_proposal(
+  target_group_id uuid,
+  target_proposal_id uuid,
+  viewed_revision_id uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  active_proposal public.proposals%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select *
+    into active_proposal
+  from public.proposals
+  where id = target_proposal_id
+    and group_id = target_group_id
+    and status = 'sent'
+  limit 1;
+
+  if active_proposal.id is null then
+    raise exception 'No active proposal to withdraw';
+  end if;
+
+  if active_proposal.current_author_user_id <> current_user_id then
+    raise exception 'Only the current sender can withdraw this proposal';
+  end if;
+
+  if active_proposal.current_revision_id <> viewed_revision_id then
+    raise exception 'Proposal changed since it was viewed';
+  end if;
+
+  if exists (
+    select 1
+    from public.proposals
+    where group_id = target_group_id
+      and status = 'draft'
+      and current_author_user_id = current_user_id
+      and id <> target_proposal_id
+  ) then
+    raise exception 'Parent already has a draft proposal';
+  end if;
+
+  insert into public.proposal_status_events (
+    proposal_id,
+    status,
+    actor_user_id,
+    revision_id
+  )
+  values (
+    active_proposal.id,
+    'withdrawn',
+    current_user_id,
+    viewed_revision_id
+  );
+
+  update public.proposals
+  set status = 'draft',
+      receiver_user_id = null,
+      updated_at = now()
+  where id = active_proposal.id;
+
+  return active_proposal.id;
 end;
 $$;
 
@@ -716,3 +827,4 @@ grant execute on function public.join_group_with_invite(text) to authenticated;
 grant execute on function public.create_draft_proposal(uuid) to authenticated;
 grant execute on function public.save_draft_proposal(uuid, jsonb) to authenticated;
 grant execute on function public.send_draft_proposal(uuid, jsonb) to authenticated;
+grant execute on function public.withdraw_active_proposal(uuid, uuid, uuid) to authenticated;

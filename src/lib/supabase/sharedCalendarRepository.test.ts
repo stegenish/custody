@@ -3,6 +3,7 @@ import {
   loadSharedCalendarState,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
+  withdrawSharedProposal,
 } from "./sharedCalendarRepository";
 
 function createQueryBuilder(result: unknown) {
@@ -314,5 +315,46 @@ describe("sendSharedDraftProposal", () => {
         overrides: [],
       })
     ).rejects.toThrow("There is already an active proposal");
+  });
+});
+
+describe("withdrawSharedProposal", () => {
+  it("withdraws the current active proposal back to a draft", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "proposal-1", error: null }),
+    };
+
+    await expect(
+      withdrawSharedProposal(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "revision-1"
+      )
+    ).resolves.toBe("proposal-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("withdraw_active_proposal", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      viewed_revision_id: "revision-1",
+    });
+  });
+
+  it("throws withdraw errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Only the current sender can withdraw this proposal" },
+      }),
+    };
+
+    await expect(
+      withdrawSharedProposal(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "revision-1"
+      )
+    ).rejects.toThrow("Only the current sender can withdraw this proposal");
   });
 });

@@ -169,3 +169,17 @@ export async function sendSharedDraftProposal(
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to send draft proposal");
 }
+
+export async function withdrawSharedProposal(
+  supabase: RpcClient,
+  groupId: string,
+  proposalId: string,
+  revisionId: string
+): Promise<string> {
+  const result = (await supabase.rpc("withdraw_active_proposal", {
+    target_group_id: groupId,
+    target_proposal_id: proposalId,
+    viewed_revision_id: revisionId,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to withdraw proposal");
+}
