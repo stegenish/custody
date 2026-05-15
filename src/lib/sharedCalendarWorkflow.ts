@@ -414,6 +414,9 @@ export function updateSharedDateNote(
   if (note.authorParentId !== authorParentId) {
     throw new Error("Only the author can edit this note");
   }
+  if (note.deletedAt) {
+    throw new Error("Deleted notes cannot be edited");
+  }
 
   return {
     ...state,

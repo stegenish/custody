@@ -277,4 +277,21 @@ describe("shared date notes", () => {
       deleteSharedDateNote(state, state.notes[0].id, "parent-b", ctx)
     ).toThrow("Only the author can delete this note");
   });
+
+  it("prevents editing a deleted note", () => {
+    const ctx = makeContext();
+    let state = addSharedDateNote(
+      makeState(),
+      "parent-a",
+      "2026-06-01",
+      "School event",
+      ctx
+    );
+    const noteId = state.notes[0].id;
+    state = deleteSharedDateNote(state, noteId, "parent-a", ctx);
+
+    expect(() =>
+      updateSharedDateNote(state, noteId, "parent-a", "Updated", ctx)
+    ).toThrow("Deleted notes cannot be edited");
+  });
 });

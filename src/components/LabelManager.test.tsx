@@ -38,6 +38,23 @@ describe("LabelManager", () => {
     expect(onAdd).toHaveBeenCalledWith("Mom", expect.any(String));
   });
 
+  it("shows a validation error instead of adding an invalid label", () => {
+    const onAdd = jest.fn();
+    render(
+      <LabelManager
+        labels={[]}
+        onAddLabel={onAdd}
+        onUpdateLabel={jest.fn()}
+        onDeleteLabel={jest.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByText("Add Label"));
+
+    expect(onAdd).not.toHaveBeenCalled();
+    expect(screen.getByText("Label name is required")).toBeInTheDocument();
+  });
+
   it("calls onDeleteLabel when delete button is clicked", () => {
     const onDelete = jest.fn();
     render(
@@ -70,5 +87,26 @@ describe("LabelManager", () => {
     fireEvent.change(nameInput, { target: { value: "Mother" } });
     fireEvent.click(screen.getByText("Save"));
     expect(onUpdate).toHaveBeenCalledWith("1", "Mother", expect.any(String));
+  });
+
+  it("shows a validation error instead of saving an invalid edit", () => {
+    const onUpdate = jest.fn();
+    render(
+      <LabelManager
+        labels={labels}
+        onAddLabel={jest.fn()}
+        onUpdateLabel={onUpdate}
+        onDeleteLabel={jest.fn()}
+      />
+    );
+    fireEvent.click(screen.getAllByText("Edit")[0]);
+
+    fireEvent.change(screen.getByDisplayValue("Mom"), {
+      target: { value: " " },
+    });
+    fireEvent.click(screen.getByText("Save"));
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    expect(screen.getByText("Label name is required")).toBeInTheDocument();
   });
 });

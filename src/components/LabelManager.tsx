@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { CustodyLabel } from "@/lib/scheduleTypes";
+import { validateLabel } from "@/lib/scheduleMutations";
 
 interface LabelManagerProps {
   labels: CustodyLabel[];
@@ -21,24 +22,37 @@ export function LabelManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   function handleAdd() {
-    if (!newName.trim()) return;
-    onAddLabel(newName.trim(), newColor);
+    const validationError = validateLabel(newName, newColor);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    onAddLabel(newName.trim(), newColor.trim());
     setNewName("");
     setNewColor(DEFAULT_COLOR);
+    setError(null);
   }
 
   function startEdit(label: CustodyLabel) {
     setEditingId(label.id);
     setEditName(label.name);
     setEditColor(label.color);
+    setError(null);
   }
 
   function handleSave() {
-    if (!editingId || !editName.trim()) return;
-    onUpdateLabel(editingId, editName.trim(), editColor);
+    if (!editingId) return;
+    const validationError = validateLabel(editName, editColor);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    onUpdateLabel(editingId, editName.trim(), editColor.trim());
     setEditingId(null);
+    setError(null);
   }
 
   return (
@@ -126,6 +140,7 @@ export function LabelManager({
           Add Label
         </button>
       </div>
+      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
     </div>
   );
 }

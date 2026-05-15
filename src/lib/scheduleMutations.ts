@@ -10,6 +10,17 @@ export function validateLabel(name: string, color: string): string | null {
   return null;
 }
 
+function normalizeLabelInput(name: string, color: string): {
+  name: string;
+  color: string;
+} {
+  const validationError = validateLabel(name, color);
+  if (validationError) {
+    throw new Error(validationError);
+  }
+  return { name: name.trim(), color: color.trim() };
+}
+
 export function validateSchedule(
   startDate: string,
   cycleWeeks: number,
@@ -39,10 +50,10 @@ export function addLabel(
   name: string,
   color: string
 ): ScheduleData {
+  const labelInput = normalizeLabelInput(name, color);
   const newLabel: CustodyLabel = {
     id: crypto.randomUUID(),
-    name,
-    color,
+    ...labelInput,
   };
   return { ...data, labels: [...data.labels, newLabel] };
 }
@@ -53,10 +64,11 @@ export function updateLabel(
   name: string,
   color: string
 ): ScheduleData {
+  const labelInput = normalizeLabelInput(name, color);
   return {
     ...data,
     labels: data.labels.map((l) =>
-      l.id === id ? { ...l, name, color } : l
+      l.id === id ? { ...l, ...labelInput } : l
     ),
   };
 }

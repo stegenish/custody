@@ -80,6 +80,15 @@ describe("addLabel", () => {
     expect(data.labels).toHaveLength(0);
     expect(result).not.toBe(data);
   });
+
+  it("throws for invalid label input", () => {
+    expect(() => addLabel(emptyData(), "", "#bbf7d0")).toThrow(
+      "Label name is required"
+    );
+    expect(() => addLabel(emptyData(), "Mom", "")).toThrow(
+      "Color is required"
+    );
+  });
 });
 
 describe("updateLabel", () => {
@@ -89,6 +98,14 @@ describe("updateLabel", () => {
     data = updateLabel(data, id, "Mother", "#00ff00");
     expect(data.labels[0].name).toBe("Mother");
     expect(data.labels[0].color).toBe("#00ff00");
+  });
+
+  it("throws for invalid label updates", () => {
+    const data = addLabel(emptyData(), "Mom", "#bbf7d0");
+
+    expect(() => updateLabel(data, data.labels[0].id, "", "#00ff00")).toThrow(
+      "Label name is required"
+    );
   });
 });
 
