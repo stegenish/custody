@@ -1,6 +1,9 @@
 import {
+  clearDraftScheduleData,
   createDefaultScheduleData,
+  loadDraftScheduleData,
   loadScheduleData,
+  saveDraftScheduleData,
   saveScheduleData,
 } from "./storage";
 import type { ScheduleData } from "./scheduleTypes";
@@ -43,5 +46,28 @@ describe("saveScheduleData + loadScheduleData", () => {
     };
     saveScheduleData(data);
     expect(loadScheduleData()).toEqual(data);
+  });
+});
+
+describe("draft schedule storage", () => {
+  const data: ScheduleData = {
+    labels: [{ id: "1", name: "Mom", color: "#bbf7d0" }],
+    schedules: [],
+    overrides: [{ date: "2026-03-01", labelId: "1" }],
+  };
+
+  it("returns null when no draft exists", () => {
+    expect(loadDraftScheduleData()).toBeNull();
+  });
+
+  it("round-trips a draft", () => {
+    saveDraftScheduleData(data);
+    expect(loadDraftScheduleData()).toEqual(data);
+  });
+
+  it("clears a draft", () => {
+    saveDraftScheduleData(data);
+    clearDraftScheduleData();
+    expect(loadDraftScheduleData()).toBeNull();
   });
 });
