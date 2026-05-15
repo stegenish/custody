@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv, hasSupabaseEnv } from "./env";
+import { getLoginRedirectUrl, isProtectedPath } from "./middlewareRoutes";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -27,7 +28,13 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user && isProtectedPath(request.nextUrl.pathname)) {
+    return NextResponse.redirect(getLoginRedirectUrl(request.nextUrl));
+  }
 
   return response;
 }
