@@ -58,4 +58,14 @@ describe("CalendarGrid", () => {
     fireEvent.click(buttons[0]);
     expect(onClick).toHaveBeenCalledWith("2026-03-02");
   });
+
+  it("passes changed date keys through to MonthGrid children", () => {
+    render(
+      <CalendarGrid
+        months={calendar}
+        changedDateKeys={new Set(["2026-03-02"])}
+      />
+    );
+    expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
+  });
 });

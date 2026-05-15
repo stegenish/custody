@@ -1,4 +1,5 @@
 import { getHolidaySet } from "./holidays";
+import { getBodoSchoolHolidaySet } from "./schoolHolidays";
 
 export interface CalendarDay {
   date: Date;
@@ -6,6 +7,7 @@ export interface CalendarDay {
   isToday: boolean;
   isCurrentMonth: boolean;
   isHoliday: boolean;
+  isSchoolHoliday: boolean;
 }
 
 export interface CalendarWeek {
@@ -100,7 +102,8 @@ export function generateMonthGrid(
   year: number,
   month: number,
   today: Date,
-  holidays?: Set<string>
+  holidays?: Set<string>,
+  schoolHolidays?: Set<string>
 ): CalendarMonth {
   const firstOfMonth = new Date(year, month, 1);
   const lastOfMonth = new Date(year, month + 1, 0);
@@ -130,6 +133,9 @@ export function generateMonthGrid(
         isToday: isSameDay(cursor, today),
         isCurrentMonth: cursor.getMonth() === month,
         isHoliday: holidays ? holidays.has(formatDateKey(cursor)) : false,
+        isSchoolHoliday: schoolHolidays
+          ? schoolHolidays.has(formatDateKey(cursor))
+          : false,
       });
       cursor.setDate(cursor.getDate() + 1);
     }
@@ -152,7 +158,8 @@ export function generateCalendar(today: Date): CalendarMonth[] {
   const months = getMonthRange(today);
   const years = [...new Set(months.map((m) => m.year))];
   const holidays = getHolidaySet(years);
+  const schoolHolidays = getBodoSchoolHolidaySet(years);
   return months.map(({ year, month }) =>
-    generateMonthGrid(year, month, today, holidays)
+    generateMonthGrid(year, month, today, holidays, schoolHolidays)
   );
 }

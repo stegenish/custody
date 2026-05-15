@@ -18,10 +18,16 @@ function cellStyle(dayColor?: DayColorResult): CSSProperties | undefined {
 interface MonthGridProps {
   month: CalendarMonth;
   colorMap?: Map<string, DayColorResult>;
+  changedDateKeys?: Set<string>;
   onDayClick?: (dateKey: string) => void;
 }
 
-export function MonthGrid({ month, colorMap, onDayClick }: MonthGridProps) {
+export function MonthGrid({
+  month,
+  colorMap,
+  changedDateKeys,
+  onDayClick,
+}: MonthGridProps) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3">
       <h2 className="mb-2 text-center text-sm font-semibold">
@@ -58,6 +64,7 @@ export function MonthGrid({ month, colorMap, onDayClick }: MonthGridProps) {
                 const dateKey = formatDateKey(day.date);
                 const dayColor = colorMap?.get(dateKey);
                 const clickable = dayColor && onDayClick;
+                const isChanged = changedDateKeys?.has(dateKey) ?? false;
 
                 return (
                   <td
@@ -76,7 +83,7 @@ export function MonthGrid({ month, colorMap, onDayClick }: MonthGridProps) {
                         : undefined
                     }
                     style={cellStyle(dayColor)}
-                    className={`text-center tabular-nums ${
+                    className={`relative text-center tabular-nums ${
                       clickable ? "cursor-pointer" : ""
                     } ${
                       isToday
@@ -88,7 +95,19 @@ export function MonthGrid({ month, colorMap, onDayClick }: MonthGridProps) {
                             : "text-gray-700"
                     }`}
                   >
-                    {day.dayOfMonth}
+                      {day.dayOfMonth}
+                    {day.isCurrentMonth && day.isSchoolHoliday && (
+                      <span
+                        data-testid="school-holiday-indicator"
+                        className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
+                      />
+                    )}
+                    {day.isCurrentMonth && isChanged && (
+                      <span
+                        data-testid="proposal-change-indicator"
+                        className="absolute inset-0 rounded-sm ring-2 ring-inset ring-gray-900/40"
+                      />
+                    )}
                   </td>
                 );
               })}

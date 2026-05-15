@@ -5,10 +5,16 @@ import { MonthGrid } from "./MonthGrid";
 interface CalendarGridProps {
   months: CalendarMonth[];
   colorMap?: Map<string, DayColorResult>;
+  changedDateKeys?: Set<string>;
   onDayClick?: (dateKey: string) => void;
 }
 
-export function CalendarGrid({ months, colorMap, onDayClick }: CalendarGridProps) {
+export function CalendarGrid({
+  months,
+  colorMap,
+  changedDateKeys,
+  onDayClick,
+}: CalendarGridProps) {
   return (
     <div
       data-testid="calendar-grid"
@@ -19,6 +25,7 @@ export function CalendarGrid({ months, colorMap, onDayClick }: CalendarGridProps
           key={`${month.year}-${month.month}`}
           month={month}
           colorMap={colorMap}
+          changedDateKeys={changedDateKeys}
           onDayClick={onDayClick}
         />
       ))}

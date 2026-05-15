@@ -8,7 +8,6 @@ import {
   generateMonthGrid,
   generateCalendar,
 } from "./dateUtils";
-import { getHolidaySet } from "./holidays";
 
 // --- isSameDay ---
 
@@ -229,6 +228,16 @@ describe("generateCalendar", () => {
     );
     expect(jan1?.isHoliday).toBe(true);
   });
+
+  it("marks Bodo school holidays", () => {
+    const calendar = generateCalendar(new Date(2026, 2, 1));
+    const march = calendar[3];
+    const allDays = march.weeks.flatMap((w) => w.days);
+    const mar2 = allDays.find(
+      (d) => d.isCurrentMonth && d.dayOfMonth === 2
+    );
+    expect(mar2?.isSchoolHoliday).toBe(true);
+  });
 });
 
 // --- isHoliday in generateMonthGrid ---
@@ -240,6 +249,7 @@ describe("generateMonthGrid isHoliday", () => {
     const grid = generateMonthGrid(2026, 2, today);
     const allDays = grid.weeks.flatMap((w) => w.days);
     expect(allDays.every((d) => d.isHoliday === false)).toBe(true);
+    expect(allDays.every((d) => d.isSchoolHoliday === false)).toBe(true);
   });
 
   it("marks matching days as holidays when holidays set is provided", () => {
@@ -260,5 +270,20 @@ describe("generateMonthGrid isHoliday", () => {
       (d) => d.isCurrentMonth && d.dayOfMonth === 2
     );
     expect(mar2?.isHoliday).toBe(false);
+  });
+
+  it("marks matching school holidays when school holiday set is provided", () => {
+    const grid = generateMonthGrid(
+      2026,
+      2,
+      today,
+      new Set(),
+      new Set(["2026-03-02"])
+    );
+    const allDays = grid.weeks.flatMap((w) => w.days);
+    const mar2 = allDays.find(
+      (d) => d.isCurrentMonth && d.dayOfMonth === 2
+    );
+    expect(mar2?.isSchoolHoliday).toBe(true);
   });
 });

@@ -128,4 +128,26 @@ describe("MonthGrid", () => {
     const feb23 = otherCells.find((c) => c.textContent === "23");
     expect(feb23?.className).not.toContain("text-red-600");
   });
+
+  it("renders a separate school holiday indicator", () => {
+    const monthWithSchoolHoliday = generateMonthGrid(
+      2026,
+      2,
+      today,
+      new Set(),
+      new Set(["2026-03-02"])
+    );
+    render(<MonthGrid month={monthWithSchoolHoliday} />);
+    expect(screen.getByTestId("school-holiday-indicator")).toBeInTheDocument();
+  });
+
+  it("renders a proposal change indicator for changed dates", () => {
+    render(
+      <MonthGrid
+        month={month}
+        changedDateKeys={new Set(["2026-03-02"])}
+      />
+    );
+    expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
+  });
 });

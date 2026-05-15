@@ -14,7 +14,8 @@ export default function Home() {
   const [today, setToday] = useState<Date | null>(null);
 
   useEffect(() => {
-    setToday(new Date());
+    const timeoutId = window.setTimeout(() => setToday(new Date()), 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const calendar = useMemo(
