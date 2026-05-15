@@ -2,6 +2,7 @@ import {
   createSharedDraftProposal,
   loadSharedCalendarState,
   saveSharedDraftProposal,
+  sendSharedDraftProposal,
 } from "./sharedCalendarRepository";
 
 function createQueryBuilder(result: unknown) {
@@ -274,5 +275,44 @@ describe("saveSharedDraftProposal", () => {
         overrides: [],
       })
     ).rejects.toThrow("Draft proposal not found");
+  });
+});
+
+describe("sendSharedDraftProposal", () => {
+  it("sends the current draft proposal to the other parent", async () => {
+    const scheduleData = {
+      labels: [],
+      schedules: [],
+      overrides: [{ date: "2026-06-01", labelId: "dad" }],
+    };
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "proposal-1", error: null }),
+    };
+
+    await expect(
+      sendSharedDraftProposal(supabase, "group-1", scheduleData)
+    ).resolves.toBe("proposal-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("send_draft_proposal", {
+      target_group_id: "group-1",
+      proposed_schedule_data: scheduleData,
+    });
+  });
+
+  it("throws send errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "There is already an active proposal" },
+      }),
+    };
+
+    await expect(
+      sendSharedDraftProposal(supabase, "group-1", {
+        labels: [],
+        schedules: [],
+        overrides: [],
+      })
+    ).rejects.toThrow("There is already an active proposal");
   });
 });

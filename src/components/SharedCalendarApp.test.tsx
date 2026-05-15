@@ -104,6 +104,7 @@ describe("SharedCalendarApp", () => {
         state={stateWithDraft}
         currentParentId="parent-a"
         saveDraftAction={jest.fn()}
+        sendDraftAction={jest.fn()}
       />
     );
 
@@ -116,10 +117,14 @@ describe("SharedCalendarApp", () => {
     expect(
       screen.getByRole("button", { name: "Save Draft" })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Send Proposal" })
+    ).toBeInTheDocument();
     expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
     expect(
-      document.querySelector<HTMLInputElement>('input[name="scheduleData"]')
-        ?.value
+      document.querySelectorAll<HTMLInputElement>(
+        'input[name="scheduleData"]'
+      )[0]?.value
     ).toContain('"date":"2026-03-02"');
   });
 });

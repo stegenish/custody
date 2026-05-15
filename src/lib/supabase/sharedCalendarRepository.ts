@@ -157,3 +157,15 @@ export async function saveSharedDraftProposal(
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to save draft proposal");
 }
+
+export async function sendSharedDraftProposal(
+  supabase: RpcClient,
+  groupId: string,
+  scheduleData: ScheduleData
+): Promise<string> {
+  const result = (await supabase.rpc("send_draft_proposal", {
+    target_group_id: groupId,
+    proposed_schedule_data: scheduleData,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to send draft proposal");
+}

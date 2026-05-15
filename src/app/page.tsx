@@ -3,6 +3,7 @@ import { LocalCalendarShell } from "@/components/LocalCalendarShell";
 import { SharedCalendarApp } from "@/components/SharedCalendarApp";
 import {
   saveSharedDraftProposalAction,
+  sendSharedDraftProposalAction,
   startSharedDraftProposal,
 } from "@/app/proposals/actions";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
@@ -43,6 +44,7 @@ export default async function Home() {
       currentParentId={user.id}
       startDraftAction={startSharedDraftProposal}
       saveDraftAction={saveSharedDraftProposalAction}
+      sendDraftAction={sendSharedDraftProposalAction}
     />
   );
 }

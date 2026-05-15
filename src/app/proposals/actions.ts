@@ -6,6 +6,7 @@ import { getMyGroupId } from "@/lib/supabase/onboarding";
 import {
   createSharedDraftProposal,
   saveSharedDraftProposal,
+  sendSharedDraftProposal,
 } from "@/lib/supabase/sharedCalendarRepository";
 import { createClient } from "@/lib/supabase/server";
 
@@ -43,6 +44,24 @@ export async function saveSharedDraftProposalAction(
   }
 
   await saveSharedDraftProposal(
+    supabase,
+    groupId,
+    parseScheduleData(formData.get("scheduleData"))
+  );
+  redirect("/");
+}
+
+export async function sendSharedDraftProposalAction(
+  formData: FormData
+): Promise<void> {
+  const supabase = await createClient();
+  const groupId = await getMyGroupId(supabase);
+
+  if (!groupId) {
+    redirect("/onboarding");
+  }
+
+  await sendSharedDraftProposal(
     supabase,
     groupId,
     parseScheduleData(formData.get("scheduleData"))

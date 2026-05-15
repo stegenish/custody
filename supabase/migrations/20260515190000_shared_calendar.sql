@@ -620,9 +620,99 @@ begin
 end;
 $$;
 
+create or replace function public.send_draft_proposal(
+  target_group_id uuid,
+  proposed_schedule_data jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  draft_proposal public.proposals%rowtype;
+  receiver_id uuid;
+  next_revision_number integer;
+  created_revision_id uuid;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  if exists (
+    select 1
+    from public.proposals
+    where group_id = target_group_id
+      and status = 'sent'
+  ) then
+    raise exception 'There is already an active proposal';
+  end if;
+
+  select user_id
+    into receiver_id
+  from public.parent_memberships
+  where group_id = target_group_id
+    and user_id <> current_user_id
+  order by created_at
+  limit 1;
+
+  if receiver_id is null then
+    raise exception 'No other parent found';
+  end if;
+
+  select *
+    into draft_proposal
+  from public.proposals
+  where group_id = target_group_id
+    and status = 'draft'
+    and current_author_user_id = current_user_id
+  limit 1;
+
+  if draft_proposal.id is null then
+    raise exception 'Draft proposal not found';
+  end if;
+
+  select coalesce(max(revision_number), 0) + 1
+    into next_revision_number
+  from public.proposal_revisions
+  where proposal_id = draft_proposal.id;
+
+  insert into public.proposal_revisions (
+    proposal_id,
+    revision_number,
+    author_user_id,
+    base_calendar_version,
+    schedule_data
+  )
+  values (
+    draft_proposal.id,
+    next_revision_number,
+    current_user_id,
+    draft_proposal.base_calendar_version,
+    proposed_schedule_data
+  )
+  returning id into created_revision_id;
+
+  update public.proposals
+  set status = 'sent',
+      receiver_user_id = receiver_id,
+      current_revision_id = created_revision_id,
+      updated_at = now()
+  where id = draft_proposal.id;
+
+  return draft_proposal.id;
+end;
+$$;
+
 grant execute on function public.ensure_initial_group() to authenticated;
 grant execute on function public.get_my_group_id() to authenticated;
 grant execute on function public.regenerate_group_invite(uuid, text) to authenticated;
 grant execute on function public.join_group_with_invite(text) to authenticated;
 grant execute on function public.create_draft_proposal(uuid) to authenticated;
 grant execute on function public.save_draft_proposal(uuid, jsonb) to authenticated;
+grant execute on function public.send_draft_proposal(uuid, jsonb) to authenticated;

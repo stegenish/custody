@@ -13,6 +13,7 @@ interface SharedCalendarAppProps {
   currentParentId: string;
   startDraftAction?: () => void | Promise<void>;
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
+  sendDraftAction?: (formData: FormData) => void | Promise<void>;
 }
 
 export function SharedCalendarApp({
@@ -20,6 +21,7 @@ export function SharedCalendarApp({
   currentParentId,
   startDraftAction,
   saveDraftAction,
+  sendDraftAction,
 }: SharedCalendarAppProps) {
   const [today, setToday] = useState<Date | null>(null);
   const currentDraft = useMemo(
@@ -49,6 +51,7 @@ export function SharedCalendarApp({
           agreedScheduleData={state.agreedCalendar.scheduleData}
           initialScheduleData={currentDraftRevision.scheduleData}
           saveDraftAction={saveDraftAction}
+          sendDraftAction={sendDraftAction}
         />
       );
     }
@@ -74,6 +77,7 @@ export function SharedCalendarApp({
   }, [
     currentDraftRevision,
     saveDraftAction,
+    sendDraftAction,
     startDraftAction,
     state.agreedCalendar.scheduleData,
     today,
@@ -85,6 +89,7 @@ interface EditableDraftProposalProps {
   agreedScheduleData: ScheduleData;
   initialScheduleData: ScheduleData;
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
+  sendDraftAction?: (formData: FormData) => void | Promise<void>;
 }
 
 function EditableDraftProposal({
@@ -92,6 +97,7 @@ function EditableDraftProposal({
   agreedScheduleData,
   initialScheduleData,
   saveDraftAction,
+  sendDraftAction,
 }: EditableDraftProposalProps) {
   const [draftScheduleData, setDraftScheduleData] =
     useState<ScheduleData>(initialScheduleData);
@@ -103,19 +109,48 @@ function EditableDraftProposal({
       proposedScheduleData={draftScheduleData}
       onUpdateProposedScheduleData={setDraftScheduleData}
       toolbar={
-        saveDraftAction ? (
+        saveDraftAction || sendDraftAction ? (
           <AppToolbar>
-            <form action={saveDraftAction}>
-              <input
-                type="hidden"
-                name="scheduleData"
-                value={JSON.stringify(draftScheduleData)}
+            {saveDraftAction && (
+              <DraftActionForm
+                action={saveDraftAction}
+                scheduleData={draftScheduleData}
+                label="Save Draft"
               />
-              <AppToolbarSubmitButton>Save Draft</AppToolbarSubmitButton>
-            </form>
+            )}
+            {sendDraftAction && (
+              <DraftActionForm
+                action={sendDraftAction}
+                scheduleData={draftScheduleData}
+                label="Send Proposal"
+              />
+            )}
           </AppToolbar>
         ) : undefined
       }
     />
+  );
+}
+
+interface DraftActionFormProps {
+  action: (formData: FormData) => void | Promise<void>;
+  scheduleData: ScheduleData;
+  label: string;
+}
+
+function DraftActionForm({
+  action,
+  scheduleData,
+  label,
+}: DraftActionFormProps) {
+  return (
+    <form action={action}>
+      <input
+        type="hidden"
+        name="scheduleData"
+        value={JSON.stringify(scheduleData)}
+      />
+      <AppToolbarSubmitButton>{label}</AppToolbarSubmitButton>
+    </form>
   );
 }
