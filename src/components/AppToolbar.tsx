@@ -27,3 +27,18 @@ export function AppToolbarButton({
     </button>
   );
 }
+
+export function AppToolbarSubmitButton({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <button
+      type="submit"
+      className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
+    >
+      {children}
+    </button>
+  );
+}

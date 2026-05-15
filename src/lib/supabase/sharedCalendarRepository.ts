@@ -10,6 +10,13 @@ import type {
 } from "./sharedCalendarRows";
 import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
 
+interface RpcClient {
+  rpc(
+    functionName: string,
+    args?: Record<string, unknown>
+  ): PromiseLike<SupabaseResult<unknown>>;
+}
+
 interface QueryBuilder<T> extends PromiseLike<SupabaseResult<T>> {
   select(columns?: string): QueryBuilder<T>;
   eq(column: string, value: unknown): QueryBuilder<T>;
@@ -126,4 +133,14 @@ export async function loadSharedCalendarState(
     comments,
     notes,
   });
+}
+
+export async function createSharedDraftProposal(
+  supabase: RpcClient,
+  groupId: string
+): Promise<string> {
+  const result = (await supabase.rpc("create_draft_proposal", {
+    target_group_id: groupId,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to create draft proposal");
 }

@@ -1,4 +1,7 @@
-import { loadSharedCalendarState } from "./sharedCalendarRepository";
+import {
+  createSharedDraftProposal,
+  loadSharedCalendarState,
+} from "./sharedCalendarRepository";
 
 function createQueryBuilder(result: unknown) {
   const builder = {
@@ -202,5 +205,34 @@ describe("loadSharedCalendarState", () => {
 
     expect(state.draftProposals).toHaveLength(1);
     expect(state.draftProposals[0].id).toBe("proposal-a");
+  });
+});
+
+describe("createSharedDraftProposal", () => {
+  it("creates a draft proposal for the current parent", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "proposal-1", error: null }),
+    };
+
+    await expect(
+      createSharedDraftProposal(supabase, "group-1")
+    ).resolves.toBe("proposal-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("create_draft_proposal", {
+      target_group_id: "group-1",
+    });
+  });
+
+  it("throws RPC errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Parent already has a draft proposal" },
+      }),
+    };
+
+    await expect(
+      createSharedDraftProposal(supabase, "group-1")
+    ).rejects.toThrow("Parent already has a draft proposal");
   });
 });

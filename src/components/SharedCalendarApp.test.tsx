@@ -44,13 +44,22 @@ describe("SharedCalendarApp", () => {
   });
 
   it("renders the agreed shared calendar read-only", () => {
-    render(<SharedCalendarApp state={state} currentParentId="parent-a" />);
+    render(
+      <SharedCalendarApp
+        state={state}
+        currentParentId="parent-a"
+        startDraftAction={jest.fn()}
+      />
+    );
 
     act(() => {
       jest.runOnlyPendingTimers();
     });
 
     expect(screen.getByText("Custody Calendar")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Start Draft" })
+    ).toBeInTheDocument();
     expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "2026-03-02" })

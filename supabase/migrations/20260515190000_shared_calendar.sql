@@ -473,7 +473,90 @@ begin
 end;
 $$;
 
+create or replace function public.create_draft_proposal(target_group_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  latest_calendar public.calendar_versions%rowtype;
+  created_proposal_id uuid;
+  created_revision_id uuid;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  if exists (
+    select 1
+    from public.proposals
+    where group_id = target_group_id
+      and status = 'draft'
+      and current_author_user_id = current_user_id
+  ) then
+    raise exception 'Parent already has a draft proposal';
+  end if;
+
+  select *
+    into latest_calendar
+  from public.calendar_versions
+  where group_id = target_group_id
+  order by version desc
+  limit 1;
+
+  if latest_calendar.id is null then
+    raise exception 'No agreed calendar found';
+  end if;
+
+  insert into public.proposals (
+    group_id,
+    status,
+    created_by_user_id,
+    current_author_user_id,
+    base_calendar_version
+  )
+  values (
+    target_group_id,
+    'draft',
+    current_user_id,
+    current_user_id,
+    latest_calendar.version
+  )
+  returning id into created_proposal_id;
+
+  insert into public.proposal_revisions (
+    proposal_id,
+    revision_number,
+    author_user_id,
+    base_calendar_version,
+    schedule_data
+  )
+  values (
+    created_proposal_id,
+    1,
+    current_user_id,
+    latest_calendar.version,
+    latest_calendar.schedule_data
+  )
+  returning id into created_revision_id;
+
+  update public.proposals
+  set current_revision_id = created_revision_id,
+      updated_at = now()
+  where id = created_proposal_id;
+
+  return created_proposal_id;
+end;
+$$;
+
 grant execute on function public.ensure_initial_group() to authenticated;
 grant execute on function public.get_my_group_id() to authenticated;
 grant execute on function public.regenerate_group_invite(uuid, text) to authenticated;
 grant execute on function public.join_group_with_invite(text) to authenticated;
+grant execute on function public.create_draft_proposal(uuid) to authenticated;

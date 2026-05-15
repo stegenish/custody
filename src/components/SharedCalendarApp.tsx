@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AppToolbar, AppToolbarSubmitButton } from "./AppToolbar";
 import { CalendarWorkspace } from "./CalendarWorkspace";
 import { ProposalWorkspace } from "./ProposalWorkspace";
 import { getCurrentRevision } from "@/lib/sharedCalendarWorkflowHelpers";
@@ -10,11 +11,13 @@ import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
 interface SharedCalendarAppProps {
   state: CustodyGroupState;
   currentParentId: string;
+  startDraftAction?: () => void | Promise<void>;
 }
 
 export function SharedCalendarApp({
   state,
   currentParentId,
+  startDraftAction,
 }: SharedCalendarAppProps) {
   const [today, setToday] = useState<Date | null>(null);
   const currentDraft = useMemo(
@@ -53,11 +56,21 @@ export function SharedCalendarApp({
         today={today}
         scheduleData={state.agreedCalendar.scheduleData}
         readOnly
+        toolbar={
+          startDraftAction ? (
+            <AppToolbar>
+              <form action={startDraftAction}>
+                <AppToolbarSubmitButton>Start Draft</AppToolbarSubmitButton>
+              </form>
+            </AppToolbar>
+          ) : undefined
+        }
         onUpdateScheduleData={() => undefined}
       />
     );
   }, [
     currentDraftRevision,
+    startDraftAction,
     state.agreedCalendar.scheduleData,
     today,
   ]);
