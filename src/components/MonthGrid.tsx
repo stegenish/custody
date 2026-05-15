@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { CalendarMonth } from "@/lib/dateUtils";
+import type { CalendarDay, CalendarMonth } from "@/lib/dateUtils";
 import type { DayColorResult } from "@/lib/scheduleTypes";
 import { formatDateKey } from "@/lib/dateUtils";
 
@@ -52,6 +52,82 @@ function DayIndicators({
   );
 }
 
+function dayCellTestId(day: CalendarDay): string {
+  if (day.isToday) return "today";
+  return day.isCurrentMonth ? "day-current-month" : "day-other-month";
+}
+
+function dayCellClassName(
+  day: CalendarDay,
+  clickable: boolean
+): string {
+  const dateClass = day.isToday
+    ? `rounded-full ring-2 ring-blue-600 font-bold ${
+        day.isHoliday ? "text-red-600" : ""
+      }`
+    : !day.isCurrentMonth
+      ? "opacity-30"
+      : day.isHoliday
+        ? "text-red-600"
+        : "text-gray-700";
+  return `relative text-center tabular-nums ${
+    clickable ? "cursor-pointer" : ""
+  } ${dateClass}`;
+}
+
+function DayCell({
+  day,
+  dayColor,
+  isChanged,
+  onDayClick,
+}: {
+  day: CalendarDay;
+  dayColor?: DayColorResult;
+  isChanged: boolean;
+  onDayClick?: (dateKey: string) => void;
+}) {
+  const dateKey = formatDateKey(day.date);
+  const clickable = Boolean(onDayClick);
+  const indicators = (
+    <DayIndicators
+      dayColor={dayColor}
+      isSchoolHoliday={day.isCurrentMonth && day.isSchoolHoliday}
+      isChanged={day.isCurrentMonth && isChanged}
+    />
+  );
+
+  return (
+    <td
+      data-testid={dayCellTestId(day)}
+      style={cellStyle(dayColor)}
+      className={dayCellClassName(day, clickable)}
+    >
+      {clickable ? (
+        <button
+          type="button"
+          aria-label={dateKey}
+          onClick={() => onDayClick?.(dateKey)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onDayClick?.(dateKey);
+            }
+          }}
+          className="relative block h-full min-h-5 w-full rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-700"
+        >
+          {day.dayOfMonth}
+          {indicators}
+        </button>
+      ) : (
+        <>
+          {day.dayOfMonth}
+          {indicators}
+        </>
+      )}
+    </td>
+  );
+}
+
 interface MonthGridProps {
   month: CalendarMonth;
   colorMap?: Map<string, DayColorResult>;
@@ -96,71 +172,15 @@ export function MonthGrid({
                 {week.isoWeekNumber}
               </td>
               {week.days.map((day) => {
-                const isToday = day.isToday;
-                const isOtherMonth = !day.isCurrentMonth;
                 const dateKey = formatDateKey(day.date);
-                const dayColor = colorMap?.get(dateKey);
-                const clickable = Boolean(onDayClick);
-                const isChanged = changedDateKeys?.has(dateKey) ?? false;
-
                 return (
-                  <td
+                  <DayCell
                     key={dateKey}
-                    data-testid={
-                      isToday
-                        ? "today"
-                        : isOtherMonth
-                          ? "day-other-month"
-                          : "day-current-month"
-                    }
-                    style={cellStyle(dayColor)}
-                    className={`relative text-center tabular-nums ${
-                      clickable ? "cursor-pointer" : ""
-                    } ${
-                      isToday
-                        ? `rounded-full ring-2 ring-blue-600 font-bold ${day.isHoliday ? "text-red-600" : ""}`
-                        : isOtherMonth
-                          ? "opacity-30"
-                          : day.isHoliday
-                            ? "text-red-600"
-                            : "text-gray-700"
-                    }`}
-                  >
-                    {clickable ? (
-                      <button
-                        type="button"
-                        aria-label={dateKey}
-                        onClick={() => onDayClick?.(dateKey)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            onDayClick?.(dateKey);
-                          }
-                        }}
-                        className="relative block h-full min-h-5 w-full rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-700"
-                      >
-                        {day.dayOfMonth}
-                        <DayIndicators
-                          dayColor={dayColor}
-                          isSchoolHoliday={
-                            day.isCurrentMonth && day.isSchoolHoliday
-                          }
-                          isChanged={day.isCurrentMonth && isChanged}
-                        />
-                      </button>
-                    ) : (
-                      <>
-                        {day.dayOfMonth}
-                        <DayIndicators
-                          dayColor={dayColor}
-                          isSchoolHoliday={
-                            day.isCurrentMonth && day.isSchoolHoliday
-                          }
-                          isChanged={day.isCurrentMonth && isChanged}
-                        />
-                      </>
-                    )}
-                  </td>
+                    day={day}
+                    dayColor={colorMap?.get(dateKey)}
+                    isChanged={changedDateKeys?.has(dateKey) ?? false}
+                    onDayClick={onDayClick}
+                  />
                 );
               })}
             </tr>
