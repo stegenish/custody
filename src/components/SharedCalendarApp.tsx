@@ -235,19 +235,17 @@ function ActiveProposalToolbar({
   return (
     <AppToolbar>
       {canReject && (
-        <ProposalActionForm
+        <ToolbarActionForm
           action={rejectProposalAction}
-          proposalId={proposalId}
-          revisionId={revisionId}
           label="Reject Proposal"
+          fields={{ proposalId, revisionId }}
         />
       )}
       {canAccept && (
-        <ProposalActionForm
+        <ToolbarActionForm
           action={acceptProposalAction}
-          proposalId={proposalId}
-          revisionId={revisionId}
           label="Accept Proposal"
+          fields={{ proposalId, revisionId }}
         />
       )}
       {canStartCounter && (
@@ -256,74 +254,24 @@ function ActiveProposalToolbar({
         </AppToolbarButton>
       )}
       {canSendCounter && (
-        <ProposalScheduleActionForm
+        <ToolbarActionForm
           action={counterProposalAction}
-          proposalId={proposalId}
-          revisionId={revisionId}
-          scheduleData={scheduleData}
           label="Send Counter"
+          fields={{
+            proposalId,
+            revisionId,
+            scheduleData: JSON.stringify(scheduleData),
+          }}
         />
       )}
       {canWithdraw && (
-        <ProposalActionForm
+        <ToolbarActionForm
           action={withdrawProposalAction}
-          proposalId={proposalId}
-          revisionId={revisionId}
           label="Withdraw Proposal"
+          fields={{ proposalId, revisionId }}
         />
       )}
     </AppToolbar>
-  );
-}
-
-interface ProposalScheduleActionFormProps {
-  action: (formData: FormData) => void | Promise<void>;
-  proposalId: string;
-  revisionId: string;
-  scheduleData: ScheduleData;
-  label: string;
-}
-
-function ProposalScheduleActionForm({
-  action,
-  proposalId,
-  revisionId,
-  scheduleData,
-  label,
-}: ProposalScheduleActionFormProps) {
-  return (
-    <form action={action}>
-      <input type="hidden" name="proposalId" value={proposalId} />
-      <input type="hidden" name="revisionId" value={revisionId} />
-      <input
-        type="hidden"
-        name="scheduleData"
-        value={JSON.stringify(scheduleData)}
-      />
-      <AppToolbarSubmitButton>{label}</AppToolbarSubmitButton>
-    </form>
-  );
-}
-
-interface ProposalActionFormProps {
-  action: (formData: FormData) => void | Promise<void>;
-  proposalId: string;
-  revisionId: string;
-  label: string;
-}
-
-function ProposalActionForm({
-  action,
-  proposalId,
-  revisionId,
-  label,
-}: ProposalActionFormProps) {
-  return (
-    <form action={action}>
-      <input type="hidden" name="proposalId" value={proposalId} />
-      <input type="hidden" name="revisionId" value={revisionId} />
-      <AppToolbarSubmitButton>{label}</AppToolbarSubmitButton>
-    </form>
   );
 }
 
@@ -357,23 +305,24 @@ function EditableDraftProposal({
         saveDraftAction || sendDraftAction || resetDraftAction ? (
           <AppToolbar>
             {saveDraftAction && (
-              <DraftActionForm
+              <ToolbarActionForm
                 action={saveDraftAction}
-                scheduleData={draftScheduleData}
                 label="Save Draft"
+                fields={{ scheduleData: JSON.stringify(draftScheduleData) }}
               />
             )}
             {sendDraftAction && (
-              <DraftActionForm
+              <ToolbarActionForm
                 action={sendDraftAction}
-                scheduleData={draftScheduleData}
                 label="Send Proposal"
+                fields={{ scheduleData: JSON.stringify(draftScheduleData) }}
               />
             )}
             {resetDraftAction && (
-              <form action={resetDraftAction}>
-                <AppToolbarSubmitButton>Reset Draft</AppToolbarSubmitButton>
-              </form>
+              <ToolbarActionForm
+                action={resetDraftAction}
+                label="Reset Draft"
+              />
             )}
           </AppToolbar>
         ) : undefined
@@ -382,24 +331,22 @@ function EditableDraftProposal({
   );
 }
 
-interface DraftActionFormProps {
+interface ToolbarActionFormProps {
   action: (formData: FormData) => void | Promise<void>;
-  scheduleData: ScheduleData;
   label: string;
+  fields?: Record<string, string>;
 }
 
-function DraftActionForm({
+function ToolbarActionForm({
   action,
-  scheduleData,
   label,
-}: DraftActionFormProps) {
+  fields = {},
+}: ToolbarActionFormProps) {
   return (
     <form action={action}>
-      <input
-        type="hidden"
-        name="scheduleData"
-        value={JSON.stringify(scheduleData)}
-      />
+      {Object.entries(fields).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
       <AppToolbarSubmitButton>{label}</AppToolbarSubmitButton>
     </form>
   );
