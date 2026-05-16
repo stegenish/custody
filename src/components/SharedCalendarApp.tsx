@@ -13,7 +13,7 @@ import { getCurrentRevision } from "@/lib/sharedCalendarWorkflowHelpers";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
 
-interface SharedCalendarAppProps {
+export interface SharedCalendarAppProps {
   state: CustodyGroupState;
   currentParentId: string;
   startDraftAction?: () => void | Promise<void>;

@@ -1,6 +1,7 @@
+import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { LocalCalendarShell } from "@/components/LocalCalendarShell";
-import { SharedCalendarApp } from "@/components/SharedCalendarApp";
+import type { SharedCalendarAppProps } from "@/components/SharedCalendarApp";
 import {
   acceptSharedProposalAction,
   counterSharedProposalAction,
@@ -18,6 +19,14 @@ import {
   type SharedCalendarSupabaseClient,
 } from "@/lib/supabase/sharedCalendarRepository";
 import { createClient } from "@/lib/supabase/server";
+
+// This entry point runs in local-only mode without Supabase env vars, and in
+// shared-calendar mode when Supabase is configured.
+const SharedCalendarApp = dynamic<SharedCalendarAppProps>(() =>
+  import("@/components/SharedCalendarApp").then(
+    (module) => module.SharedCalendarApp
+  )
+);
 
 export default async function Home() {
   if (!hasSupabaseEnv()) {

@@ -1,3 +1,5 @@
+// Executable spec for shared-calendar transitions. The live app persists these
+// invariants through Supabase RPCs called by sharedCalendarRepository.ts.
 import type { ScheduleData } from "./scheduleTypes";
 import { cloneScheduleData } from "./scheduleData";
 import {
