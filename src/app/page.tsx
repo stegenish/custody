@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { LocalCalendarShell } from "@/components/LocalCalendarShell";
 import { SharedCalendarApp } from "@/components/SharedCalendarApp";
 import {
+  acceptSharedProposalAction,
   rejectSharedProposalAction,
   saveSharedDraftProposalAction,
   sendSharedDraftProposalAction,
@@ -47,6 +48,7 @@ export default async function Home() {
       startDraftAction={startSharedDraftProposal}
       saveDraftAction={saveSharedDraftProposalAction}
       sendDraftAction={sendSharedDraftProposalAction}
+      acceptProposalAction={acceptSharedProposalAction}
       rejectProposalAction={rejectSharedProposalAction}
       withdrawProposalAction={withdrawSharedProposalAction}
     />

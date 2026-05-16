@@ -896,6 +896,124 @@ begin
 end;
 $$;
 
+create or replace function public.accept_active_proposal(
+  target_group_id uuid,
+  target_proposal_id uuid,
+  viewed_revision_id uuid
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  active_proposal public.proposals%rowtype;
+  accepted_revision public.proposal_revisions%rowtype;
+  latest_calendar public.calendar_versions%rowtype;
+  next_calendar_version integer;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select *
+    into active_proposal
+  from public.proposals
+  where id = target_proposal_id
+    and group_id = target_group_id
+    and status = 'sent'
+  limit 1;
+
+  if active_proposal.id is null then
+    raise exception 'No active proposal to accept';
+  end if;
+
+  if active_proposal.receiver_user_id <> current_user_id then
+    raise exception 'Only the receiver can accept this proposal';
+  end if;
+
+  if active_proposal.current_revision_id <> viewed_revision_id then
+    raise exception 'Proposal changed since it was viewed';
+  end if;
+
+  select *
+    into accepted_revision
+  from public.proposal_revisions
+  where id = viewed_revision_id
+    and proposal_id = active_proposal.id
+  limit 1;
+
+  if accepted_revision.id is null then
+    raise exception 'Viewed proposal revision not found';
+  end if;
+
+  select *
+    into latest_calendar
+  from public.calendar_versions
+  where group_id = target_group_id
+  order by version desc
+  limit 1;
+
+  if latest_calendar.id is null then
+    raise exception 'No agreed calendar found';
+  end if;
+
+  if accepted_revision.base_calendar_version <> latest_calendar.version then
+    raise exception 'Shared calendar changed since this proposal was created';
+  end if;
+
+  next_calendar_version := latest_calendar.version + 1;
+
+  insert into public.calendar_versions (
+    group_id,
+    version,
+    schedule_data,
+    accepted_proposal_id,
+    created_by_user_id
+  )
+  values (
+    target_group_id,
+    next_calendar_version,
+    accepted_revision.schedule_data,
+    active_proposal.id,
+    current_user_id
+  );
+
+  insert into public.proposal_status_events (
+    proposal_id,
+    status,
+    actor_user_id,
+    revision_id
+  )
+  values (
+    active_proposal.id,
+    'accepted',
+    current_user_id,
+    viewed_revision_id
+  );
+
+  update public.proposals
+  set status = case
+        when id = active_proposal.id then 'accepted'
+        else 'withdrawn'
+      end,
+      receiver_user_id = case
+        when id = active_proposal.id then receiver_user_id
+        else null
+      end,
+      updated_at = now()
+  where group_id = target_group_id
+    and status in ('draft', 'sent');
+
+  return next_calendar_version;
+end;
+$$;
+
 grant execute on function public.ensure_initial_group() to authenticated;
 grant execute on function public.get_my_group_id() to authenticated;
 grant execute on function public.regenerate_group_invite(uuid, text) to authenticated;
@@ -905,3 +1023,4 @@ grant execute on function public.save_draft_proposal(uuid, jsonb) to authenticat
 grant execute on function public.send_draft_proposal(uuid, jsonb) to authenticated;
 grant execute on function public.withdraw_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.reject_active_proposal(uuid, uuid, uuid) to authenticated;
+grant execute on function public.accept_active_proposal(uuid, uuid, uuid) to authenticated;

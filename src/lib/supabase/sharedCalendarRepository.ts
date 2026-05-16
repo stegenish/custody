@@ -217,3 +217,17 @@ export async function rejectSharedProposal(
     "Unable to reject proposal"
   );
 }
+
+export async function acceptSharedProposal(
+  supabase: RpcClient,
+  groupId: string,
+  proposalId: string,
+  revisionId: string
+): Promise<number> {
+  const result = (await supabase.rpc("accept_active_proposal", {
+    target_group_id: groupId,
+    target_proposal_id: proposalId,
+    viewed_revision_id: revisionId,
+  })) as SupabaseResult<number>;
+  return requireSupabaseData(result, "Unable to accept proposal");
+}

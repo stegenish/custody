@@ -1,4 +1,5 @@
 import {
+  acceptSharedProposal,
   createSharedDraftProposal,
   loadSharedCalendarState,
   rejectSharedProposal,
@@ -388,5 +389,36 @@ describe("rejectSharedProposal", () => {
     await expect(
       rejectSharedProposal(supabase, "group-1", "proposal-1", "revision-1")
     ).rejects.toThrow("Only the receiver can reject this proposal");
+  });
+});
+
+describe("acceptSharedProposal", () => {
+  it("accepts the viewed proposal revision into the shared calendar", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: 2, error: null }),
+    };
+
+    await expect(
+      acceptSharedProposal(supabase, "group-1", "proposal-1", "revision-1")
+    ).resolves.toBe(2);
+
+    expect(supabase.rpc).toHaveBeenCalledWith("accept_active_proposal", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      viewed_revision_id: "revision-1",
+    });
+  });
+
+  it("throws accept errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Proposal changed since it was viewed" },
+      }),
+    };
+
+    await expect(
+      acceptSharedProposal(supabase, "group-1", "proposal-1", "revision-1")
+    ).rejects.toThrow("Proposal changed since it was viewed");
   });
 });

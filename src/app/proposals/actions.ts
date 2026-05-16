@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 import { getMyGroupId } from "@/lib/supabase/onboarding";
 import {
+  acceptSharedProposal,
   createSharedDraftProposal,
   rejectSharedProposal,
   saveSharedDraftProposal,
@@ -55,7 +56,7 @@ async function runProposalRevisionAction(
     groupId: string,
     proposalId: string,
     revisionId: string
-  ) => Promise<string>
+  ) => Promise<unknown>
 ): Promise<void> {
   const supabase = await createClient();
   const groupId = await getRequiredGroupId(supabase);
@@ -101,6 +102,12 @@ export async function rejectSharedProposalAction(
   formData: FormData
 ): Promise<void> {
   await runProposalRevisionAction(formData, rejectSharedProposal);
+}
+
+export async function acceptSharedProposalAction(
+  formData: FormData
+): Promise<void> {
+  await runProposalRevisionAction(formData, acceptSharedProposal);
 }
 
 export async function sendSharedDraftProposalAction(
