@@ -56,77 +56,59 @@ export function SharedCalendarApp({
     [state.activeProposal]
   );
 
-  return useMemo(() => {
-    if (!today) return null;
-    if (state.activeProposal && currentActiveRevision) {
-      return (
-        <ActiveProposalReview
-          key={currentActiveRevision.id}
-          today={today}
-          agreedScheduleData={state.agreedCalendar.scheduleData}
-          proposedScheduleData={currentActiveRevision.scheduleData}
-          proposalId={state.activeProposal.id}
-          revisionId={currentActiveRevision.id}
-          isReceiver={state.activeProposal.receiverParentId === currentParentId}
-          isSender={
-            state.activeProposal.currentAuthorParentId === currentParentId
-          }
-          acceptProposalAction={acceptProposalAction}
-          counterProposalAction={counterProposalAction}
-          rejectProposalAction={rejectProposalAction}
-          withdrawProposalAction={withdrawProposalAction}
-        />
-      );
-    }
+  if (!today) return null;
 
-    if (currentDraftRevision) {
-      return (
-        <EditableDraftProposal
-          key={currentDraftRevision.id}
-          today={today}
-          agreedScheduleData={state.agreedCalendar.scheduleData}
-          initialScheduleData={currentDraftRevision.scheduleData}
-          saveDraftAction={saveDraftAction}
-          sendDraftAction={sendDraftAction}
-          resetDraftAction={resetDraftAction}
-        />
-      );
-    }
-
+  if (state.activeProposal && currentActiveRevision) {
     return (
-      <CalendarWorkspace
-        title="Custody Calendar"
+      <ActiveProposalReview
+        key={currentActiveRevision.id}
         today={today}
-        scheduleData={state.agreedCalendar.scheduleData}
-        readOnly
-        toolbar={
-          startDraftAction ? (
-            <AppToolbar>
-              <form action={startDraftAction}>
-                <AppToolbarSubmitButton>Start Draft</AppToolbarSubmitButton>
-              </form>
-            </AppToolbar>
-          ) : undefined
-        }
-        onUpdateScheduleData={() => undefined}
+        agreedScheduleData={state.agreedCalendar.scheduleData}
+        proposedScheduleData={currentActiveRevision.scheduleData}
+        proposalId={state.activeProposal.id}
+        revisionId={currentActiveRevision.id}
+        isReceiver={state.activeProposal.receiverParentId === currentParentId}
+        isSender={state.activeProposal.currentAuthorParentId === currentParentId}
+        acceptProposalAction={acceptProposalAction}
+        counterProposalAction={counterProposalAction}
+        rejectProposalAction={rejectProposalAction}
+        withdrawProposalAction={withdrawProposalAction}
       />
     );
-  }, [
-    acceptProposalAction,
-    counterProposalAction,
-    currentActiveRevision,
-    currentDraftRevision,
-    currentParentId,
-    rejectProposalAction,
-    resetDraftAction,
-    saveDraftAction,
-    sendDraftAction,
-    startDraftAction,
-    state.agreedCalendar.scheduleData,
-    state.activeProposal,
-    today,
-    withdrawProposalAction,
-  ]);
+  }
+
+  if (currentDraftRevision) {
+    return (
+      <EditableDraftProposal
+        key={currentDraftRevision.id}
+        today={today}
+        agreedScheduleData={state.agreedCalendar.scheduleData}
+        initialScheduleData={currentDraftRevision.scheduleData}
+        saveDraftAction={saveDraftAction}
+        sendDraftAction={sendDraftAction}
+        resetDraftAction={resetDraftAction}
+      />
+    );
+  }
+
+  return (
+    <CalendarWorkspace
+      title="Custody Calendar"
+      today={today}
+      scheduleData={state.agreedCalendar.scheduleData}
+      readOnly
+      toolbar={
+        startDraftAction ? (
+          <AppToolbar>
+            <form action={startDraftAction}>
+              <AppToolbarSubmitButton>Start Draft</AppToolbarSubmitButton>
+            </form>
+          </AppToolbar>
+        ) : undefined
+      }
+      onUpdateScheduleData={() => undefined}
+    />
+  );
 }
 
 interface ActiveProposalReviewProps {
