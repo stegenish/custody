@@ -66,12 +66,14 @@ export function LabelManager({
               <>
                 <input
                   type="color"
+                  aria-label={`Edit ${label.name} color`}
                   value={editColor}
                   onChange={(e) => setEditColor(e.target.value)}
                   className="h-6 w-6 cursor-pointer border-0 p-0"
                 />
                 <input
                   type="text"
+                  aria-label={`Edit ${label.name} name`}
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="rounded border px-1 py-0.5 text-sm"
@@ -121,12 +123,14 @@ export function LabelManager({
       <div className="flex items-center gap-2">
         <input
           type="color"
+          aria-label="New label color"
           value={newColor}
           onChange={(e) => setNewColor(e.target.value)}
           className="h-6 w-6 cursor-pointer border-0 p-0"
         />
         <input
           type="text"
+          aria-label="New label name"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="Label name"

@@ -21,6 +21,9 @@ describe("DayOverrideBar", () => {
       />
     );
     expect(screen.getByText("2026-03-05")).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Override 2026-03-05" })
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mom" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Dad" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mom" })).toHaveAttribute(
@@ -42,6 +45,56 @@ describe("DayOverrideBar", () => {
       />
     );
     expect(screen.getByRole("button", { name: "Mom" })).toHaveFocus();
+  });
+
+  it("refocuses the current label when the selected day changes", () => {
+    const { rerender } = render(
+      <DayOverrideBar
+        dateKey="2026-03-05"
+        currentLabelId="a"
+        isOverride={false}
+        labels={labels}
+        onSetOverride={jest.fn()}
+        onRemoveOverride={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    rerender(
+      <DayOverrideBar
+        dateKey="2026-03-06"
+        currentLabelId="b"
+        isOverride={false}
+        labels={labels}
+        onSetOverride={jest.fn()}
+        onRemoveOverride={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Dad" })).toHaveFocus();
+  });
+
+  it("calls onClose when Escape is pressed", () => {
+    const onClose = jest.fn();
+    render(
+      <DayOverrideBar
+        dateKey="2026-03-05"
+        currentLabelId="a"
+        isOverride={false}
+        labels={labels}
+        onSetOverride={jest.fn()}
+        onRemoveOverride={jest.fn()}
+        onClose={onClose}
+      />
+    );
+
+    fireEvent.keyDown(
+      screen.getByRole("dialog", { name: "Override 2026-03-05" }),
+      { key: "Escape" }
+    );
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("calls onSetOverride when a label button is clicked", () => {

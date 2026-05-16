@@ -31,7 +31,8 @@ describe("LabelManager", () => {
         onDeleteLabel={jest.fn()}
       />
     );
-    fireEvent.change(screen.getByPlaceholderText("Label name"), {
+    expect(screen.getByLabelText("New label color")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("New label name"), {
       target: { value: "Mom" },
     });
     fireEvent.click(screen.getByText("Add Label"));
@@ -83,7 +84,8 @@ describe("LabelManager", () => {
     const editButtons = screen.getAllByText("Edit");
     fireEvent.click(editButtons[0]);
 
-    const nameInput = screen.getByDisplayValue("Mom");
+    expect(screen.getByLabelText("Edit Mom color")).toBeInTheDocument();
+    const nameInput = screen.getByLabelText("Edit Mom name");
     fireEvent.change(nameInput, { target: { value: "Mother" } });
     fireEvent.click(screen.getByText("Save"));
     expect(onUpdate).toHaveBeenCalledWith("1", "Mother", expect.any(String));

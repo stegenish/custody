@@ -20,16 +20,30 @@ export function DayOverrideBar({
   onRemoveOverride,
   onClose,
 }: DayOverrideBarProps) {
-  const firstButtonRef = useRef<HTMLButtonElement | null>(null);
-  const currentButtonRef = useRef<HTMLButtonElement | null>(null);
+  const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
+  const firstLabelId = labels[0]?.id ?? null;
 
   useEffect(() => {
-    (currentButtonRef.current ?? firstButtonRef.current)?.focus();
-  }, []);
+    const currentButton = currentLabelId
+      ? buttonRefs.current.get(currentLabelId)
+      : null;
+    const firstButton = firstLabelId
+      ? buttonRefs.current.get(firstLabelId)
+      : null;
+
+    (currentButton ?? firstButton)?.focus();
+  }, [currentLabelId, dateKey, firstLabelId]);
 
   return (
     <div
       data-testid="day-override-bar"
+      role="dialog"
+      aria-label={`Override ${dateKey}`}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          onClose();
+        }
+      }}
       className="fixed bottom-0 inset-x-0 z-50 border-t border-gray-200 bg-white px-4 py-3 shadow-lg"
     >
       <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-3">
@@ -41,11 +55,10 @@ export function DayOverrideBar({
               key={label.id}
               type="button"
               ref={(element) => {
-                if (!firstButtonRef.current) {
-                  firstButtonRef.current = element;
-                }
-                if (label.id === currentLabelId) {
-                  currentButtonRef.current = element;
+                if (element) {
+                  buttonRefs.current.set(label.id, element);
+                } else {
+                  buttonRefs.current.delete(label.id);
                 }
               }}
               aria-pressed={label.id === currentLabelId}
