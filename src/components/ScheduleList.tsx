@@ -82,34 +82,34 @@ export function ScheduleList({
           Create at least 2 labels before adding a schedule.
         </p>
       ) : (
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="text-sm">
+        <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap">
+          <label className="flex min-w-0 flex-col text-sm">
             Start date
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="ml-1 rounded border px-2 py-1 text-sm"
+              className="mt-1 w-full rounded border px-2 py-1 text-sm"
             />
           </label>
-          <label className="text-sm">
+          <label className="flex min-w-0 flex-col text-sm">
             Cycle
             <select
               value={cycleWeeks}
               onChange={(e) => setCycleWeeks(Number(e.target.value) as 1 | 2 | 3)}
-              className="ml-1 rounded border px-2 py-1 text-sm"
+              className="mt-1 w-full rounded border px-2 py-1 text-sm"
             >
               <option value={1}>1 week</option>
               <option value={2}>2 weeks</option>
               <option value={3}>3 weeks</option>
             </select>
           </label>
-          <label className="text-sm">
+          <label className="flex min-w-0 flex-col text-sm">
             Label A
             <select
               value={effectiveLabelA}
               onChange={(e) => setLabelA(e.target.value)}
-              className="ml-1 rounded border px-2 py-1 text-sm"
+              className="mt-1 w-full rounded border px-2 py-1 text-sm"
             >
               {labels.map((l) => (
                 <option key={l.id} value={l.id}>
@@ -118,12 +118,12 @@ export function ScheduleList({
               ))}
             </select>
           </label>
-          <label className="text-sm">
+          <label className="flex min-w-0 flex-col text-sm">
             Label B
             <select
               value={effectiveLabelB}
               onChange={(e) => setLabelB(e.target.value)}
-              className="ml-1 rounded border px-2 py-1 text-sm"
+              className="mt-1 w-full rounded border px-2 py-1 text-sm"
             >
               {labels.map((l) => (
                 <option key={l.id} value={l.id}>
@@ -135,12 +135,14 @@ export function ScheduleList({
           <button
             type="button"
             onClick={handleAdd}
-            className="rounded bg-green-600 px-3 py-1 text-xs text-white"
+            className="col-span-2 rounded bg-green-600 px-3 py-2 text-xs text-white sm:col-span-1 sm:py-1"
           >
             Add Schedule
           </button>
           {error && (
-            <p className="basis-full text-sm text-red-700">{error}</p>
+            <p className="col-span-2 text-sm text-red-700 sm:basis-full">
+              {error}
+            </p>
           )}
         </div>
       )}
