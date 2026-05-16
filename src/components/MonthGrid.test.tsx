@@ -72,6 +72,21 @@ describe("MonthGrid", () => {
     expect(screen.getByText("Custody: Mom")).toBeInTheDocument();
   });
 
+  it("renders a visible custody initial for colored days", () => {
+    const colorMap = new Map<string, DayColorResult>([
+      [
+        "2026-03-02",
+        {
+          label: { id: "mom", name: "Mom", color: "#bbf7d0" },
+          isOverride: false,
+        },
+      ],
+    ]);
+    render(<MonthGrid month={month} colorMap={colorMap} />);
+
+    expect(screen.getByTestId("custody-label-indicator")).toHaveTextContent("M");
+  });
+
   it("renders non-color changeover text for split-color days", () => {
     const colorMap = new Map<string, DayColorResult>([
       [
