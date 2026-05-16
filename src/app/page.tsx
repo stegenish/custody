@@ -5,6 +5,8 @@ import type { SharedCalendarAppProps } from "@/components/SharedCalendarApp";
 import {
   acceptSharedProposalAction,
   counterSharedProposalAction,
+  createProposalCommentAction,
+  createSharedDateNoteAction,
   rejectSharedProposalAction,
   resetSharedDraftProposalAction,
   saveSharedDraftProposalAction,
@@ -64,6 +66,8 @@ export default async function Home() {
       counterProposalAction={counterSharedProposalAction}
       rejectProposalAction={rejectSharedProposalAction}
       withdrawProposalAction={withdrawSharedProposalAction}
+      createSharedDateNoteAction={createSharedDateNoteAction}
+      createProposalCommentAction={createProposalCommentAction}
     />
   );
 }

@@ -159,6 +159,39 @@ describe("SharedCalendarApp", () => {
     expect(screen.getByText("Remember school event")).toBeInTheDocument();
   });
 
+  it("renders a shared date note form for selected dates", () => {
+    render(
+      <SharedCalendarApp
+        state={{
+          ...state,
+          notes: [
+            {
+              id: "note-1",
+              authorParentId: "parent-a",
+              date: "2026-03-02",
+              body: "Remember school event",
+              createdAt: "2026-05-16T00:00:00.000Z",
+              updatedAt: "2026-05-16T00:00:00.000Z",
+            },
+          ],
+        }}
+        currentParentId="parent-a"
+        createSharedDateNoteAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "New shared note" })
+    ).toBeInTheDocument();
+    expect(document.querySelector<HTMLInputElement>('input[name="date"]')?.value)
+      .toBe("2026-03-02");
+  });
+
   it("renders the current parent's draft proposal as editable", () => {
     const draftScheduleData = {
       ...state.agreedCalendar.scheduleData,
@@ -342,6 +375,53 @@ describe("SharedCalendarApp", () => {
     fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
 
     expect(screen.getByText("Can we swap this date?")).toBeInTheDocument();
+  });
+
+  it("renders a proposal comment form for selected active proposal dates", () => {
+    const activeProposal = createActiveProposal({
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    });
+    const stateWithComment: CustodyGroupState = {
+      ...state,
+      activeProposal: {
+        ...activeProposal,
+        comments: [
+          {
+            id: "comment-1",
+            proposalId: "proposal-1",
+            authorParentId: "parent-a",
+            date: "2026-03-03",
+            body: "Can we swap this date?",
+            createdAt: "2026-05-16T00:00:00.000Z",
+            updatedAt: "2026-05-16T00:00:00.000Z",
+          },
+        ],
+      },
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithComment}
+        currentParentId="parent-b"
+        createProposalCommentAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "New proposal comment" })
+    ).toBeInTheDocument();
+    expect(document.querySelector<HTMLInputElement>('input[name="date"]')?.value)
+      .toBe("2026-03-03");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="proposalId"]')
+        ?.value
+    ).toBe("proposal-1");
   });
 
   it("lets the receiver edit and send a counterproposal", () => {

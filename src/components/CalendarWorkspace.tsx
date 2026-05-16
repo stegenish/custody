@@ -27,6 +27,9 @@ interface CalendarWorkspaceProps {
   commentDateKeys?: Set<string>;
   sharedDateNotes?: SharedDateNote[];
   proposalComments?: ProposalComment[];
+  proposalId?: string;
+  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateScheduleData: (data: ScheduleData) => void;
@@ -42,6 +45,9 @@ export function CalendarWorkspace({
   commentDateKeys,
   sharedDateNotes = [],
   proposalComments = [],
+  proposalId,
+  createSharedDateNoteAction,
+  createProposalCommentAction,
   toolbar,
   readOnly = false,
   onUpdateScheduleData,
@@ -62,6 +68,9 @@ export function CalendarWorkspace({
   const selectedComments = selectedDate
     ? proposalComments.filter((comment) => comment.date === selectedDate)
     : [];
+  const canCreateDateDetails =
+    Boolean(createSharedDateNoteAction) ||
+    Boolean(proposalId && createProposalCommentAction);
   const effectiveNoteDateKeys = useMemo(
     () => noteDateKeys ?? dateKeysForDatedItems(sharedDateNotes),
     [noteDateKeys, sharedDateNotes]
@@ -89,13 +98,20 @@ export function CalendarWorkspace({
         changedDateKeys={changedDateKeys}
         noteDateKeys={effectiveNoteDateKeys}
         commentDateKeys={effectiveCommentDateKeys}
-        onDayClick={readOnly && !hasDateDetails ? undefined : setSelectedDate}
+        onDayClick={
+          readOnly && !hasDateDetails && !canCreateDateDetails
+            ? undefined
+            : setSelectedDate
+        }
       />
-      {selectedDate && hasDateDetails && (
+      {selectedDate && (hasDateDetails || canCreateDateDetails) && (
         <SelectedDateDetails
           dateKey={selectedDate}
           notes={selectedNotes}
           comments={selectedComments}
+          proposalId={proposalId}
+          createSharedDateNoteAction={createSharedDateNoteAction}
+          createProposalCommentAction={createProposalCommentAction}
           onClose={() => setSelectedDate(null)}
         />
       )}
@@ -122,14 +138,30 @@ function SelectedDateDetails({
   dateKey,
   notes,
   comments,
+  proposalId,
+  createSharedDateNoteAction,
+  createProposalCommentAction,
   onClose,
 }: {
   dateKey: string;
   notes: SharedDateNote[];
   comments: ProposalComment[];
+  proposalId?: string;
+  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   onClose: () => void;
 }) {
-  if (notes.length === 0 && comments.length === 0) return null;
+  const canCreateProposalComment =
+    Boolean(proposalId) && Boolean(createProposalCommentAction);
+
+  if (
+    notes.length === 0 &&
+    comments.length === 0 &&
+    !createSharedDateNoteAction &&
+    !canCreateProposalComment
+  ) {
+    return null;
+  }
 
   return (
     <aside
@@ -148,6 +180,23 @@ function SelectedDateDetails({
       </div>
       <DateTextList title="Shared notes" items={notes} />
       <DateTextList title="Proposal comments" items={comments} />
+      {createSharedDateNoteAction && (
+        <DateTextForm
+          action={createSharedDateNoteAction}
+          dateKey={dateKey}
+          label="New shared note"
+          submitLabel="Add Note"
+        />
+      )}
+      {proposalId && createProposalCommentAction && (
+        <DateTextForm
+          action={createProposalCommentAction}
+          dateKey={dateKey}
+          label="New proposal comment"
+          submitLabel="Add Comment"
+          fields={{ proposalId }}
+        />
+      )}
     </aside>
   );
 }
@@ -177,6 +226,43 @@ function DateTextList({
         ))}
       </ul>
     </section>
+  );
+}
+
+function DateTextForm({
+  action,
+  dateKey,
+  label,
+  submitLabel,
+  fields = {},
+}: {
+  action: (formData: FormData) => void | Promise<void>;
+  dateKey: string;
+  label: string;
+  submitLabel: string;
+  fields?: Record<string, string>;
+}) {
+  return (
+    <form action={action} className="mt-3 space-y-2">
+      <input type="hidden" name="date" value={dateKey} />
+      {Object.entries(fields).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
+      <label className="block text-sm font-medium text-gray-700">
+        {label}
+        <textarea
+          name="body"
+          aria-label={label}
+          className="mt-1 block min-h-20 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+        />
+      </label>
+      <button
+        type="submit"
+        className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
+      >
+        {submitLabel}
+      </button>
+    </form>
   );
 }
 

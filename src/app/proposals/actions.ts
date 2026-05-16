@@ -7,6 +7,8 @@ import { getMyGroupId } from "@/lib/supabase/onboarding";
 import {
   acceptSharedProposal,
   counterSharedProposal,
+  createProposalComment,
+  createSharedDateNote,
   createSharedDraftProposal,
   rejectSharedProposal,
   resetSharedDraftProposal,
@@ -118,6 +120,46 @@ async function runProposalScheduleAction(
   );
 }
 
+async function runDateBodyAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    date: string,
+    body: string
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      requireFormString(formData, "date"),
+      requireFormString(formData, "body")
+    )
+  );
+}
+
+async function runProposalDateBodyAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    proposalId: string,
+    date: string,
+    body: string
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      requireFormString(formData, "proposalId"),
+      requireFormString(formData, "date"),
+      requireFormString(formData, "body")
+    )
+  );
+}
+
 export async function startSharedDraftProposal(): Promise<void> {
   await runGroupAction(createSharedDraftProposal);
 }
@@ -160,4 +202,16 @@ export async function sendSharedDraftProposalAction(
   formData: FormData
 ): Promise<void> {
   await runGroupScheduleAction(formData, sendSharedDraftProposal);
+}
+
+export async function createSharedDateNoteAction(
+  formData: FormData
+): Promise<void> {
+  await runDateBodyAction(formData, createSharedDateNote);
+}
+
+export async function createProposalCommentAction(
+  formData: FormData
+): Promise<void> {
+  await runProposalDateBodyAction(formData, createProposalComment);
 }

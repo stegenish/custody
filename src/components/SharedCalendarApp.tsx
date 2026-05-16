@@ -28,6 +28,8 @@ export interface SharedCalendarAppProps {
   counterProposalAction?: (formData: FormData) => void | Promise<void>;
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
   withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
+  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
 }
 
 export function SharedCalendarApp({
@@ -41,6 +43,8 @@ export function SharedCalendarApp({
   counterProposalAction,
   rejectProposalAction,
   withdrawProposalAction,
+  createSharedDateNoteAction,
+  createProposalCommentAction,
 }: SharedCalendarAppProps) {
   const today = useClientToday();
   const currentDraft = useMemo(
@@ -85,6 +89,8 @@ export function SharedCalendarApp({
         sharedDateNotes={state.notes}
         proposalComments={state.activeProposal.comments}
         proposalId={state.activeProposal.id}
+        createSharedDateNoteAction={createSharedDateNoteAction}
+        createProposalCommentAction={createProposalCommentAction}
         revisionId={currentActiveRevision.id}
         isReceiver={state.activeProposal.receiverParentId === currentParentId}
         isSender={state.activeProposal.currentAuthorParentId === currentParentId}
@@ -105,6 +111,7 @@ export function SharedCalendarApp({
         initialScheduleData={currentDraftRevision.scheduleData}
         noteDateKeys={noteDateKeys}
         sharedDateNotes={state.notes}
+        createSharedDateNoteAction={createSharedDateNoteAction}
         saveDraftAction={saveDraftAction}
         sendDraftAction={sendDraftAction}
         resetDraftAction={resetDraftAction}
@@ -119,6 +126,7 @@ export function SharedCalendarApp({
       scheduleData={state.agreedCalendar.scheduleData}
       noteDateKeys={noteDateKeys}
       sharedDateNotes={state.notes}
+      createSharedDateNoteAction={createSharedDateNoteAction}
       readOnly
       toolbar={
         startDraftAction ? (
@@ -142,6 +150,8 @@ interface ActiveProposalReviewProps {
   commentDateKeys?: Set<string>;
   sharedDateNotes?: SharedDateNote[];
   proposalComments?: ProposalComment[];
+  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   proposalId: string;
   revisionId: string;
   isReceiver: boolean;
@@ -160,6 +170,8 @@ function ActiveProposalReview({
   commentDateKeys,
   sharedDateNotes,
   proposalComments,
+  createSharedDateNoteAction,
+  createProposalCommentAction,
   proposalId,
   revisionId,
   isReceiver,
@@ -183,6 +195,9 @@ function ActiveProposalReview({
       commentDateKeys={commentDateKeys}
       sharedDateNotes={sharedDateNotes}
       proposalComments={proposalComments}
+      proposalId={proposalId}
+      createSharedDateNoteAction={createSharedDateNoteAction}
+      createProposalCommentAction={createProposalCommentAction}
       readOnly={!isCounterEditing}
       toolbar={
         <ActiveProposalToolbar
@@ -298,6 +313,7 @@ interface EditableDraftProposalProps {
   initialScheduleData: ScheduleData;
   noteDateKeys?: Set<string>;
   sharedDateNotes?: SharedDateNote[];
+  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
   sendDraftAction?: (formData: FormData) => void | Promise<void>;
   resetDraftAction?: () => void | Promise<void>;
@@ -309,6 +325,7 @@ function EditableDraftProposal({
   initialScheduleData,
   noteDateKeys,
   sharedDateNotes,
+  createSharedDateNoteAction,
   saveDraftAction,
   sendDraftAction,
   resetDraftAction,
@@ -323,6 +340,7 @@ function EditableDraftProposal({
       proposedScheduleData={draftScheduleData}
       noteDateKeys={noteDateKeys}
       sharedDateNotes={sharedDateNotes}
+      createSharedDateNoteAction={createSharedDateNoteAction}
       onUpdateProposedScheduleData={setDraftScheduleData}
       toolbar={
         saveDraftAction || sendDraftAction || resetDraftAction ? (

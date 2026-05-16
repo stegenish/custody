@@ -19,6 +19,9 @@ interface ProposalWorkspaceProps {
   commentDateKeys?: Set<string>;
   sharedDateNotes?: SharedDateNote[];
   proposalComments?: ProposalComment[];
+  proposalId?: string;
+  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateProposedScheduleData: (data: ScheduleData) => void;
@@ -33,6 +36,9 @@ export function ProposalWorkspace({
   commentDateKeys,
   sharedDateNotes,
   proposalComments,
+  proposalId,
+  createSharedDateNoteAction,
+  createProposalCommentAction,
   toolbar,
   readOnly = false,
   onUpdateProposedScheduleData,
@@ -61,6 +67,9 @@ export function ProposalWorkspace({
       commentDateKeys={commentDateKeys}
       sharedDateNotes={sharedDateNotes}
       proposalComments={proposalComments}
+      proposalId={proposalId}
+      createSharedDateNoteAction={createSharedDateNoteAction}
+      createProposalCommentAction={createProposalCommentAction}
       toolbar={toolbar}
       readOnly={readOnly}
       onUpdateScheduleData={onUpdateProposedScheduleData}
