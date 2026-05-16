@@ -48,6 +48,36 @@ async function getRequiredGroupId(
   return groupId;
 }
 
+async function runGroupAction(
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string
+  ) => Promise<unknown>
+): Promise<void> {
+  const supabase = await createClient();
+  const groupId = await getRequiredGroupId(supabase);
+
+  await mutation(supabase, groupId);
+  redirect("/");
+}
+
+async function runGroupScheduleAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    scheduleData: ScheduleData
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      parseScheduleData(formData.get("scheduleData"))
+    )
+  );
+}
+
 async function runProposalRevisionAction(
   formData: FormData,
   mutation: (
@@ -57,46 +87,49 @@ async function runProposalRevisionAction(
     revisionId: string
   ) => Promise<unknown>
 ): Promise<void> {
-  const supabase = await createClient();
-  const groupId = await getRequiredGroupId(supabase);
-
-  await mutation(
-    supabase,
-    groupId,
-    requireFormString(formData, "proposalId"),
-    requireFormString(formData, "revisionId")
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      requireFormString(formData, "proposalId"),
+      requireFormString(formData, "revisionId")
+    )
   );
-  redirect("/");
+}
+
+async function runProposalScheduleAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    proposalId: string,
+    revisionId: string,
+    scheduleData: ScheduleData
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      requireFormString(formData, "proposalId"),
+      requireFormString(formData, "revisionId"),
+      parseScheduleData(formData.get("scheduleData"))
+    )
+  );
 }
 
 export async function startSharedDraftProposal(): Promise<void> {
-  const supabase = await createClient();
-  const groupId = await getRequiredGroupId(supabase);
-
-  await createSharedDraftProposal(supabase, groupId);
-  redirect("/");
+  await runGroupAction(createSharedDraftProposal);
 }
 
 export async function saveSharedDraftProposalAction(
   formData: FormData
 ): Promise<void> {
-  const supabase = await createClient();
-  const groupId = await getRequiredGroupId(supabase);
-
-  await saveSharedDraftProposal(
-    supabase,
-    groupId,
-    parseScheduleData(formData.get("scheduleData"))
-  );
-  redirect("/");
+  await runGroupScheduleAction(formData, saveSharedDraftProposal);
 }
 
 export async function resetSharedDraftProposalAction(): Promise<void> {
-  const supabase = await createClient();
-  const groupId = await getRequiredGroupId(supabase);
-
-  await resetSharedDraftProposal(supabase, groupId);
-  redirect("/");
+  await runGroupAction(resetSharedDraftProposal);
 }
 
 export async function withdrawSharedProposalAction(
@@ -120,29 +153,11 @@ export async function acceptSharedProposalAction(
 export async function counterSharedProposalAction(
   formData: FormData
 ): Promise<void> {
-  const supabase = await createClient();
-  const groupId = await getRequiredGroupId(supabase);
-
-  await counterSharedProposal(
-    supabase,
-    groupId,
-    requireFormString(formData, "proposalId"),
-    requireFormString(formData, "revisionId"),
-    parseScheduleData(formData.get("scheduleData"))
-  );
-  redirect("/");
+  await runProposalScheduleAction(formData, counterSharedProposal);
 }
 
 export async function sendSharedDraftProposalAction(
   formData: FormData
 ): Promise<void> {
-  const supabase = await createClient();
-  const groupId = await getRequiredGroupId(supabase);
-
-  await sendSharedDraftProposal(
-    supabase,
-    groupId,
-    parseScheduleData(formData.get("scheduleData"))
-  );
-  redirect("/");
+  await runGroupScheduleAction(formData, sendSharedDraftProposal);
 }
