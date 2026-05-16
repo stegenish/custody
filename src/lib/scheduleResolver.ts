@@ -11,11 +11,21 @@ export function findActiveSchedule(
   date: Date,
   schedules: CustodySchedule[]
 ): CustodySchedule | null {
+  return findActiveScheduleInOrder(date, sortSchedulesByStartDate(schedules));
+}
+
+function sortSchedulesByStartDate(
+  schedules: readonly CustodySchedule[]
+): CustodySchedule[] {
+  return [...schedules].sort((a, b) => a.startDate.localeCompare(b.startDate));
+}
+
+function findActiveScheduleInOrder(
+  date: Date,
+  orderedSchedules: readonly CustodySchedule[]
+): CustodySchedule | null {
   const d = startOfDay(date);
   let active: CustodySchedule | null = null;
-  const orderedSchedules = [...schedules].sort((a, b) =>
-    a.startDate.localeCompare(b.startDate)
-  );
   for (const schedule of orderedSchedules) {
     const start = parseDateKey(schedule.startDate);
     if (d >= start) {
@@ -53,6 +63,20 @@ export function resolveDayColor(
   overrides: DayOverride[],
   labels: CustodyLabel[]
 ): DayColorResult | null {
+  return resolveDayColorWithSchedules(
+    date,
+    sortSchedulesByStartDate(schedules),
+    overrides,
+    labels
+  );
+}
+
+function resolveDayColorWithSchedules(
+  date: Date,
+  orderedSchedules: readonly CustodySchedule[],
+  overrides: DayOverride[],
+  labels: CustodyLabel[]
+): DayColorResult | null {
   // Check overrides first
   const dateKey = formatDateKey(date);
   const override = overrides.find((o) => o.date === dateKey);
@@ -64,7 +88,7 @@ export function resolveDayColor(
   }
 
   // Resolve via schedule
-  const schedule = findActiveSchedule(date, schedules);
+  const schedule = findActiveScheduleInOrder(date, orderedSchedules);
   if (!schedule) return null;
 
   const labelId = resolveScheduleLabel(date, schedule);
@@ -80,6 +104,7 @@ export function buildColorMap(
   scheduleData: ScheduleData
 ): Map<string, DayColorResult> {
   const { labels, schedules, overrides } = scheduleData;
+  const orderedSchedules = sortSchedulesByStartDate(schedules);
   const map = new Map<string, DayColorResult>();
 
   const cursor = startOfDay(startDate);
@@ -88,7 +113,12 @@ export function buildColorMap(
   let prevResult: DayColorResult | null = null;
 
   while (cursor <= end) {
-    const result = resolveDayColor(cursor, schedules, overrides, labels);
+    const result = resolveDayColorWithSchedules(
+      cursor,
+      orderedSchedules,
+      overrides,
+      labels
+    );
     const outgoingLabel =
       result &&
       !result.isOverride &&
