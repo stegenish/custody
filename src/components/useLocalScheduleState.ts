@@ -50,7 +50,7 @@ export function useLocalScheduleState() {
 
   function applyDraftLocally() {
     if (!draftScheduleData) return;
-    setAgreedScheduleData(draftScheduleData);
+    setAgreedScheduleData(cloneScheduleData(draftScheduleData));
     setDraftScheduleData(null);
   }
 

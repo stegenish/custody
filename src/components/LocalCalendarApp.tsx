@@ -46,7 +46,6 @@ export function LocalCalendarApp({ today }: LocalCalendarAppProps) {
       title="Custody Calendar"
       today={today}
       scheduleData={agreedScheduleData}
-      readOnly
       onUpdateScheduleData={setAgreedScheduleData}
       toolbar={
         <AppToolbar>

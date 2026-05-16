@@ -30,7 +30,18 @@ describe("LocalCalendarApp", () => {
 
     expect(screen.getByText("Custody Calendar")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start Draft" })).toBeInTheDocument();
-    expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
+    expect(screen.getByText("Schedule Editor")).toBeInTheDocument();
+  });
+
+  it("allows editing the agreed calendar without starting a draft", () => {
+    render(<LocalCalendarApp today={new Date(2026, 2, 1)} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(within(screen.getByTestId("day-override-bar")).getByText("Dad"));
+
+    expect(loadScheduleData().overrides).toEqual([
+      { date: "2026-03-02", labelId: "dad" },
+    ]);
   });
 
   it("starts and persists a draft proposal", () => {
