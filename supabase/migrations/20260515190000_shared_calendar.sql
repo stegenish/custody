@@ -820,6 +820,82 @@ begin
 end;
 $$;
 
+create or replace function public.reject_active_proposal(
+  target_group_id uuid,
+  target_proposal_id uuid,
+  viewed_revision_id uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  active_proposal public.proposals%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select *
+    into active_proposal
+  from public.proposals
+  where id = target_proposal_id
+    and group_id = target_group_id
+    and status = 'sent'
+  limit 1;
+
+  if active_proposal.id is null then
+    raise exception 'No active proposal to reject';
+  end if;
+
+  if active_proposal.receiver_user_id <> current_user_id then
+    raise exception 'Only the receiver can reject this proposal';
+  end if;
+
+  if active_proposal.current_revision_id <> viewed_revision_id then
+    raise exception 'Proposal changed since it was viewed';
+  end if;
+
+  if exists (
+    select 1
+    from public.proposals
+    where group_id = target_group_id
+      and status = 'draft'
+      and current_author_user_id = active_proposal.current_author_user_id
+      and id <> target_proposal_id
+  ) then
+    raise exception 'Sender already has a draft proposal';
+  end if;
+
+  insert into public.proposal_status_events (
+    proposal_id,
+    status,
+    actor_user_id,
+    revision_id
+  )
+  values (
+    active_proposal.id,
+    'rejected',
+    current_user_id,
+    viewed_revision_id
+  );
+
+  update public.proposals
+  set status = 'draft',
+      receiver_user_id = null,
+      updated_at = now()
+  where id = active_proposal.id;
+
+  return active_proposal.id;
+end;
+$$;
+
 grant execute on function public.ensure_initial_group() to authenticated;
 grant execute on function public.get_my_group_id() to authenticated;
 grant execute on function public.regenerate_group_invite(uuid, text) to authenticated;
@@ -828,3 +904,4 @@ grant execute on function public.create_draft_proposal(uuid) to authenticated;
 grant execute on function public.save_draft_proposal(uuid, jsonb) to authenticated;
 grant execute on function public.send_draft_proposal(uuid, jsonb) to authenticated;
 grant execute on function public.withdraw_active_proposal(uuid, uuid, uuid) to authenticated;
+grant execute on function public.reject_active_proposal(uuid, uuid, uuid) to authenticated;

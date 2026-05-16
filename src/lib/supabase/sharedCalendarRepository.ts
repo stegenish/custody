@@ -170,16 +170,50 @@ export async function sendSharedDraftProposal(
   return requireSupabaseData(result, "Unable to send draft proposal");
 }
 
+async function runActiveProposalMutation(
+  supabase: RpcClient,
+  functionName: string,
+  groupId: string,
+  proposalId: string,
+  revisionId: string,
+  errorMessage: string
+): Promise<string> {
+  const result = (await supabase.rpc(functionName, {
+    target_group_id: groupId,
+    target_proposal_id: proposalId,
+    viewed_revision_id: revisionId,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, errorMessage);
+}
+
 export async function withdrawSharedProposal(
   supabase: RpcClient,
   groupId: string,
   proposalId: string,
   revisionId: string
 ): Promise<string> {
-  const result = (await supabase.rpc("withdraw_active_proposal", {
-    target_group_id: groupId,
-    target_proposal_id: proposalId,
-    viewed_revision_id: revisionId,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to withdraw proposal");
+  return runActiveProposalMutation(
+    supabase,
+    "withdraw_active_proposal",
+    groupId,
+    proposalId,
+    revisionId,
+    "Unable to withdraw proposal"
+  );
+}
+
+export async function rejectSharedProposal(
+  supabase: RpcClient,
+  groupId: string,
+  proposalId: string,
+  revisionId: string
+): Promise<string> {
+  return runActiveProposalMutation(
+    supabase,
+    "reject_active_proposal",
+    groupId,
+    proposalId,
+    revisionId,
+    "Unable to reject proposal"
+  );
 }

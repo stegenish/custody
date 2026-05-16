@@ -1,6 +1,7 @@
 import {
   createSharedDraftProposal,
   loadSharedCalendarState,
+  rejectSharedProposal,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
   withdrawSharedProposal,
@@ -356,5 +357,36 @@ describe("withdrawSharedProposal", () => {
         "revision-1"
       )
     ).rejects.toThrow("Only the current sender can withdraw this proposal");
+  });
+});
+
+describe("rejectSharedProposal", () => {
+  it("rejects the current active proposal back to sender draft", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "proposal-1", error: null }),
+    };
+
+    await expect(
+      rejectSharedProposal(supabase, "group-1", "proposal-1", "revision-1")
+    ).resolves.toBe("proposal-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("reject_active_proposal", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      viewed_revision_id: "revision-1",
+    });
+  });
+
+  it("throws reject errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Only the receiver can reject this proposal" },
+      }),
+    };
+
+    await expect(
+      rejectSharedProposal(supabase, "group-1", "proposal-1", "revision-1")
+    ).rejects.toThrow("Only the receiver can reject this proposal");
   });
 });

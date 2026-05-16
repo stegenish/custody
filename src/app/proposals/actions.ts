@@ -5,6 +5,7 @@ import type { ScheduleData } from "@/lib/scheduleTypes";
 import { getMyGroupId } from "@/lib/supabase/onboarding";
 import {
   createSharedDraftProposal,
+  rejectSharedProposal,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
   withdrawSharedProposal,
@@ -33,13 +34,44 @@ function requireFormString(
   return value;
 }
 
-export async function startSharedDraftProposal(): Promise<void> {
-  const supabase = await createClient();
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+async function getRequiredGroupId(
+  supabase: SupabaseServerClient
+): Promise<string> {
   const groupId = await getMyGroupId(supabase);
 
   if (!groupId) {
     redirect("/onboarding");
   }
+
+  return groupId;
+}
+
+async function runProposalRevisionAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    proposalId: string,
+    revisionId: string
+  ) => Promise<string>
+): Promise<void> {
+  const supabase = await createClient();
+  const groupId = await getRequiredGroupId(supabase);
+
+  await mutation(
+    supabase,
+    groupId,
+    requireFormString(formData, "proposalId"),
+    requireFormString(formData, "revisionId")
+  );
+  redirect("/");
+}
+
+export async function startSharedDraftProposal(): Promise<void> {
+  const supabase = await createClient();
+  const groupId = await getRequiredGroupId(supabase);
 
   await createSharedDraftProposal(supabase, groupId);
   redirect("/");
@@ -49,11 +81,7 @@ export async function saveSharedDraftProposalAction(
   formData: FormData
 ): Promise<void> {
   const supabase = await createClient();
-  const groupId = await getMyGroupId(supabase);
-
-  if (!groupId) {
-    redirect("/onboarding");
-  }
+  const groupId = await getRequiredGroupId(supabase);
 
   await saveSharedDraftProposal(
     supabase,
@@ -66,31 +94,20 @@ export async function saveSharedDraftProposalAction(
 export async function withdrawSharedProposalAction(
   formData: FormData
 ): Promise<void> {
-  const supabase = await createClient();
-  const groupId = await getMyGroupId(supabase);
+  await runProposalRevisionAction(formData, withdrawSharedProposal);
+}
 
-  if (!groupId) {
-    redirect("/onboarding");
-  }
-
-  await withdrawSharedProposal(
-    supabase,
-    groupId,
-    requireFormString(formData, "proposalId"),
-    requireFormString(formData, "revisionId")
-  );
-  redirect("/");
+export async function rejectSharedProposalAction(
+  formData: FormData
+): Promise<void> {
+  await runProposalRevisionAction(formData, rejectSharedProposal);
 }
 
 export async function sendSharedDraftProposalAction(
   formData: FormData
 ): Promise<void> {
   const supabase = await createClient();
-  const groupId = await getMyGroupId(supabase);
-
-  if (!groupId) {
-    redirect("/onboarding");
-  }
+  const groupId = await getRequiredGroupId(supabase);
 
   await sendSharedDraftProposal(
     supabase,
