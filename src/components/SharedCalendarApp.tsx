@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   AppToolbar,
   AppToolbarButton,
@@ -8,6 +8,7 @@ import {
 } from "./AppToolbar";
 import { CalendarWorkspace } from "./CalendarWorkspace";
 import { ProposalWorkspace } from "./ProposalWorkspace";
+import { useClientToday } from "./useClientToday";
 import { getCurrentRevision } from "@/lib/sharedCalendarWorkflowHelpers";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
@@ -37,7 +38,7 @@ export function SharedCalendarApp({
   rejectProposalAction,
   withdrawProposalAction,
 }: SharedCalendarAppProps) {
-  const [today, setToday] = useState<Date | null>(null);
+  const today = useClientToday();
   const currentDraft = useMemo(
     () =>
       state.draftProposals.find(
@@ -54,11 +55,6 @@ export function SharedCalendarApp({
       state.activeProposal ? getCurrentRevision(state.activeProposal) : null,
     [state.activeProposal]
   );
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setToday(new Date()), 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
 
   return useMemo(() => {
     if (!today) return null;

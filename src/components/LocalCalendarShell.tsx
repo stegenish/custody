@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { LocalCalendarApp } from "./LocalCalendarApp";
+import { useClientToday } from "./useClientToday";
 
 export function LocalCalendarShell() {
-  const [today, setToday] = useState<Date | null>(null);
+  const today = useClientToday();
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setToday(new Date()), 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  return useMemo(() => {
-    if (!today) return null;
-    return <LocalCalendarApp today={today} />;
-  }, [today]);
+  if (!today) return null;
+  return <LocalCalendarApp today={today} />;
 }
