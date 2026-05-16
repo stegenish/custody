@@ -1,5 +1,21 @@
 create extension if not exists pgcrypto;
 
+create or replace function public.is_allowed_schedule_data_size(schedule_data jsonb)
+returns boolean
+language sql
+immutable
+as $$
+  select char_length(schedule_data::text) <= 65536
+$$;
+
+create or replace function public.is_allowed_text_body_size(body text)
+returns boolean
+language sql
+immutable
+as $$
+  select char_length(body) <= 4096
+$$;
+
 create table if not exists public.custody_groups (
   id uuid primary key default gen_random_uuid(),
   name text not null default 'Custody calendar',
@@ -33,7 +49,7 @@ create table if not exists public.calendar_versions (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.custody_groups(id) on delete cascade,
   version integer not null,
-  schedule_data jsonb not null,
+  schedule_data jsonb not null check (public.is_allowed_schedule_data_size(schedule_data)),
   accepted_proposal_id uuid,
   created_at timestamptz not null default now(),
   created_by_user_id uuid references auth.users(id) on delete set null,
@@ -69,7 +85,7 @@ create table if not exists public.proposal_revisions (
   revision_number integer not null,
   author_user_id uuid not null references auth.users(id) on delete cascade,
   base_calendar_version integer not null,
-  schedule_data jsonb not null,
+  schedule_data jsonb not null check (public.is_allowed_schedule_data_size(schedule_data)),
   created_at timestamptz not null default now(),
   unique (proposal_id, revision_number)
 );
@@ -96,7 +112,7 @@ create table if not exists public.proposal_comments (
   proposal_id uuid not null references public.proposals(id) on delete cascade,
   author_user_id uuid not null references auth.users(id) on delete cascade,
   date_key date not null,
-  body text not null,
+  body text not null check (public.is_allowed_text_body_size(body)),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz
@@ -107,7 +123,7 @@ create table if not exists public.shared_date_notes (
   group_id uuid not null references public.custody_groups(id) on delete cascade,
   author_user_id uuid not null references auth.users(id) on delete cascade,
   date_key date not null,
-  body text not null,
+  body text not null check (public.is_allowed_text_body_size(body)),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz
@@ -612,6 +628,10 @@ begin
     raise exception 'Draft proposal not found';
   end if;
 
+  if not public.is_allowed_schedule_data_size(proposed_schedule_data) then
+    raise exception 'Schedule data is too large';
+  end if;
+
   select coalesce(max(revision_number), 0) + 1
     into next_revision_number
   from public.proposal_revisions
@@ -697,6 +717,10 @@ begin
 
   if draft_proposal.id is null then
     raise exception 'Draft proposal not found';
+  end if;
+
+  if not public.is_allowed_schedule_data_size(proposed_schedule_data) then
+    raise exception 'Schedule data is too large';
   end if;
 
   select coalesce(max(revision_number), 0) + 1
@@ -1009,6 +1033,10 @@ begin
     raise exception 'Viewed proposal revision not found';
   end if;
 
+  if not public.is_allowed_schedule_data_size(proposed_schedule_data) then
+    raise exception 'Schedule data is too large';
+  end if;
+
   select *
     into latest_calendar
   from public.calendar_versions
@@ -1209,6 +1237,10 @@ begin
     raise exception 'Parent does not belong to this custody group';
   end if;
 
+  if not public.is_allowed_text_body_size(note_body) then
+    raise exception 'Shared date note is too long';
+  end if;
+
   insert into public.shared_date_notes (
     group_id,
     author_user_id,
@@ -1263,6 +1295,10 @@ begin
 
   if existing_note.author_user_id <> current_user_id then
     raise exception 'Only the author can edit this note';
+  end if;
+
+  if not public.is_allowed_text_body_size(note_body) then
+    raise exception 'Shared date note is too long';
   end if;
 
   update public.shared_date_notes
@@ -1356,6 +1392,10 @@ begin
     raise exception 'Proposal not found';
   end if;
 
+  if not public.is_allowed_text_body_size(comment_body) then
+    raise exception 'Proposal comment is too long';
+  end if;
+
   insert into public.proposal_comments (
     proposal_id,
     author_user_id,
@@ -1414,6 +1454,10 @@ begin
 
   if existing_comment.author_user_id <> current_user_id then
     raise exception 'Only the author can edit this comment';
+  end if;
+
+  if not public.is_allowed_text_body_size(comment_body) then
+    raise exception 'Proposal comment is too long';
   end if;
 
   update public.proposal_comments

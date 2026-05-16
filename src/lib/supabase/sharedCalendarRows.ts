@@ -1,4 +1,5 @@
 import type { ScheduleData } from "@/lib/scheduleTypes";
+import { requireScheduleData } from "@/lib/scheduleDataValidation";
 import type {
   CalendarProposal,
   CustodyGroupState,
@@ -91,7 +92,10 @@ function mapRevision(row: ProposalRevisionRow): ProposalRevision {
     revisionNumber: row.revision_number,
     authorParentId: row.author_user_id,
     baseCalendarVersion: row.base_calendar_version,
-    scheduleData: row.schedule_data,
+    scheduleData: requireScheduleData(
+      row.schedule_data,
+      "Invalid proposal revision schedule data"
+    ),
     createdAt: row.created_at,
   };
 }
@@ -171,7 +175,10 @@ export function mapSharedCalendarRows(
     parents: rows.memberships.map(mapParent),
     agreedCalendar: {
       version: rows.latestCalendarVersion.version,
-      scheduleData: rows.latestCalendarVersion.schedule_data,
+      scheduleData: requireScheduleData(
+        rows.latestCalendarVersion.schedule_data,
+        "Invalid agreed calendar schedule data"
+      ),
       updatedAt: rows.latestCalendarVersion.created_at,
     },
     draftProposals: proposals.filter((proposal) => proposal.status === "draft"),

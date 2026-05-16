@@ -33,6 +33,26 @@ describe("loadScheduleData", () => {
     localStorage.setItem("custody-calendar-schedules", "{}");
     expect(loadScheduleData()).toEqual(createDefaultScheduleData());
   });
+
+  it("returns default data when nested schedule data is malformed", () => {
+    localStorage.setItem(
+      "custody-calendar-schedules",
+      JSON.stringify({
+        labels: [],
+        schedules: [
+          {
+            id: "schedule-1",
+            startDate: "not-a-date",
+            cycleWeeks: 2,
+            labelIds: ["mom", "dad"],
+          },
+        ],
+        overrides: [],
+      })
+    );
+
+    expect(loadScheduleData()).toEqual(createDefaultScheduleData());
+  });
 });
 
 describe("saveScheduleData + loadScheduleData", () => {
@@ -67,6 +87,24 @@ describe("draft schedule storage", () => {
 
   it("returns null when draft storage contains the wrong shape", () => {
     localStorage.setItem("custody-calendar-draft-schedule", "{}");
+    expect(loadDraftScheduleData()).toBeNull();
+  });
+
+  it("returns null when draft storage contains invalid JSON", () => {
+    localStorage.setItem("custody-calendar-draft-schedule", "not-json{{{");
+    expect(loadDraftScheduleData()).toBeNull();
+  });
+
+  it("returns null when nested draft schedule data is malformed", () => {
+    localStorage.setItem(
+      "custody-calendar-draft-schedule",
+      JSON.stringify({
+        labels: [],
+        schedules: [],
+        overrides: [{ date: "2026-02-31", labelId: "mom" }],
+      })
+    );
+
     expect(loadDraftScheduleData()).toBeNull();
   });
 

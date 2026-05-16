@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import type { ScheduleData } from "@/lib/scheduleTypes";
+import { parseScheduleDataJson } from "@/lib/scheduleDataValidation";
 import { getMyGroupId } from "@/lib/supabase/onboarding";
 import {
   acceptSharedProposal,
@@ -19,11 +20,7 @@ function parseScheduleData(value: FormDataEntryValue | null): ScheduleData {
   if (typeof value !== "string") {
     throw new Error("Missing schedule data");
   }
-  const parsed = JSON.parse(value);
-  if (typeof parsed !== "object" || parsed === null) {
-    throw new Error("Invalid schedule data");
-  }
-  return parsed as ScheduleData;
+  return parseScheduleDataJson(value);
 }
 
 function requireFormString(

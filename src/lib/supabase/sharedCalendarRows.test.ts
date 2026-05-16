@@ -235,4 +235,63 @@ describe("mapSharedCalendarRows", () => {
     expect(state.draftProposals[0].comments).toEqual([]);
     expect(state.notes).toEqual([]);
   });
+
+  it("rejects malformed agreed calendar schedule data", () => {
+    expect(() =>
+      mapSharedCalendarRows({
+        ...baseRows,
+        latestCalendarVersion: {
+          ...baseRows.latestCalendarVersion,
+          schedule_data: {
+            labels: [],
+            schedules: [
+              {
+                id: "schedule-1",
+                startDate: "not-a-date",
+                cycleWeeks: 2,
+                labelIds: ["mom", "dad"],
+              },
+            ],
+            overrides: [],
+          },
+        },
+      })
+    ).toThrow("Invalid agreed calendar schedule data");
+  });
+
+  it("rejects malformed proposal revision schedule data", () => {
+    expect(() =>
+      mapSharedCalendarRows({
+        ...baseRows,
+        proposals: [
+          {
+            id: "draft-1",
+            status: "draft",
+            created_by_user_id: "parent-a",
+            current_author_user_id: "parent-a",
+            receiver_user_id: null,
+            base_calendar_version: 2,
+            current_revision_id: "rev-1",
+            created_at: "2026-05-15T12:00:00.000Z",
+            updated_at: "2026-05-15T12:00:00.000Z",
+          },
+        ],
+        revisions: [
+          {
+            id: "rev-1",
+            proposal_id: "draft-1",
+            revision_number: 1,
+            author_user_id: "parent-a",
+            base_calendar_version: 2,
+            schedule_data: {
+              labels: [],
+              schedules: [],
+              overrides: [{ date: "2026-02-31", labelId: "mom" }],
+            },
+            created_at: "2026-05-15T12:00:00.000Z",
+          },
+        ],
+      })
+    ).toThrow("Invalid proposal revision schedule data");
+  });
 });

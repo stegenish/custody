@@ -15,6 +15,7 @@ import {
   updateSharedDateNote,
   withdrawSharedProposal,
 } from "./sharedCalendarRepository";
+import { MAX_TEXT_BODY_LENGTH } from "@/lib/scheduleDataValidation";
 
 function createQueryBuilder(result: unknown) {
   const builder = {
@@ -569,6 +570,22 @@ describe("shared date note mutations", () => {
       updateSharedDateNote(supabase, "group-1", "note-1", "No")
     ).rejects.toThrow("Only the author can edit this note");
   });
+
+  it("rejects oversized shared date note bodies before calling RPC", async () => {
+    const supabase = {
+      rpc: jest.fn(),
+    };
+
+    await expect(
+      createSharedDateNote(
+        supabase,
+        "group-1",
+        "2026-06-01",
+        "x".repeat(MAX_TEXT_BODY_LENGTH + 1)
+      )
+    ).rejects.toThrow("Shared date note is too long");
+    expect(supabase.rpc).not.toHaveBeenCalled();
+  });
 });
 
 describe("proposal comment mutations", () => {
@@ -651,5 +668,22 @@ describe("proposal comment mutations", () => {
         "No"
       )
     ).rejects.toThrow("Only the author can edit this comment");
+  });
+
+  it("rejects oversized proposal comments before calling RPC", async () => {
+    const supabase = {
+      rpc: jest.fn(),
+    };
+
+    await expect(
+      createProposalComment(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "2026-06-01",
+        "x".repeat(MAX_TEXT_BODY_LENGTH + 1)
+      )
+    ).rejects.toThrow("Proposal comment is too long");
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 });

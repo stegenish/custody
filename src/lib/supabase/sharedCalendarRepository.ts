@@ -9,6 +9,7 @@ import type {
   SharedDateNoteRow,
 } from "./sharedCalendarRows";
 import type { ScheduleData } from "@/lib/scheduleTypes";
+import { assertTextBodyLength } from "@/lib/scheduleDataValidation";
 import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
 
 interface RpcClient {
@@ -267,7 +268,7 @@ export async function createSharedDateNote(
   const result = (await supabase.rpc("create_shared_date_note", {
     target_group_id: groupId,
     note_date_key: date,
-    note_body: body,
+    note_body: assertTextBodyLength(body, "Shared date note"),
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to create shared date note");
 }
@@ -281,7 +282,7 @@ export async function updateSharedDateNote(
   const result = (await supabase.rpc("update_shared_date_note", {
     target_group_id: groupId,
     target_note_id: noteId,
-    note_body: body,
+    note_body: assertTextBodyLength(body, "Shared date note"),
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to update shared date note");
 }
@@ -309,7 +310,7 @@ export async function createProposalComment(
     target_group_id: groupId,
     target_proposal_id: proposalId,
     comment_date_key: date,
-    comment_body: body,
+    comment_body: assertTextBodyLength(body, "Proposal comment"),
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to create proposal comment");
 }
@@ -325,7 +326,7 @@ export async function updateProposalComment(
     target_group_id: groupId,
     target_proposal_id: proposalId,
     target_comment_id: commentId,
-    comment_body: body,
+    comment_body: assertTextBodyLength(body, "Proposal comment"),
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to update proposal comment");
 }

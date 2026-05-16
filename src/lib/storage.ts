@@ -1,20 +1,11 @@
 import type { ScheduleData } from "./scheduleTypes";
+import { isScheduleData } from "./scheduleDataValidation";
 
 const STORAGE_KEY = "custody-calendar-schedules";
 const DRAFT_STORAGE_KEY = "custody-calendar-draft-schedule";
 
 export function createDefaultScheduleData(): ScheduleData {
   return { labels: [], schedules: [], overrides: [] };
-}
-
-function isScheduleData(value: unknown): value is ScheduleData {
-  if (!value || typeof value !== "object") return false;
-  const data = value as Partial<ScheduleData>;
-  return (
-    Array.isArray(data.labels) &&
-    Array.isArray(data.schedules) &&
-    Array.isArray(data.overrides)
-  );
 }
 
 export function loadScheduleData(): ScheduleData {
