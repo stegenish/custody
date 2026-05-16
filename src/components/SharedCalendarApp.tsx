@@ -11,7 +11,11 @@ import { ProposalWorkspace } from "./ProposalWorkspace";
 import { useClientToday } from "./useClientToday";
 import { getCurrentRevision } from "@/lib/sharedCalendarWorkflowHelpers";
 import type { ScheduleData } from "@/lib/scheduleTypes";
-import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
+import type {
+  CustodyGroupState,
+  ProposalComment,
+  SharedDateNote,
+} from "@/lib/sharedCalendarTypes";
 
 export interface SharedCalendarAppProps {
   state: CustodyGroupState;
@@ -55,6 +59,17 @@ export function SharedCalendarApp({
       state.activeProposal ? getCurrentRevision(state.activeProposal) : null,
     [state.activeProposal]
   );
+  const noteDateKeys = useMemo(
+    () => dateKeysForNotes(state.notes),
+    [state.notes]
+  );
+  const activeProposalCommentDateKeys = useMemo(
+    () =>
+      state.activeProposal
+        ? dateKeysForProposalComments(state.activeProposal.comments)
+        : undefined,
+    [state.activeProposal]
+  );
 
   if (!today) return null;
 
@@ -65,6 +80,8 @@ export function SharedCalendarApp({
         today={today}
         agreedScheduleData={state.agreedCalendar.scheduleData}
         proposedScheduleData={currentActiveRevision.scheduleData}
+        noteDateKeys={noteDateKeys}
+        commentDateKeys={activeProposalCommentDateKeys}
         proposalId={state.activeProposal.id}
         revisionId={currentActiveRevision.id}
         isReceiver={state.activeProposal.receiverParentId === currentParentId}
@@ -84,6 +101,7 @@ export function SharedCalendarApp({
         today={today}
         agreedScheduleData={state.agreedCalendar.scheduleData}
         initialScheduleData={currentDraftRevision.scheduleData}
+        noteDateKeys={noteDateKeys}
         saveDraftAction={saveDraftAction}
         sendDraftAction={sendDraftAction}
         resetDraftAction={resetDraftAction}
@@ -96,6 +114,7 @@ export function SharedCalendarApp({
       title="Custody Calendar"
       today={today}
       scheduleData={state.agreedCalendar.scheduleData}
+      noteDateKeys={noteDateKeys}
       readOnly
       toolbar={
         startDraftAction ? (
@@ -115,6 +134,8 @@ interface ActiveProposalReviewProps {
   today: Date;
   agreedScheduleData: ScheduleData;
   proposedScheduleData: ScheduleData;
+  noteDateKeys?: Set<string>;
+  commentDateKeys?: Set<string>;
   proposalId: string;
   revisionId: string;
   isReceiver: boolean;
@@ -129,6 +150,8 @@ function ActiveProposalReview({
   today,
   agreedScheduleData,
   proposedScheduleData,
+  noteDateKeys,
+  commentDateKeys,
   proposalId,
   revisionId,
   isReceiver,
@@ -148,6 +171,8 @@ function ActiveProposalReview({
       today={today}
       agreedScheduleData={agreedScheduleData}
       proposedScheduleData={counterScheduleData}
+      noteDateKeys={noteDateKeys}
+      commentDateKeys={commentDateKeys}
       readOnly={!isCounterEditing}
       toolbar={
         <ActiveProposalToolbar
@@ -261,6 +286,7 @@ interface EditableDraftProposalProps {
   today: Date;
   agreedScheduleData: ScheduleData;
   initialScheduleData: ScheduleData;
+  noteDateKeys?: Set<string>;
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
   sendDraftAction?: (formData: FormData) => void | Promise<void>;
   resetDraftAction?: () => void | Promise<void>;
@@ -270,6 +296,7 @@ function EditableDraftProposal({
   today,
   agreedScheduleData,
   initialScheduleData,
+  noteDateKeys,
   saveDraftAction,
   sendDraftAction,
   resetDraftAction,
@@ -282,6 +309,7 @@ function EditableDraftProposal({
       today={today}
       agreedScheduleData={agreedScheduleData}
       proposedScheduleData={draftScheduleData}
+      noteDateKeys={noteDateKeys}
       onUpdateProposedScheduleData={setDraftScheduleData}
       toolbar={
         saveDraftAction || sendDraftAction || resetDraftAction ? (
@@ -311,6 +339,14 @@ function EditableDraftProposal({
       }
     />
   );
+}
+
+function dateKeysForNotes(notes: SharedDateNote[]): Set<string> {
+  return new Set(notes.map((note) => note.date));
+}
+
+function dateKeysForProposalComments(comments: ProposalComment[]): Set<string> {
+  return new Set(comments.map((comment) => comment.date));
 }
 
 interface ToolbarActionFormProps {

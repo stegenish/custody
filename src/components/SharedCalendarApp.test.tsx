@@ -98,6 +98,36 @@ describe("SharedCalendarApp", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("renders shared date note indicators on the agreed calendar", () => {
+    const stateWithNote: CustodyGroupState = {
+      ...state,
+      notes: [
+        {
+          id: "note-1",
+          authorParentId: "parent-a",
+          date: "2026-03-02",
+          body: "Remember school event",
+          createdAt: "2026-05-16T00:00:00.000Z",
+          updatedAt: "2026-05-16T00:00:00.000Z",
+        },
+      ],
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithNote}
+        currentParentId="parent-a"
+        startDraftAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByTestId("shared-note-indicator")).toBeInTheDocument();
+  });
+
   it("renders the current parent's draft proposal as editable", () => {
     const draftScheduleData = {
       ...state.agreedCalendar.scheduleData,
@@ -204,6 +234,44 @@ describe("SharedCalendarApp", () => {
       document.querySelector<HTMLInputElement>('input[name="revisionId"]')
         ?.value
     ).toBe("revision-1");
+  });
+
+  it("renders proposal comment indicators on active proposals", () => {
+    const activeProposal = createActiveProposal({
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    });
+    const stateWithComment: CustodyGroupState = {
+      ...state,
+      activeProposal: {
+        ...activeProposal,
+        comments: [
+          {
+            id: "comment-1",
+            proposalId: "proposal-1",
+            authorParentId: "parent-a",
+            date: "2026-03-03",
+            body: "Can we swap this date?",
+            createdAt: "2026-05-16T00:00:00.000Z",
+            updatedAt: "2026-05-16T00:00:00.000Z",
+          },
+        ],
+      },
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithComment}
+        currentParentId="parent-b"
+        acceptProposalAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByTestId("proposal-comment-indicator")).toBeInTheDocument();
   });
 
   it("lets the receiver edit and send a counterproposal", () => {

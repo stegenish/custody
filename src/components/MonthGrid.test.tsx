@@ -208,4 +208,24 @@ describe("MonthGrid", () => {
     );
     expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
   });
+
+  it("renders a shared note indicator for noted dates", () => {
+    render(
+      <MonthGrid
+        month={month}
+        noteDateKeys={new Set(["2026-03-02"])}
+      />
+    );
+    expect(screen.getByTestId("shared-note-indicator")).toBeInTheDocument();
+  });
+
+  it("renders a proposal comment indicator for commented dates", () => {
+    render(
+      <MonthGrid
+        month={month}
+        commentDateKeys={new Set(["2026-03-02"])}
+      />
+    );
+    expect(screen.getByTestId("proposal-comment-indicator")).toBeInTheDocument();
+  });
 });

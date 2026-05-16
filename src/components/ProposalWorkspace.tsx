@@ -11,6 +11,8 @@ interface ProposalWorkspaceProps {
   title?: string;
   agreedScheduleData: ScheduleData;
   proposedScheduleData: ScheduleData;
+  noteDateKeys?: Set<string>;
+  commentDateKeys?: Set<string>;
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateProposedScheduleData: (data: ScheduleData) => void;
@@ -21,6 +23,8 @@ export function ProposalWorkspace({
   title = "Draft Proposal",
   agreedScheduleData,
   proposedScheduleData,
+  noteDateKeys,
+  commentDateKeys,
   toolbar,
   readOnly = false,
   onUpdateProposedScheduleData,
@@ -45,6 +49,8 @@ export function ProposalWorkspace({
       calendar={calendar}
       scheduleData={proposedScheduleData}
       changedDateKeys={changedDateKeys}
+      noteDateKeys={noteDateKeys}
+      commentDateKeys={commentDateKeys}
       toolbar={toolbar}
       readOnly={readOnly}
       onUpdateScheduleData={onUpdateProposedScheduleData}

@@ -6,6 +6,8 @@ interface CalendarGridProps {
   months: CalendarMonth[];
   colorMap?: Map<string, DayColorResult>;
   changedDateKeys?: Set<string>;
+  noteDateKeys?: Set<string>;
+  commentDateKeys?: Set<string>;
   onDayClick?: (dateKey: string) => void;
 }
 
@@ -13,6 +15,8 @@ export function CalendarGrid({
   months,
   colorMap,
   changedDateKeys,
+  noteDateKeys,
+  commentDateKeys,
   onDayClick,
 }: CalendarGridProps) {
   return (
@@ -26,6 +30,8 @@ export function CalendarGrid({
           month={month}
           colorMap={colorMap}
           changedDateKeys={changedDateKeys}
+          noteDateKeys={noteDateKeys}
+          commentDateKeys={commentDateKeys}
           onDayClick={onDayClick}
         />
       ))}

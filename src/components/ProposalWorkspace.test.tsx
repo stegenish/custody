@@ -54,4 +54,20 @@ describe("ProposalWorkspace", () => {
       screen.queryByTestId("proposal-change-indicator")
     ).not.toBeInTheDocument();
   });
+
+  it("renders shared note and proposal comment indicators", () => {
+    render(
+      <ProposalWorkspace
+        today={new Date(2026, 2, 1)}
+        agreedScheduleData={agreedScheduleData}
+        proposedScheduleData={agreedScheduleData}
+        noteDateKeys={new Set(["2026-03-02"])}
+        commentDateKeys={new Set(["2026-03-03"])}
+        onUpdateProposedScheduleData={jest.fn()}
+      />
+    );
+
+    expect(screen.getByTestId("shared-note-indicator")).toBeInTheDocument();
+    expect(screen.getByTestId("proposal-comment-indicator")).toBeInTheDocument();
+  });
 });

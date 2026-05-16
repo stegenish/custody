@@ -40,10 +40,14 @@ function DayIndicators({
   dayColor,
   isSchoolHoliday,
   isChanged,
+  hasSharedNote,
+  hasProposalComment,
 }: {
   dayColor?: DayColorResult;
   isSchoolHoliday: boolean;
   isChanged: boolean;
+  hasSharedNote: boolean;
+  hasProposalComment: boolean;
 }) {
   const description = custodyDescription(dayColor);
   const indicator = custodyIndicator(dayColor);
@@ -63,6 +67,20 @@ function DayIndicators({
         <span
           data-testid="school-holiday-indicator"
           className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
+        />
+      )}
+      {hasSharedNote && (
+        <span
+          aria-hidden="true"
+          data-testid="shared-note-indicator"
+          className="absolute bottom-0.5 left-1 h-1.5 w-1.5 rounded-full bg-violet-600"
+        />
+      )}
+      {hasProposalComment && (
+        <span
+          aria-hidden="true"
+          data-testid="proposal-comment-indicator"
+          className="absolute bottom-0.5 right-1 h-1.5 w-1.5 rounded-full bg-amber-500"
         />
       )}
       {isChanged && (
@@ -102,11 +120,15 @@ function DayCell({
   day,
   dayColor,
   isChanged,
+  hasSharedNote,
+  hasProposalComment,
   onDayClick,
 }: {
   day: CalendarDay;
   dayColor?: DayColorResult;
   isChanged: boolean;
+  hasSharedNote: boolean;
+  hasProposalComment: boolean;
   onDayClick?: (dateKey: string) => void;
 }) {
   const dateKey = formatDateKey(day.date);
@@ -116,6 +138,8 @@ function DayCell({
       dayColor={dayColor}
       isSchoolHoliday={day.isCurrentMonth && day.isSchoolHoliday}
       isChanged={day.isCurrentMonth && isChanged}
+      hasSharedNote={day.isCurrentMonth && hasSharedNote}
+      hasProposalComment={day.isCurrentMonth && hasProposalComment}
     />
   );
 
@@ -155,6 +179,8 @@ interface MonthGridProps {
   month: CalendarMonth;
   colorMap?: Map<string, DayColorResult>;
   changedDateKeys?: Set<string>;
+  noteDateKeys?: Set<string>;
+  commentDateKeys?: Set<string>;
   onDayClick?: (dateKey: string) => void;
 }
 
@@ -162,6 +188,8 @@ export function MonthGrid({
   month,
   colorMap,
   changedDateKeys,
+  noteDateKeys,
+  commentDateKeys,
   onDayClick,
 }: MonthGridProps) {
   return (
@@ -202,6 +230,8 @@ export function MonthGrid({
                     day={day}
                     dayColor={colorMap?.get(dateKey)}
                     isChanged={changedDateKeys?.has(dateKey) ?? false}
+                    hasSharedNote={noteDateKeys?.has(dateKey) ?? false}
+                    hasProposalComment={commentDateKeys?.has(dateKey) ?? false}
                     onDayClick={onDayClick}
                   />
                 );

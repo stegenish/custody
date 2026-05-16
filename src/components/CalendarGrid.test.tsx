@@ -67,4 +67,24 @@ describe("CalendarGrid", () => {
     );
     expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
   });
+
+  it("passes shared note date keys through to MonthGrid children", () => {
+    render(
+      <CalendarGrid
+        months={calendar}
+        noteDateKeys={new Set(["2026-03-02"])}
+      />
+    );
+    expect(screen.getByTestId("shared-note-indicator")).toBeInTheDocument();
+  });
+
+  it("passes proposal comment date keys through to MonthGrid children", () => {
+    render(
+      <CalendarGrid
+        months={calendar}
+        commentDateKeys={new Set(["2026-03-02"])}
+      />
+    );
+    expect(screen.getByTestId("proposal-comment-indicator")).toBeInTheDocument();
+  });
 });

@@ -19,6 +19,8 @@ interface CalendarWorkspaceProps {
   calendar?: CalendarMonth[];
   scheduleData: ScheduleData;
   changedDateKeys?: Set<string>;
+  noteDateKeys?: Set<string>;
+  commentDateKeys?: Set<string>;
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateScheduleData: (data: ScheduleData) => void;
@@ -30,6 +32,8 @@ export function CalendarWorkspace({
   calendar,
   scheduleData,
   changedDateKeys,
+  noteDateKeys,
+  commentDateKeys,
   toolbar,
   readOnly = false,
   onUpdateScheduleData,
@@ -59,6 +63,8 @@ export function CalendarWorkspace({
         months={visibleCalendar}
         colorMap={colorMap}
         changedDateKeys={changedDateKeys}
+        noteDateKeys={noteDateKeys}
+        commentDateKeys={commentDateKeys}
         onDayClick={readOnly ? undefined : setSelectedDate}
       />
       {!readOnly && selectedDate && (
