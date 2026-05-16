@@ -3,6 +3,7 @@ import { LocalCalendarShell } from "@/components/LocalCalendarShell";
 import { SharedCalendarApp } from "@/components/SharedCalendarApp";
 import {
   acceptSharedProposalAction,
+  counterSharedProposalAction,
   rejectSharedProposalAction,
   saveSharedDraftProposalAction,
   sendSharedDraftProposalAction,
@@ -49,6 +50,7 @@ export default async function Home() {
       saveDraftAction={saveSharedDraftProposalAction}
       sendDraftAction={sendSharedDraftProposalAction}
       acceptProposalAction={acceptSharedProposalAction}
+      counterProposalAction={counterSharedProposalAction}
       rejectProposalAction={rejectSharedProposalAction}
       withdrawProposalAction={withdrawSharedProposalAction}
     />

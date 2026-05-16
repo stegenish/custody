@@ -5,6 +5,7 @@ import type { ScheduleData } from "@/lib/scheduleTypes";
 import { getMyGroupId } from "@/lib/supabase/onboarding";
 import {
   acceptSharedProposal,
+  counterSharedProposal,
   createSharedDraftProposal,
   rejectSharedProposal,
   saveSharedDraftProposal,
@@ -108,6 +109,22 @@ export async function acceptSharedProposalAction(
   formData: FormData
 ): Promise<void> {
   await runProposalRevisionAction(formData, acceptSharedProposal);
+}
+
+export async function counterSharedProposalAction(
+  formData: FormData
+): Promise<void> {
+  const supabase = await createClient();
+  const groupId = await getRequiredGroupId(supabase);
+
+  await counterSharedProposal(
+    supabase,
+    groupId,
+    requireFormString(formData, "proposalId"),
+    requireFormString(formData, "revisionId"),
+    parseScheduleData(formData.get("scheduleData"))
+  );
+  redirect("/");
 }
 
 export async function sendSharedDraftProposalAction(

@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { SharedCalendarApp } from "./SharedCalendarApp";
 import type {
   CalendarProposal,
@@ -200,6 +200,53 @@ describe("SharedCalendarApp", () => {
       document.querySelector<HTMLInputElement>('input[name="revisionId"]')
         ?.value
     ).toBe("revision-1");
+  });
+
+  it("lets the receiver edit and send a counterproposal", () => {
+    const proposedScheduleData = {
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    };
+    const stateWithActiveProposal: CustodyGroupState = {
+      ...state,
+      activeProposal: createActiveProposal(proposedScheduleData),
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithActiveProposal}
+        currentParentId="parent-b"
+        counterProposalAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByText("Review Proposal")).toBeInTheDocument();
+    expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Edit Counter" }));
+
+    expect(screen.getByText("Schedule Editor")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Send Counter" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Accept Proposal" })
+    ).not.toBeInTheDocument();
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="proposalId"]')
+        ?.value
+    ).toBe("proposal-1");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="revisionId"]')
+        ?.value
+    ).toBe("revision-1");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="scheduleData"]')
+        ?.value
+    ).toContain('"date":"2026-03-02"');
   });
 
   it("renders an active proposal for sender withdrawal", () => {

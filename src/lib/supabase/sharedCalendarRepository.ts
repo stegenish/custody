@@ -231,3 +231,19 @@ export async function acceptSharedProposal(
   })) as SupabaseResult<number>;
   return requireSupabaseData(result, "Unable to accept proposal");
 }
+
+export async function counterSharedProposal(
+  supabase: RpcClient,
+  groupId: string,
+  proposalId: string,
+  revisionId: string,
+  scheduleData: ScheduleData
+): Promise<string> {
+  const result = (await supabase.rpc("counter_active_proposal", {
+    target_group_id: groupId,
+    target_proposal_id: proposalId,
+    viewed_revision_id: revisionId,
+    proposed_schedule_data: scheduleData,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to counter proposal");
+}

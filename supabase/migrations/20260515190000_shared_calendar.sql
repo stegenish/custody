@@ -896,6 +896,124 @@ begin
 end;
 $$;
 
+create or replace function public.counter_active_proposal(
+  target_group_id uuid,
+  target_proposal_id uuid,
+  viewed_revision_id uuid,
+  proposed_schedule_data jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  active_proposal public.proposals%rowtype;
+  viewed_revision public.proposal_revisions%rowtype;
+  latest_calendar public.calendar_versions%rowtype;
+  next_revision_number integer;
+  created_revision_id uuid;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select *
+    into active_proposal
+  from public.proposals
+  where id = target_proposal_id
+    and group_id = target_group_id
+    and status = 'sent'
+  limit 1;
+
+  if active_proposal.id is null then
+    raise exception 'No active proposal to counter';
+  end if;
+
+  if active_proposal.receiver_user_id <> current_user_id then
+    raise exception 'Only the receiver can counter this proposal';
+  end if;
+
+  if active_proposal.current_revision_id <> viewed_revision_id then
+    raise exception 'Proposal changed since it was viewed';
+  end if;
+
+  select *
+    into viewed_revision
+  from public.proposal_revisions
+  where id = viewed_revision_id
+    and proposal_id = active_proposal.id
+  limit 1;
+
+  if viewed_revision.id is null then
+    raise exception 'Viewed proposal revision not found';
+  end if;
+
+  select *
+    into latest_calendar
+  from public.calendar_versions
+  where group_id = target_group_id
+  order by version desc
+  limit 1;
+
+  if latest_calendar.id is null then
+    raise exception 'No agreed calendar found';
+  end if;
+
+  if viewed_revision.base_calendar_version <> latest_calendar.version then
+    raise exception 'Shared calendar changed since this proposal was created';
+  end if;
+
+  select coalesce(max(revision_number), 0) + 1
+    into next_revision_number
+  from public.proposal_revisions
+  where proposal_id = active_proposal.id;
+
+  insert into public.proposal_revisions (
+    proposal_id,
+    revision_number,
+    author_user_id,
+    base_calendar_version,
+    schedule_data
+  )
+  values (
+    active_proposal.id,
+    next_revision_number,
+    current_user_id,
+    latest_calendar.version,
+    proposed_schedule_data
+  )
+  returning id into created_revision_id;
+
+  insert into public.proposal_status_events (
+    proposal_id,
+    status,
+    actor_user_id,
+    revision_id
+  )
+  values (
+    active_proposal.id,
+    'countered',
+    current_user_id,
+    created_revision_id
+  );
+
+  update public.proposals
+  set current_author_user_id = current_user_id,
+      receiver_user_id = active_proposal.current_author_user_id,
+      current_revision_id = created_revision_id,
+      updated_at = now()
+  where id = active_proposal.id;
+
+  return created_revision_id;
+end;
+$$;
+
 create or replace function public.accept_active_proposal(
   target_group_id uuid,
   target_proposal_id uuid,
@@ -1023,4 +1141,5 @@ grant execute on function public.save_draft_proposal(uuid, jsonb) to authenticat
 grant execute on function public.send_draft_proposal(uuid, jsonb) to authenticated;
 grant execute on function public.withdraw_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.reject_active_proposal(uuid, uuid, uuid) to authenticated;
+grant execute on function public.counter_active_proposal(uuid, uuid, uuid, jsonb) to authenticated;
 grant execute on function public.accept_active_proposal(uuid, uuid, uuid) to authenticated;

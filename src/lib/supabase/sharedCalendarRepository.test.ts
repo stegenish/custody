@@ -1,5 +1,6 @@
 import {
   acceptSharedProposal,
+  counterSharedProposal,
   createSharedDraftProposal,
   loadSharedCalendarState,
   rejectSharedProposal,
@@ -420,5 +421,54 @@ describe("acceptSharedProposal", () => {
     await expect(
       acceptSharedProposal(supabase, "group-1", "proposal-1", "revision-1")
     ).rejects.toThrow("Proposal changed since it was viewed");
+  });
+});
+
+describe("counterSharedProposal", () => {
+  it("sends a counterproposal revision from the receiver", async () => {
+    const scheduleData = {
+      labels: [],
+      schedules: [],
+      overrides: [{ date: "2026-06-01", labelId: "mom" }],
+    };
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "revision-2", error: null }),
+    };
+
+    await expect(
+      counterSharedProposal(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "revision-1",
+        scheduleData
+      )
+    ).resolves.toBe("revision-2");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("counter_active_proposal", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      viewed_revision_id: "revision-1",
+      proposed_schedule_data: scheduleData,
+    });
+  });
+
+  it("throws counter errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Only the receiver can counter this proposal" },
+      }),
+    };
+
+    await expect(
+      counterSharedProposal(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "revision-1",
+        { labels: [], schedules: [], overrides: [] }
+      )
+    ).rejects.toThrow("Only the receiver can counter this proposal");
   });
 });

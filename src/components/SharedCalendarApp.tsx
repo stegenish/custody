@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AppToolbar, AppToolbarSubmitButton } from "./AppToolbar";
+import {
+  AppToolbar,
+  AppToolbarButton,
+  AppToolbarSubmitButton,
+} from "./AppToolbar";
 import { CalendarWorkspace } from "./CalendarWorkspace";
 import { ProposalWorkspace } from "./ProposalWorkspace";
 import { getCurrentRevision } from "@/lib/sharedCalendarWorkflowHelpers";
@@ -15,6 +19,7 @@ interface SharedCalendarAppProps {
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
   sendDraftAction?: (formData: FormData) => void | Promise<void>;
   acceptProposalAction?: (formData: FormData) => void | Promise<void>;
+  counterProposalAction?: (formData: FormData) => void | Promise<void>;
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
   withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
 }
@@ -26,6 +31,7 @@ export function SharedCalendarApp({
   saveDraftAction,
   sendDraftAction,
   acceptProposalAction,
+  counterProposalAction,
   rejectProposalAction,
   withdrawProposalAction,
 }: SharedCalendarAppProps) {
@@ -57,6 +63,7 @@ export function SharedCalendarApp({
     if (state.activeProposal && currentActiveRevision) {
       return (
         <ActiveProposalReview
+          key={currentActiveRevision.id}
           today={today}
           agreedScheduleData={state.agreedCalendar.scheduleData}
           proposedScheduleData={currentActiveRevision.scheduleData}
@@ -67,6 +74,7 @@ export function SharedCalendarApp({
             state.activeProposal.currentAuthorParentId === currentParentId
           }
           acceptProposalAction={acceptProposalAction}
+          counterProposalAction={counterProposalAction}
           rejectProposalAction={rejectProposalAction}
           withdrawProposalAction={withdrawProposalAction}
         />
@@ -106,6 +114,7 @@ export function SharedCalendarApp({
     );
   }, [
     acceptProposalAction,
+    counterProposalAction,
     currentActiveRevision,
     currentDraftRevision,
     currentParentId,
@@ -129,6 +138,7 @@ interface ActiveProposalReviewProps {
   isReceiver: boolean;
   isSender: boolean;
   acceptProposalAction?: (formData: FormData) => void | Promise<void>;
+  counterProposalAction?: (formData: FormData) => void | Promise<void>;
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
   withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
 }
@@ -142,28 +152,37 @@ function ActiveProposalReview({
   isReceiver,
   isSender,
   acceptProposalAction,
+  counterProposalAction,
   rejectProposalAction,
   withdrawProposalAction,
 }: ActiveProposalReviewProps) {
+  const [counterScheduleData, setCounterScheduleData] =
+    useState<ScheduleData>(proposedScheduleData);
+  const [isCounterEditing, setIsCounterEditing] = useState(false);
+
   return (
     <ProposalWorkspace
       title={isReceiver ? "Review Proposal" : "Sent Proposal"}
       today={today}
       agreedScheduleData={agreedScheduleData}
-      proposedScheduleData={proposedScheduleData}
-      readOnly
+      proposedScheduleData={counterScheduleData}
+      readOnly={!isCounterEditing}
       toolbar={
         <ActiveProposalToolbar
           proposalId={proposalId}
           revisionId={revisionId}
+          scheduleData={counterScheduleData}
+          isCounterEditing={isCounterEditing}
           isReceiver={isReceiver}
           isSender={isSender}
           acceptProposalAction={acceptProposalAction}
+          counterProposalAction={counterProposalAction}
           rejectProposalAction={rejectProposalAction}
           withdrawProposalAction={withdrawProposalAction}
+          onStartCounter={() => setIsCounterEditing(true)}
         />
       }
-      onUpdateProposedScheduleData={() => undefined}
+      onUpdateProposedScheduleData={setCounterScheduleData}
     />
   );
 }
@@ -171,27 +190,47 @@ function ActiveProposalReview({
 interface ActiveProposalToolbarProps {
   proposalId: string;
   revisionId: string;
+  scheduleData: ScheduleData;
+  isCounterEditing: boolean;
   isReceiver: boolean;
   isSender: boolean;
   acceptProposalAction?: (formData: FormData) => void | Promise<void>;
+  counterProposalAction?: (formData: FormData) => void | Promise<void>;
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
   withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
+  onStartCounter: () => void;
 }
 
 function ActiveProposalToolbar({
   proposalId,
   revisionId,
+  scheduleData,
+  isCounterEditing,
   isReceiver,
   isSender,
   acceptProposalAction,
+  counterProposalAction,
   rejectProposalAction,
   withdrawProposalAction,
+  onStartCounter,
 }: ActiveProposalToolbarProps) {
-  const canReject = isReceiver && rejectProposalAction;
-  const canAccept = isReceiver && acceptProposalAction;
+  const canReject = isReceiver && rejectProposalAction && !isCounterEditing;
+  const canAccept = isReceiver && acceptProposalAction && !isCounterEditing;
+  const canStartCounter =
+    isReceiver && counterProposalAction && !isCounterEditing;
+  const canSendCounter =
+    isReceiver && counterProposalAction && isCounterEditing;
   const canWithdraw = isSender && withdrawProposalAction;
 
-  if (!canReject && !canAccept && !canWithdraw) return null;
+  if (
+    !canReject &&
+    !canAccept &&
+    !canStartCounter &&
+    !canSendCounter &&
+    !canWithdraw
+  ) {
+    return null;
+  }
 
   return (
     <AppToolbar>
@@ -211,6 +250,20 @@ function ActiveProposalToolbar({
           label="Accept Proposal"
         />
       )}
+      {canStartCounter && (
+        <AppToolbarButton onClick={onStartCounter}>
+          Edit Counter
+        </AppToolbarButton>
+      )}
+      {canSendCounter && (
+        <ProposalScheduleActionForm
+          action={counterProposalAction}
+          proposalId={proposalId}
+          revisionId={revisionId}
+          scheduleData={scheduleData}
+          label="Send Counter"
+        />
+      )}
       {canWithdraw && (
         <ProposalActionForm
           action={withdrawProposalAction}
@@ -220,6 +273,35 @@ function ActiveProposalToolbar({
         />
       )}
     </AppToolbar>
+  );
+}
+
+interface ProposalScheduleActionFormProps {
+  action: (formData: FormData) => void | Promise<void>;
+  proposalId: string;
+  revisionId: string;
+  scheduleData: ScheduleData;
+  label: string;
+}
+
+function ProposalScheduleActionForm({
+  action,
+  proposalId,
+  revisionId,
+  scheduleData,
+  label,
+}: ProposalScheduleActionFormProps) {
+  return (
+    <form action={action}>
+      <input type="hidden" name="proposalId" value={proposalId} />
+      <input type="hidden" name="revisionId" value={revisionId} />
+      <input
+        type="hidden"
+        name="scheduleData"
+        value={JSON.stringify(scheduleData)}
+      />
+      <AppToolbarSubmitButton>{label}</AppToolbarSubmitButton>
+    </form>
   );
 }
 
