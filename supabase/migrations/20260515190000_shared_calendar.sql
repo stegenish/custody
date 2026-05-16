@@ -1100,7 +1100,8 @@ $$;
 create or replace function public.accept_active_proposal(
   target_group_id uuid,
   target_proposal_id uuid,
-  viewed_revision_id uuid
+  viewed_revision_id uuid,
+  promote_proposal_comments boolean default false
 )
 returns integer
 language plpgsql
@@ -1197,6 +1198,23 @@ begin
     current_user_id,
     viewed_revision_id
   );
+
+  if promote_proposal_comments then
+    insert into public.shared_date_notes (
+      group_id,
+      author_user_id,
+      date_key,
+      body
+    )
+    select
+      target_group_id,
+      proposal_comments.author_user_id,
+      proposal_comments.date_key,
+      proposal_comments.body
+    from public.proposal_comments
+    where proposal_comments.proposal_id = active_proposal.id
+      and proposal_comments.deleted_at is null;
+  end if;
 
   update public.proposals
   set status = case
@@ -1530,7 +1548,7 @@ grant execute on function public.reset_draft_proposal(uuid) to authenticated;
 grant execute on function public.withdraw_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.reject_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.counter_active_proposal(uuid, uuid, uuid, jsonb) to authenticated;
-grant execute on function public.accept_active_proposal(uuid, uuid, uuid) to authenticated;
+grant execute on function public.accept_active_proposal(uuid, uuid, uuid, boolean) to authenticated;
 grant execute on function public.create_shared_date_note(uuid, date, text) to authenticated;
 grant execute on function public.update_shared_date_note(uuid, uuid, text) to authenticated;
 grant execute on function public.delete_shared_date_note(uuid, uuid) to authenticated;

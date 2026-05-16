@@ -262,7 +262,8 @@ export async function acceptSharedProposal(
   supabase: RpcClient,
   groupId: string,
   proposalId: string,
-  revisionId: string
+  revisionId: string,
+  promoteProposalComments = false
 ): Promise<number> {
   return callRpc<number>(
     supabase,
@@ -271,6 +272,7 @@ export async function acceptSharedProposal(
       target_group_id: groupId,
       target_proposal_id: proposalId,
       viewed_revision_id: revisionId,
+      promote_proposal_comments: promoteProposalComments,
     },
     "Unable to accept proposal"
   );

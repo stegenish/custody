@@ -201,6 +201,50 @@ describe("shared calendar proposal workflow", () => {
     expect(state.proposalHistory[0].status).toBe("accepted");
   });
 
+  it("can promote active proposal comments into shared date notes when accepted", () => {
+    const ctx = makeContext();
+    let state = createDraftProposal(makeState(), "parent-a", changedSchedule, ctx);
+    state = sendDraftProposal(state, state.draftProposals[0].id, "parent-b", ctx);
+    const proposalId = state.activeProposal!.id;
+    const viewedRevisionId = state.activeProposal!.currentRevisionId;
+    state = addProposalComment(
+      state,
+      proposalId,
+      "parent-a",
+      "2026-06-01",
+      "Remember the school event",
+      ctx
+    );
+    state = addProposalComment(
+      state,
+      proposalId,
+      "parent-b",
+      "2026-06-02",
+      "Deleted comment",
+      ctx
+    );
+    const deletedCommentId = state.activeProposal!.comments[1].id;
+    state = deleteProposalComment(
+      state,
+      proposalId,
+      deletedCommentId,
+      "parent-b",
+      ctx
+    );
+
+    state = acceptActiveProposal(state, "parent-b", viewedRevisionId, ctx, {
+      promoteCommentsToNotes: true,
+    });
+
+    expect(state.notes).toEqual([
+      expect.objectContaining({
+        authorParentId: "parent-a",
+        date: "2026-06-01",
+        body: "Remember the school event",
+      }),
+    ]);
+  });
+
   it("blocks acceptance of a stale viewed revision", () => {
     const ctx = makeContext();
     let state = createDraftProposal(makeState(), "parent-a", emptySchedule, ctx);

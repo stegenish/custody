@@ -337,6 +337,11 @@ describe("SharedCalendarApp", () => {
     expect(
       screen.getByRole("button", { name: "Reject Proposal" })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", {
+        name: "Save proposal comments as shared notes",
+      })
+    ).toBeInTheDocument();
     expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Start Draft" })

@@ -456,6 +456,30 @@ describe("acceptSharedProposal", () => {
       target_group_id: "group-1",
       target_proposal_id: "proposal-1",
       viewed_revision_id: "revision-1",
+      promote_proposal_comments: false,
+    });
+  });
+
+  it("can request proposal comment promotion when accepting", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: 2, error: null }),
+    };
+
+    await expect(
+      acceptSharedProposal(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "revision-1",
+        true
+      )
+    ).resolves.toBe(2);
+
+    expect(supabase.rpc).toHaveBeenCalledWith("accept_active_proposal", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      viewed_revision_id: "revision-1",
+      promote_proposal_comments: true,
     });
   });
 

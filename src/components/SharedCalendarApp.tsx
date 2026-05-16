@@ -308,9 +308,8 @@ function ActiveProposalToolbar({
         />
       )}
       {canAccept && (
-        <ToolbarActionForm
+        <AcceptProposalForm
           action={acceptProposalAction}
-          label="Accept Proposal"
           fields={{ proposalId, revisionId }}
         />
       )}
@@ -338,6 +337,31 @@ function ActiveProposalToolbar({
         />
       )}
     </AppToolbar>
+  );
+}
+
+function AcceptProposalForm({
+  action,
+  fields,
+}: {
+  action: (formData: FormData) => void | Promise<void>;
+  fields: Record<string, string>;
+}) {
+  return (
+    <form action={action} className="flex flex-wrap items-center gap-2">
+      {Object.entries(fields).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
+      <label className="flex items-center gap-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          name="promoteProposalComments"
+          className="h-4 w-4 rounded border-gray-300"
+        />
+        Save proposal comments as shared notes
+      </label>
+      <AppToolbarSubmitButton>Accept Proposal</AppToolbarSubmitButton>
+    </form>
   );
 }
 

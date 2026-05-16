@@ -103,6 +103,27 @@ async function runProposalRevisionAction(
   );
 }
 
+async function runAcceptProposalAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    proposalId: string,
+    revisionId: string,
+    promoteProposalComments: boolean
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      requireFormString(formData, "proposalId"),
+      requireFormString(formData, "revisionId"),
+      formData.get("promoteProposalComments") === "on"
+    )
+  );
+}
+
 async function runProposalScheduleAction(
   formData: FormData,
   mutation: (
@@ -265,7 +286,7 @@ export async function rejectSharedProposalAction(
 export async function acceptSharedProposalAction(
   formData: FormData
 ): Promise<void> {
-  await runProposalRevisionAction(formData, acceptSharedProposal);
+  await runAcceptProposalAction(formData, acceptSharedProposal);
 }
 
 export async function counterSharedProposalAction(

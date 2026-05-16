@@ -23,7 +23,8 @@ Current state:
 - Existing shared date notes and active proposal comments show edit/delete forms only to the parent who created them.
 - Shared note and proposal comment update/delete server actions are wired through the shared app entry point.
 - Added direct server action tests for shared note and proposal comment update/delete form parsing.
+- Added an accept-time option to promote active, non-deleted proposal comments into shared date notes.
 
 Next likely slice:
 
-- Continue proposal comment carry-forward/promotion behavior from the design plan.
+- Continue email notifications for proposal/comment events.

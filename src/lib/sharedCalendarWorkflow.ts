@@ -227,7 +227,8 @@ export function acceptActiveProposal(
   state: CustodyGroupState,
   parentId: string,
   viewedRevisionId: string,
-  ctx: MutationContext
+  ctx: MutationContext,
+  options: { promoteCommentsToNotes?: boolean } = {}
 ): CustodyGroupState {
   requireParent(state, parentId);
   if (!state.activeProposal) {
@@ -246,6 +247,19 @@ export function acceptActiveProposal(
   }
 
   const accepted = snapshotProposal(state.activeProposal, "accepted", ctx.now);
+  const promotedNotes = options.promoteCommentsToNotes
+    ? state.activeProposal.comments
+        .filter((comment) => !comment.deletedAt)
+        .map((comment): SharedDateNote => ({
+          id: ctx.createId(),
+          authorParentId: comment.authorParentId,
+          date: comment.date,
+          body: comment.body,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        }))
+    : [];
+
   return {
     ...state,
     agreedCalendar: {
@@ -256,6 +270,7 @@ export function acceptActiveProposal(
     draftProposals: [],
     activeProposal: null,
     proposalHistory: [...state.proposalHistory, accepted],
+    notes: [...state.notes, ...promotedNotes],
   };
 }
 
