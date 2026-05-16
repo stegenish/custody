@@ -586,6 +586,17 @@ describe("shared date note mutations", () => {
     ).rejects.toThrow("Shared date note is too long");
     expect(supabase.rpc).not.toHaveBeenCalled();
   });
+
+  it("rejects invalid shared date note dates before calling RPC", async () => {
+    const supabase = {
+      rpc: jest.fn(),
+    };
+
+    await expect(
+      createSharedDateNote(supabase, "group-1", "2026-02-30", "School event")
+    ).rejects.toThrow("Invalid date key: 2026-02-30");
+    expect(supabase.rpc).not.toHaveBeenCalled();
+  });
 });
 
 describe("proposal comment mutations", () => {
@@ -684,6 +695,23 @@ describe("proposal comment mutations", () => {
         "x".repeat(MAX_TEXT_BODY_LENGTH + 1)
       )
     ).rejects.toThrow("Proposal comment is too long");
+    expect(supabase.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid proposal comment dates before calling RPC", async () => {
+    const supabase = {
+      rpc: jest.fn(),
+    };
+
+    await expect(
+      createProposalComment(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "2026-02-30",
+        "Can we swap?"
+      )
+    ).rejects.toThrow("Invalid date key: 2026-02-30");
     expect(supabase.rpc).not.toHaveBeenCalled();
   });
 });

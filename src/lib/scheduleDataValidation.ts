@@ -96,6 +96,11 @@ export function requireScheduleData(
   return value;
 }
 
+export function assertDateKey(value: string): string {
+  parseDateKey(value);
+  return value;
+}
+
 export function assertTextBodyLength(body: string, label: string): string {
   if (body.length > MAX_TEXT_BODY_LENGTH) {
     throw new Error(`${label} is too long`);

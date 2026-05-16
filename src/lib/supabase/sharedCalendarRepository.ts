@@ -9,7 +9,10 @@ import type {
   SharedDateNoteRow,
 } from "./sharedCalendarRows";
 import type { ScheduleData } from "@/lib/scheduleTypes";
-import { assertTextBodyLength } from "@/lib/scheduleDataValidation";
+import {
+  assertDateKey,
+  assertTextBodyLength,
+} from "@/lib/scheduleDataValidation";
 import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
 
 interface RpcClient {
@@ -304,7 +307,7 @@ export async function createSharedDateNote(
     "create_shared_date_note",
     {
       target_group_id: groupId,
-      note_date_key: date,
+      note_date_key: assertDateKey(date),
       note_body: assertTextBodyLength(body, "Shared date note"),
     },
     "Unable to create shared date note"
@@ -358,7 +361,7 @@ export async function createProposalComment(
     {
       target_group_id: groupId,
       target_proposal_id: proposalId,
-      comment_date_key: date,
+      comment_date_key: assertDateKey(date),
       comment_body: assertTextBodyLength(body, "Proposal comment"),
     },
     "Unable to create proposal comment"
