@@ -1320,6 +1320,161 @@ begin
 end;
 $$;
 
+create or replace function public.create_proposal_comment(
+  target_group_id uuid,
+  target_proposal_id uuid,
+  comment_date_key date,
+  comment_body text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  created_comment_id uuid;
+  proposal_exists boolean;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select exists (
+    select 1
+    from public.proposals
+    where id = target_proposal_id
+      and group_id = target_group_id
+  )
+    into proposal_exists;
+
+  if not proposal_exists then
+    raise exception 'Proposal not found';
+  end if;
+
+  insert into public.proposal_comments (
+    proposal_id,
+    author_user_id,
+    date_key,
+    body
+  )
+  values (
+    target_proposal_id,
+    current_user_id,
+    comment_date_key,
+    comment_body
+  )
+  returning id into created_comment_id;
+
+  return created_comment_id;
+end;
+$$;
+
+create or replace function public.update_proposal_comment(
+  target_group_id uuid,
+  target_proposal_id uuid,
+  target_comment_id uuid,
+  comment_body text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  existing_comment public.proposal_comments%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select proposal_comments.*
+    into existing_comment
+  from public.proposal_comments
+  join public.proposals
+    on proposals.id = proposal_comments.proposal_id
+  where proposal_comments.id = target_comment_id
+    and proposal_comments.proposal_id = target_proposal_id
+    and proposals.group_id = target_group_id
+    and proposal_comments.deleted_at is null
+  limit 1;
+
+  if existing_comment.id is null then
+    raise exception 'Comment not found';
+  end if;
+
+  if existing_comment.author_user_id <> current_user_id then
+    raise exception 'Only the author can edit this comment';
+  end if;
+
+  update public.proposal_comments
+  set body = comment_body,
+      updated_at = now()
+  where id = target_comment_id;
+
+  return target_comment_id;
+end;
+$$;
+
+create or replace function public.delete_proposal_comment(
+  target_group_id uuid,
+  target_proposal_id uuid,
+  target_comment_id uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  existing_comment public.proposal_comments%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select proposal_comments.*
+    into existing_comment
+  from public.proposal_comments
+  join public.proposals
+    on proposals.id = proposal_comments.proposal_id
+  where proposal_comments.id = target_comment_id
+    and proposal_comments.proposal_id = target_proposal_id
+    and proposals.group_id = target_group_id
+    and proposal_comments.deleted_at is null
+  limit 1;
+
+  if existing_comment.id is null then
+    raise exception 'Comment not found';
+  end if;
+
+  if existing_comment.author_user_id <> current_user_id then
+    raise exception 'Only the author can delete this comment';
+  end if;
+
+  update public.proposal_comments
+  set deleted_at = now(),
+      updated_at = now()
+  where id = target_comment_id;
+
+  return target_comment_id;
+end;
+$$;
+
 grant execute on function public.ensure_initial_group() to authenticated;
 grant execute on function public.get_my_group_id() to authenticated;
 grant execute on function public.regenerate_group_invite(uuid, text) to authenticated;
@@ -1335,3 +1490,6 @@ grant execute on function public.accept_active_proposal(uuid, uuid, uuid) to aut
 grant execute on function public.create_shared_date_note(uuid, date, text) to authenticated;
 grant execute on function public.update_shared_date_note(uuid, uuid, text) to authenticated;
 grant execute on function public.delete_shared_date_note(uuid, uuid) to authenticated;
+grant execute on function public.create_proposal_comment(uuid, uuid, date, text) to authenticated;
+grant execute on function public.update_proposal_comment(uuid, uuid, uuid, text) to authenticated;
+grant execute on function public.delete_proposal_comment(uuid, uuid, uuid) to authenticated;

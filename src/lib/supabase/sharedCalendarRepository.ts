@@ -297,3 +297,49 @@ export async function deleteSharedDateNote(
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to delete shared date note");
 }
+
+export async function createProposalComment(
+  supabase: RpcClient,
+  groupId: string,
+  proposalId: string,
+  date: string,
+  body: string
+): Promise<string> {
+  const result = (await supabase.rpc("create_proposal_comment", {
+    target_group_id: groupId,
+    target_proposal_id: proposalId,
+    comment_date_key: date,
+    comment_body: body,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to create proposal comment");
+}
+
+export async function updateProposalComment(
+  supabase: RpcClient,
+  groupId: string,
+  proposalId: string,
+  commentId: string,
+  body: string
+): Promise<string> {
+  const result = (await supabase.rpc("update_proposal_comment", {
+    target_group_id: groupId,
+    target_proposal_id: proposalId,
+    target_comment_id: commentId,
+    comment_body: body,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to update proposal comment");
+}
+
+export async function deleteProposalComment(
+  supabase: RpcClient,
+  groupId: string,
+  proposalId: string,
+  commentId: string
+): Promise<string> {
+  const result = (await supabase.rpc("delete_proposal_comment", {
+    target_group_id: groupId,
+    target_proposal_id: proposalId,
+    target_comment_id: commentId,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to delete proposal comment");
+}

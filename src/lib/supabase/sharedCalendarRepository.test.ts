@@ -1,14 +1,17 @@
 import {
   acceptSharedProposal,
   counterSharedProposal,
+  createProposalComment,
   createSharedDateNote,
   createSharedDraftProposal,
+  deleteProposalComment,
   deleteSharedDateNote,
   loadSharedCalendarState,
   rejectSharedProposal,
   resetSharedDraftProposal,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
+  updateProposalComment,
   updateSharedDateNote,
   withdrawSharedProposal,
 } from "./sharedCalendarRepository";
@@ -565,5 +568,88 @@ describe("shared date note mutations", () => {
     await expect(
       updateSharedDateNote(supabase, "group-1", "note-1", "No")
     ).rejects.toThrow("Only the author can edit this note");
+  });
+});
+
+describe("proposal comment mutations", () => {
+  it("creates a proposal comment", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "comment-1", error: null }),
+    };
+
+    await expect(
+      createProposalComment(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "2026-06-01",
+        "Can we swap?"
+      )
+    ).resolves.toBe("comment-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("create_proposal_comment", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      comment_date_key: "2026-06-01",
+      comment_body: "Can we swap?",
+    });
+  });
+
+  it("updates a proposal comment", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "comment-1", error: null }),
+    };
+
+    await expect(
+      updateProposalComment(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "comment-1",
+        "Updated"
+      )
+    ).resolves.toBe("comment-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("update_proposal_comment", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      target_comment_id: "comment-1",
+      comment_body: "Updated",
+    });
+  });
+
+  it("soft-deletes a proposal comment", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "comment-1", error: null }),
+    };
+
+    await expect(
+      deleteProposalComment(supabase, "group-1", "proposal-1", "comment-1")
+    ).resolves.toBe("comment-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("delete_proposal_comment", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      target_comment_id: "comment-1",
+    });
+  });
+
+  it("throws proposal comment mutation errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Only the author can edit this comment" },
+      }),
+    };
+
+    await expect(
+      updateProposalComment(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "comment-1",
+        "No"
+      )
+    ).rejects.toThrow("Only the author can edit this comment");
   });
 });
