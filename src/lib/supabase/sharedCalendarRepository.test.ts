@@ -17,6 +17,18 @@ import {
 } from "./sharedCalendarRepository";
 import { MAX_TEXT_BODY_LENGTH } from "@/lib/scheduleDataValidation";
 
+let consoleErrorSpy: jest.SpyInstance;
+
+beforeEach(() => {
+  consoleErrorSpy = jest
+    .spyOn(console, "error")
+    .mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  consoleErrorSpy.mockRestore();
+});
+
 function createQueryBuilder(result: unknown) {
   const builder = {
     select: jest.fn(() => builder),
@@ -122,7 +134,7 @@ describe("loadSharedCalendarState", () => {
 
     await expect(
       loadSharedCalendarState(supabase, "group-1", "parent-a")
-    ).rejects.toThrow("No access");
+    ).rejects.toThrow("Unable to load parent memberships");
   });
 
   it("hides draft proposals owned by other parents", async () => {
@@ -247,7 +259,7 @@ describe("createSharedDraftProposal", () => {
 
     await expect(
       createSharedDraftProposal(supabase, "group-1")
-    ).rejects.toThrow("Parent already has a draft proposal");
+    ).rejects.toThrow("Unable to create draft proposal");
   });
 });
 
@@ -286,7 +298,7 @@ describe("saveSharedDraftProposal", () => {
         schedules: [],
         overrides: [],
       })
-    ).rejects.toThrow("Draft proposal not found");
+    ).rejects.toThrow("Unable to save draft proposal");
   });
 });
 
@@ -315,7 +327,7 @@ describe("resetSharedDraftProposal", () => {
 
     await expect(
       resetSharedDraftProposal(supabase, "group-1")
-    ).rejects.toThrow("Draft proposal not found");
+    ).rejects.toThrow("Unable to reset draft proposal");
   });
 });
 
@@ -354,7 +366,7 @@ describe("sendSharedDraftProposal", () => {
         schedules: [],
         overrides: [],
       })
-    ).rejects.toThrow("There is already an active proposal");
+    ).rejects.toThrow("Unable to send draft proposal");
   });
 });
 
@@ -395,7 +407,7 @@ describe("withdrawSharedProposal", () => {
         "proposal-1",
         "revision-1"
       )
-    ).rejects.toThrow("Only the current sender can withdraw this proposal");
+    ).rejects.toThrow("Unable to withdraw proposal");
   });
 });
 
@@ -426,7 +438,7 @@ describe("rejectSharedProposal", () => {
 
     await expect(
       rejectSharedProposal(supabase, "group-1", "proposal-1", "revision-1")
-    ).rejects.toThrow("Only the receiver can reject this proposal");
+    ).rejects.toThrow("Unable to reject proposal");
   });
 });
 
@@ -457,7 +469,7 @@ describe("acceptSharedProposal", () => {
 
     await expect(
       acceptSharedProposal(supabase, "group-1", "proposal-1", "revision-1")
-    ).rejects.toThrow("Proposal changed since it was viewed");
+    ).rejects.toThrow("Unable to accept proposal");
   });
 });
 
@@ -506,7 +518,7 @@ describe("counterSharedProposal", () => {
         "revision-1",
         { labels: [], schedules: [], overrides: [] }
       )
-    ).rejects.toThrow("Only the receiver can counter this proposal");
+    ).rejects.toThrow("Unable to counter proposal");
   });
 });
 
@@ -568,7 +580,7 @@ describe("shared date note mutations", () => {
 
     await expect(
       updateSharedDateNote(supabase, "group-1", "note-1", "No")
-    ).rejects.toThrow("Only the author can edit this note");
+    ).rejects.toThrow("Unable to update shared date note");
   });
 
   it("rejects oversized shared date note bodies before calling RPC", async () => {
@@ -678,7 +690,7 @@ describe("proposal comment mutations", () => {
         "comment-1",
         "No"
       )
-    ).rejects.toThrow("Only the author can edit this comment");
+    ).rejects.toThrow("Unable to update proposal comment");
   });
 
   it("rejects oversized proposal comments before calling RPC", async () => {

@@ -12,6 +12,18 @@ function makeSupabase(data: string | null, error: { message: string } | null) {
 }
 
 describe("onboarding RPC helpers", () => {
+  let consoleErrorSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   it("ensures the initial group", async () => {
     const supabase = makeSupabase("group-1", null);
     await expect(ensureInitialGroup(supabase)).resolves.toBe("group-1");
@@ -64,6 +76,8 @@ describe("onboarding RPC helpers", () => {
 
   it("throws RPC errors", async () => {
     const supabase = makeSupabase(null, { message: "No" });
-    await expect(ensureInitialGroup(supabase)).rejects.toThrow("No");
+    await expect(ensureInitialGroup(supabase)).rejects.toThrow(
+      "Unable to create or load custody group"
+    );
   });
 });
