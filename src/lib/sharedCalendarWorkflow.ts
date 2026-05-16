@@ -74,6 +74,21 @@ export function resetDraftProposal(
   };
 }
 
+function restoreProposalAsDraft(
+  state: CustodyGroupState,
+  proposal: CalendarProposal,
+  now: string
+): CalendarProposal[] {
+  const draft = asDraft(proposal, now);
+  return [
+    ...state.draftProposals.filter(
+      (existing) =>
+        existing.currentAuthorParentId !== draft.currentAuthorParentId
+    ),
+    draft,
+  ];
+}
+
 export function sendDraftProposal(
   state: CustodyGroupState,
   proposalId: string,
@@ -128,7 +143,11 @@ export function withdrawActiveProposal(
   return {
     ...state,
     activeProposal: null,
-    draftProposals: [...state.draftProposals, asDraft(state.activeProposal, ctx.now)],
+    draftProposals: restoreProposalAsDraft(
+      state,
+      state.activeProposal,
+      ctx.now
+    ),
     proposalHistory: [...state.proposalHistory, withdrawn],
   };
 }
@@ -150,7 +169,11 @@ export function rejectActiveProposal(
   return {
     ...state,
     activeProposal: null,
-    draftProposals: [...state.draftProposals, asDraft(state.activeProposal, ctx.now)],
+    draftProposals: restoreProposalAsDraft(
+      state,
+      state.activeProposal,
+      ctx.now
+    ),
     proposalHistory: [...state.proposalHistory, rejected],
   };
 }

@@ -55,6 +55,29 @@ function makeState(): CustodyGroupState {
   };
 }
 
+function makeStateWithActiveProposalAndExistingSenderDraft(
+  ctx: MutationContext
+): { state: CustodyGroupState; activeProposalId: string } {
+  let state = createDraftProposal(makeState(), "parent-a", changedSchedule, ctx);
+  const activeProposalId = state.draftProposals[0].id;
+  state = sendDraftProposal(state, activeProposalId, "parent-b", ctx);
+
+  return {
+    state: {
+      ...state,
+      draftProposals: [
+        {
+          ...state.activeProposal!,
+          id: "existing-draft",
+          status: "draft",
+          receiverParentId: undefined,
+        },
+      ],
+    },
+    activeProposalId,
+  };
+}
+
 describe("shared calendar proposal workflow", () => {
   it("creates only one draft per parent", () => {
     const ctx = makeContext();
@@ -103,6 +126,22 @@ describe("shared calendar proposal workflow", () => {
     expect(state.proposalHistory[0].status).toBe("withdrawn");
   });
 
+  it("withdraw replaces any existing sender draft", () => {
+    const ctx = makeContext();
+    const { activeProposalId, state: stateWithExistingDraft } =
+      makeStateWithActiveProposalAndExistingSenderDraft(ctx);
+
+    const state = withdrawActiveProposal(
+      stateWithExistingDraft,
+      "parent-a",
+      ctx
+    );
+
+    expect(state.draftProposals).toHaveLength(1);
+    expect(state.draftProposals[0].id).toBe(activeProposalId);
+    expect(state.draftProposals[0].currentAuthorParentId).toBe("parent-a");
+  });
+
   it("rejects a proposal back to the sender draft", () => {
     const ctx = makeContext();
     let state = createDraftProposal(makeState(), "parent-a", changedSchedule, ctx);
@@ -114,6 +153,22 @@ describe("shared calendar proposal workflow", () => {
     expect(state.draftProposals[0].id).toBe(proposalId);
     expect(state.draftProposals[0].status).toBe("draft");
     expect(state.proposalHistory[0].status).toBe("rejected");
+  });
+
+  it("reject replaces any existing sender draft", () => {
+    const ctx = makeContext();
+    const { activeProposalId, state: stateWithExistingDraft } =
+      makeStateWithActiveProposalAndExistingSenderDraft(ctx);
+
+    const state = rejectActiveProposal(
+      stateWithExistingDraft,
+      "parent-b",
+      ctx
+    );
+
+    expect(state.draftProposals).toHaveLength(1);
+    expect(state.draftProposals[0].id).toBe(activeProposalId);
+    expect(state.draftProposals[0].currentAuthorParentId).toBe("parent-a");
   });
 
   it("creates a counterproposal revision owned by the receiver", () => {
