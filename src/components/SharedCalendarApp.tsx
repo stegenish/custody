@@ -18,6 +18,7 @@ interface SharedCalendarAppProps {
   startDraftAction?: () => void | Promise<void>;
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
   sendDraftAction?: (formData: FormData) => void | Promise<void>;
+  resetDraftAction?: () => void | Promise<void>;
   acceptProposalAction?: (formData: FormData) => void | Promise<void>;
   counterProposalAction?: (formData: FormData) => void | Promise<void>;
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
@@ -30,6 +31,7 @@ export function SharedCalendarApp({
   startDraftAction,
   saveDraftAction,
   sendDraftAction,
+  resetDraftAction,
   acceptProposalAction,
   counterProposalAction,
   rejectProposalAction,
@@ -90,6 +92,7 @@ export function SharedCalendarApp({
           initialScheduleData={currentDraftRevision.scheduleData}
           saveDraftAction={saveDraftAction}
           sendDraftAction={sendDraftAction}
+          resetDraftAction={resetDraftAction}
         />
       );
     }
@@ -119,6 +122,7 @@ export function SharedCalendarApp({
     currentDraftRevision,
     currentParentId,
     rejectProposalAction,
+    resetDraftAction,
     saveDraftAction,
     sendDraftAction,
     startDraftAction,
@@ -333,6 +337,7 @@ interface EditableDraftProposalProps {
   initialScheduleData: ScheduleData;
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
   sendDraftAction?: (formData: FormData) => void | Promise<void>;
+  resetDraftAction?: () => void | Promise<void>;
 }
 
 function EditableDraftProposal({
@@ -341,6 +346,7 @@ function EditableDraftProposal({
   initialScheduleData,
   saveDraftAction,
   sendDraftAction,
+  resetDraftAction,
 }: EditableDraftProposalProps) {
   const [draftScheduleData, setDraftScheduleData] =
     useState<ScheduleData>(initialScheduleData);
@@ -352,7 +358,7 @@ function EditableDraftProposal({
       proposedScheduleData={draftScheduleData}
       onUpdateProposedScheduleData={setDraftScheduleData}
       toolbar={
-        saveDraftAction || sendDraftAction ? (
+        saveDraftAction || sendDraftAction || resetDraftAction ? (
           <AppToolbar>
             {saveDraftAction && (
               <DraftActionForm
@@ -367,6 +373,11 @@ function EditableDraftProposal({
                 scheduleData={draftScheduleData}
                 label="Send Proposal"
               />
+            )}
+            {resetDraftAction && (
+              <form action={resetDraftAction}>
+                <AppToolbarSubmitButton>Reset Draft</AppToolbarSubmitButton>
+              </form>
             )}
           </AppToolbar>
         ) : undefined

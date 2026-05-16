@@ -4,6 +4,7 @@ import {
   createSharedDraftProposal,
   loadSharedCalendarState,
   rejectSharedProposal,
+  resetSharedDraftProposal,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
   withdrawSharedProposal,
@@ -278,6 +279,35 @@ describe("saveSharedDraftProposal", () => {
         schedules: [],
         overrides: [],
       })
+    ).rejects.toThrow("Draft proposal not found");
+  });
+});
+
+describe("resetSharedDraftProposal", () => {
+  it("resets the current draft proposal", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "proposal-1", error: null }),
+    };
+
+    await expect(
+      resetSharedDraftProposal(supabase, "group-1")
+    ).resolves.toBe("proposal-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("reset_draft_proposal", {
+      target_group_id: "group-1",
+    });
+  });
+
+  it("throws reset errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Draft proposal not found" },
+      }),
+    };
+
+    await expect(
+      resetSharedDraftProposal(supabase, "group-1")
     ).rejects.toThrow("Draft proposal not found");
   });
 });

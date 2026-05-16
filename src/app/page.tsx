@@ -5,6 +5,7 @@ import {
   acceptSharedProposalAction,
   counterSharedProposalAction,
   rejectSharedProposalAction,
+  resetSharedDraftProposalAction,
   saveSharedDraftProposalAction,
   sendSharedDraftProposalAction,
   startSharedDraftProposal,
@@ -49,6 +50,7 @@ export default async function Home() {
       startDraftAction={startSharedDraftProposal}
       saveDraftAction={saveSharedDraftProposalAction}
       sendDraftAction={sendSharedDraftProposalAction}
+      resetDraftAction={resetSharedDraftProposalAction}
       acceptProposalAction={acceptSharedProposalAction}
       counterProposalAction={counterSharedProposalAction}
       rejectProposalAction={rejectSharedProposalAction}

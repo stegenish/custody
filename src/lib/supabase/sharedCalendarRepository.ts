@@ -158,6 +158,16 @@ export async function saveSharedDraftProposal(
   return requireSupabaseData(result, "Unable to save draft proposal");
 }
 
+export async function resetSharedDraftProposal(
+  supabase: RpcClient,
+  groupId: string
+): Promise<string> {
+  const result = (await supabase.rpc("reset_draft_proposal", {
+    target_group_id: groupId,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to reset draft proposal");
+}
+
 export async function sendSharedDraftProposal(
   supabase: RpcClient,
   groupId: string,

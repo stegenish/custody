@@ -8,6 +8,7 @@ import {
   counterSharedProposal,
   createSharedDraftProposal,
   rejectSharedProposal,
+  resetSharedDraftProposal,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
   withdrawSharedProposal,
@@ -90,6 +91,14 @@ export async function saveSharedDraftProposalAction(
     groupId,
     parseScheduleData(formData.get("scheduleData"))
   );
+  redirect("/");
+}
+
+export async function resetSharedDraftProposalAction(): Promise<void> {
+  const supabase = await createClient();
+  const groupId = await getRequiredGroupId(supabase);
+
+  await resetSharedDraftProposal(supabase, groupId);
   redirect("/");
 }
 

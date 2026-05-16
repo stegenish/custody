@@ -744,6 +744,61 @@ begin
 end;
 $$;
 
+create or replace function public.reset_draft_proposal(
+  target_group_id uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  draft_proposal public.proposals%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select *
+    into draft_proposal
+  from public.proposals
+  where group_id = target_group_id
+    and status = 'draft'
+    and current_author_user_id = current_user_id
+  limit 1;
+
+  if draft_proposal.id is null then
+    raise exception 'Draft proposal not found';
+  end if;
+
+  insert into public.proposal_status_events (
+    proposal_id,
+    status,
+    actor_user_id,
+    revision_id
+  )
+  values (
+    draft_proposal.id,
+    'withdrawn',
+    current_user_id,
+    draft_proposal.current_revision_id
+  );
+
+  update public.proposals
+  set status = 'withdrawn',
+      receiver_user_id = null,
+      updated_at = now()
+  where id = draft_proposal.id;
+
+  return draft_proposal.id;
+end;
+$$;
+
 create or replace function public.withdraw_active_proposal(
   target_group_id uuid,
   target_proposal_id uuid,
@@ -1139,6 +1194,7 @@ grant execute on function public.join_group_with_invite(text) to authenticated;
 grant execute on function public.create_draft_proposal(uuid) to authenticated;
 grant execute on function public.save_draft_proposal(uuid, jsonb) to authenticated;
 grant execute on function public.send_draft_proposal(uuid, jsonb) to authenticated;
+grant execute on function public.reset_draft_proposal(uuid) to authenticated;
 grant execute on function public.withdraw_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.reject_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.counter_active_proposal(uuid, uuid, uuid, jsonb) to authenticated;

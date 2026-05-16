@@ -137,6 +137,7 @@ describe("SharedCalendarApp", () => {
         currentParentId="parent-a"
         saveDraftAction={jest.fn()}
         sendDraftAction={jest.fn()}
+        resetDraftAction={jest.fn()}
       />
     );
 
@@ -151,6 +152,9 @@ describe("SharedCalendarApp", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Send Proposal" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Reset Draft" })
     ).toBeInTheDocument();
     expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
     expect(
