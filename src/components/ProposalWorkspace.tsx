@@ -4,6 +4,10 @@ import { type ReactNode, useMemo } from "react";
 import { CalendarWorkspace } from "./CalendarWorkspace";
 import { generateCalendar, getCalendarVisibleRange } from "@/lib/dateUtils";
 import { getChangedDateKeys } from "@/lib/proposalDiff";
+import type {
+  ProposalComment,
+  SharedDateNote,
+} from "@/lib/sharedCalendarTypes";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 
 interface ProposalWorkspaceProps {
@@ -13,6 +17,8 @@ interface ProposalWorkspaceProps {
   proposedScheduleData: ScheduleData;
   noteDateKeys?: Set<string>;
   commentDateKeys?: Set<string>;
+  sharedDateNotes?: SharedDateNote[];
+  proposalComments?: ProposalComment[];
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateProposedScheduleData: (data: ScheduleData) => void;
@@ -25,6 +31,8 @@ export function ProposalWorkspace({
   proposedScheduleData,
   noteDateKeys,
   commentDateKeys,
+  sharedDateNotes,
+  proposalComments,
   toolbar,
   readOnly = false,
   onUpdateProposedScheduleData,
@@ -51,6 +59,8 @@ export function ProposalWorkspace({
       changedDateKeys={changedDateKeys}
       noteDateKeys={noteDateKeys}
       commentDateKeys={commentDateKeys}
+      sharedDateNotes={sharedDateNotes}
+      proposalComments={proposalComments}
       toolbar={toolbar}
       readOnly={readOnly}
       onUpdateScheduleData={onUpdateProposedScheduleData}

@@ -128,6 +128,37 @@ describe("SharedCalendarApp", () => {
     expect(screen.getByTestId("shared-note-indicator")).toBeInTheDocument();
   });
 
+  it("shows shared date notes when a noted date is selected", () => {
+    const stateWithNote: CustodyGroupState = {
+      ...state,
+      notes: [
+        {
+          id: "note-1",
+          authorParentId: "parent-a",
+          date: "2026-03-02",
+          body: "Remember school event",
+          createdAt: "2026-05-16T00:00:00.000Z",
+          updatedAt: "2026-05-16T00:00:00.000Z",
+        },
+      ],
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithNote}
+        currentParentId="parent-a"
+        startDraftAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+
+    expect(screen.getByText("Remember school event")).toBeInTheDocument();
+  });
+
   it("renders the current parent's draft proposal as editable", () => {
     const draftScheduleData = {
       ...state.agreedCalendar.scheduleData,
@@ -272,6 +303,45 @@ describe("SharedCalendarApp", () => {
     });
 
     expect(screen.getByTestId("proposal-comment-indicator")).toBeInTheDocument();
+  });
+
+  it("shows proposal comments when a commented proposal date is selected", () => {
+    const activeProposal = createActiveProposal({
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    });
+    const stateWithComment: CustodyGroupState = {
+      ...state,
+      activeProposal: {
+        ...activeProposal,
+        comments: [
+          {
+            id: "comment-1",
+            proposalId: "proposal-1",
+            authorParentId: "parent-a",
+            date: "2026-03-03",
+            body: "Can we swap this date?",
+            createdAt: "2026-05-16T00:00:00.000Z",
+            updatedAt: "2026-05-16T00:00:00.000Z",
+          },
+        ],
+      },
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithComment}
+        currentParentId="parent-b"
+        acceptProposalAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+
+    expect(screen.getByText("Can we swap this date?")).toBeInTheDocument();
   });
 
   it("lets the receiver edit and send a counterproposal", () => {

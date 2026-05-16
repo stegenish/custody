@@ -123,4 +123,60 @@ describe("CalendarWorkspace", () => {
 
     expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
   });
+
+  it("shows shared date notes when a noted read-only date is selected", () => {
+    render(
+      <CalendarWorkspace
+        title="Custody Calendar"
+        today={new Date(2026, 2, 1)}
+        scheduleData={scheduleData}
+        sharedDateNotes={[
+          {
+            id: "note-1",
+            authorParentId: "parent-a",
+            date: "2026-03-02",
+            body: "Remember school event",
+            createdAt: "2026-05-16T00:00:00.000Z",
+            updatedAt: "2026-05-16T00:00:00.000Z",
+          },
+        ]}
+        readOnly
+        onUpdateScheduleData={jest.fn()}
+      />
+    );
+
+    clickMarchSecond();
+
+    expect(screen.getByTestId("selected-date-details")).toBeInTheDocument();
+    expect(screen.getByText("Remember school event")).toBeInTheDocument();
+    expect(screen.queryByTestId("day-override-bar")).not.toBeInTheDocument();
+  });
+
+  it("shows proposal comments when a commented read-only date is selected", () => {
+    render(
+      <CalendarWorkspace
+        title="Review Proposal"
+        today={new Date(2026, 2, 1)}
+        scheduleData={scheduleData}
+        proposalComments={[
+          {
+            id: "comment-1",
+            proposalId: "proposal-1",
+            authorParentId: "parent-a",
+            date: "2026-03-02",
+            body: "Can we swap this date?",
+            createdAt: "2026-05-16T00:00:00.000Z",
+            updatedAt: "2026-05-16T00:00:00.000Z",
+          },
+        ]}
+        readOnly
+        onUpdateScheduleData={jest.fn()}
+      />
+    );
+
+    clickMarchSecond();
+
+    expect(screen.getByTestId("selected-date-details")).toBeInTheDocument();
+    expect(screen.getByText("Can we swap this date?")).toBeInTheDocument();
+  });
 });

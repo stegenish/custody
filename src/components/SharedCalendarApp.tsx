@@ -82,6 +82,8 @@ export function SharedCalendarApp({
         proposedScheduleData={currentActiveRevision.scheduleData}
         noteDateKeys={noteDateKeys}
         commentDateKeys={activeProposalCommentDateKeys}
+        sharedDateNotes={state.notes}
+        proposalComments={state.activeProposal.comments}
         proposalId={state.activeProposal.id}
         revisionId={currentActiveRevision.id}
         isReceiver={state.activeProposal.receiverParentId === currentParentId}
@@ -102,6 +104,7 @@ export function SharedCalendarApp({
         agreedScheduleData={state.agreedCalendar.scheduleData}
         initialScheduleData={currentDraftRevision.scheduleData}
         noteDateKeys={noteDateKeys}
+        sharedDateNotes={state.notes}
         saveDraftAction={saveDraftAction}
         sendDraftAction={sendDraftAction}
         resetDraftAction={resetDraftAction}
@@ -115,6 +118,7 @@ export function SharedCalendarApp({
       today={today}
       scheduleData={state.agreedCalendar.scheduleData}
       noteDateKeys={noteDateKeys}
+      sharedDateNotes={state.notes}
       readOnly
       toolbar={
         startDraftAction ? (
@@ -136,6 +140,8 @@ interface ActiveProposalReviewProps {
   proposedScheduleData: ScheduleData;
   noteDateKeys?: Set<string>;
   commentDateKeys?: Set<string>;
+  sharedDateNotes?: SharedDateNote[];
+  proposalComments?: ProposalComment[];
   proposalId: string;
   revisionId: string;
   isReceiver: boolean;
@@ -152,6 +158,8 @@ function ActiveProposalReview({
   proposedScheduleData,
   noteDateKeys,
   commentDateKeys,
+  sharedDateNotes,
+  proposalComments,
   proposalId,
   revisionId,
   isReceiver,
@@ -173,6 +181,8 @@ function ActiveProposalReview({
       proposedScheduleData={counterScheduleData}
       noteDateKeys={noteDateKeys}
       commentDateKeys={commentDateKeys}
+      sharedDateNotes={sharedDateNotes}
+      proposalComments={proposalComments}
       readOnly={!isCounterEditing}
       toolbar={
         <ActiveProposalToolbar
@@ -287,6 +297,7 @@ interface EditableDraftProposalProps {
   agreedScheduleData: ScheduleData;
   initialScheduleData: ScheduleData;
   noteDateKeys?: Set<string>;
+  sharedDateNotes?: SharedDateNote[];
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
   sendDraftAction?: (formData: FormData) => void | Promise<void>;
   resetDraftAction?: () => void | Promise<void>;
@@ -297,6 +308,7 @@ function EditableDraftProposal({
   agreedScheduleData,
   initialScheduleData,
   noteDateKeys,
+  sharedDateNotes,
   saveDraftAction,
   sendDraftAction,
   resetDraftAction,
@@ -310,6 +322,7 @@ function EditableDraftProposal({
       agreedScheduleData={agreedScheduleData}
       proposedScheduleData={draftScheduleData}
       noteDateKeys={noteDateKeys}
+      sharedDateNotes={sharedDateNotes}
       onUpdateProposedScheduleData={setDraftScheduleData}
       toolbar={
         saveDraftAction || sendDraftAction || resetDraftAction ? (
