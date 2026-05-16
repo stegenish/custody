@@ -192,6 +192,54 @@ describe("SharedCalendarApp", () => {
       .toBe("2026-03-02");
   });
 
+  it("renders edit and delete controls for the current parent's shared notes", () => {
+    render(
+      <SharedCalendarApp
+        state={{
+          ...state,
+          notes: [
+            {
+              id: "note-1",
+              authorParentId: "parent-a",
+              date: "2026-03-02",
+              body: "Remember school event",
+              createdAt: "2026-05-16T00:00:00.000Z",
+              updatedAt: "2026-05-16T00:00:00.000Z",
+            },
+            {
+              id: "note-2",
+              authorParentId: "parent-b",
+              date: "2026-03-02",
+              body: "Other parent note",
+              createdAt: "2026-05-16T00:00:00.000Z",
+              updatedAt: "2026-05-16T00:00:00.000Z",
+            },
+          ],
+        }}
+        currentParentId="parent-a"
+        updateSharedDateNoteAction={jest.fn()}
+        deleteSharedDateNoteAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "Edit shared note" })
+    ).toHaveValue("Remember school event");
+    expect(screen.getByRole("button", { name: "Save Note" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Delete Note" })
+    ).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("Other parent note")).not.toBeInTheDocument();
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="noteId"]')?.value
+    ).toBe("note-1");
+  });
+
   it("renders the current parent's draft proposal as editable", () => {
     const draftScheduleData = {
       ...state.agreedCalendar.scheduleData,
@@ -422,6 +470,69 @@ describe("SharedCalendarApp", () => {
       document.querySelector<HTMLInputElement>('input[name="proposalId"]')
         ?.value
     ).toBe("proposal-1");
+  });
+
+  it("renders edit and delete controls for the current parent's proposal comments", () => {
+    const activeProposal = createActiveProposal({
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    });
+    const stateWithComments: CustodyGroupState = {
+      ...state,
+      activeProposal: {
+        ...activeProposal,
+        comments: [
+          {
+            id: "comment-1",
+            proposalId: "proposal-1",
+            authorParentId: "parent-b",
+            date: "2026-03-03",
+            body: "My comment",
+            createdAt: "2026-05-16T00:00:00.000Z",
+            updatedAt: "2026-05-16T00:00:00.000Z",
+          },
+          {
+            id: "comment-2",
+            proposalId: "proposal-1",
+            authorParentId: "parent-a",
+            date: "2026-03-03",
+            body: "Other parent comment",
+            createdAt: "2026-05-16T00:00:00.000Z",
+            updatedAt: "2026-05-16T00:00:00.000Z",
+          },
+        ],
+      },
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithComments}
+        currentParentId="parent-b"
+        updateProposalCommentAction={jest.fn()}
+        deleteProposalCommentAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "Edit proposal comment" })
+    ).toHaveValue("My comment");
+    expect(
+      screen.getByRole("button", { name: "Save Comment" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Delete Comment" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByDisplayValue("Other parent comment")
+    ).not.toBeInTheDocument();
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="commentId"]')?.value
+    ).toBe("comment-1");
   });
 
   it("lets the receiver edit and send a counterproposal", () => {

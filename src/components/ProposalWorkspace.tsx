@@ -20,8 +20,13 @@ interface ProposalWorkspaceProps {
   sharedDateNotes?: SharedDateNote[];
   proposalComments?: ProposalComment[];
   proposalId?: string;
+  currentParentId?: string;
   createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
   createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateProposedScheduleData: (data: ScheduleData) => void;
@@ -37,8 +42,13 @@ export function ProposalWorkspace({
   sharedDateNotes,
   proposalComments,
   proposalId,
+  currentParentId,
   createSharedDateNoteAction,
+  updateSharedDateNoteAction,
+  deleteSharedDateNoteAction,
   createProposalCommentAction,
+  updateProposalCommentAction,
+  deleteProposalCommentAction,
   toolbar,
   readOnly = false,
   onUpdateProposedScheduleData,
@@ -68,8 +78,13 @@ export function ProposalWorkspace({
       sharedDateNotes={sharedDateNotes}
       proposalComments={proposalComments}
       proposalId={proposalId}
+      currentParentId={currentParentId}
       createSharedDateNoteAction={createSharedDateNoteAction}
+      updateSharedDateNoteAction={updateSharedDateNoteAction}
+      deleteSharedDateNoteAction={deleteSharedDateNoteAction}
       createProposalCommentAction={createProposalCommentAction}
+      updateProposalCommentAction={updateProposalCommentAction}
+      deleteProposalCommentAction={deleteProposalCommentAction}
       toolbar={toolbar}
       readOnly={readOnly}
       onUpdateScheduleData={onUpdateProposedScheduleData}

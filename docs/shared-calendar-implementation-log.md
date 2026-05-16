@@ -20,9 +20,10 @@ Current state:
 - Notes and proposal comments can be represented visually on calendar dates.
 - Selecting a date can show note/comment details outside the calendar cell.
 - New shared date notes and active proposal comments can be submitted from selected dates.
-- Existing note/comment editing controls are still pending.
-- Server repository functions for note/comment update/delete already exist, but UI forms are still pending.
+- Existing shared date notes and active proposal comments show edit/delete forms only to the parent who created them.
+- Shared note and proposal comment update/delete server actions are wired through the shared app entry point.
 
 Next likely slice:
 
-- Add server actions and forms for author-only note/comment edit/delete.
+- Add direct tests around the server actions for note/comment update/delete form parsing.
+- Continue proposal comment carry-forward/promotion behavior from the design plan.

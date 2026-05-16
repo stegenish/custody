@@ -28,8 +28,13 @@ interface CalendarWorkspaceProps {
   sharedDateNotes?: SharedDateNote[];
   proposalComments?: ProposalComment[];
   proposalId?: string;
+  currentParentId?: string;
   createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
   createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateScheduleData: (data: ScheduleData) => void;
@@ -46,8 +51,13 @@ export function CalendarWorkspace({
   sharedDateNotes = [],
   proposalComments = [],
   proposalId,
+  currentParentId,
   createSharedDateNoteAction,
+  updateSharedDateNoteAction,
+  deleteSharedDateNoteAction,
   createProposalCommentAction,
+  updateProposalCommentAction,
+  deleteProposalCommentAction,
   toolbar,
   readOnly = false,
   onUpdateScheduleData,
@@ -110,8 +120,13 @@ export function CalendarWorkspace({
           notes={selectedNotes}
           comments={selectedComments}
           proposalId={proposalId}
+          currentParentId={currentParentId}
           createSharedDateNoteAction={createSharedDateNoteAction}
+          updateSharedDateNoteAction={updateSharedDateNoteAction}
+          deleteSharedDateNoteAction={deleteSharedDateNoteAction}
           createProposalCommentAction={createProposalCommentAction}
+          updateProposalCommentAction={updateProposalCommentAction}
+          deleteProposalCommentAction={deleteProposalCommentAction}
           onClose={() => setSelectedDate(null)}
         />
       )}
@@ -139,16 +154,26 @@ function SelectedDateDetails({
   notes,
   comments,
   proposalId,
+  currentParentId,
   createSharedDateNoteAction,
+  updateSharedDateNoteAction,
+  deleteSharedDateNoteAction,
   createProposalCommentAction,
+  updateProposalCommentAction,
+  deleteProposalCommentAction,
   onClose,
 }: {
   dateKey: string;
   notes: SharedDateNote[];
   comments: ProposalComment[];
   proposalId?: string;
+  currentParentId?: string;
   createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
   createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   onClose: () => void;
 }) {
   const canCreateProposalComment =
@@ -178,8 +203,29 @@ function SelectedDateDetails({
           Close
         </button>
       </div>
-      <DateTextList title="Shared notes" items={notes} />
-      <DateTextList title="Proposal comments" items={comments} />
+      <DateTextList
+        title="Shared notes"
+        items={notes}
+        currentParentId={currentParentId}
+        idFieldName="noteId"
+        editLabel="Edit shared note"
+        saveLabel="Save Note"
+        deleteLabel="Delete Note"
+        updateAction={updateSharedDateNoteAction}
+        deleteAction={deleteSharedDateNoteAction}
+      />
+      <DateTextList
+        title="Proposal comments"
+        items={comments}
+        currentParentId={currentParentId}
+        idFieldName="commentId"
+        editLabel="Edit proposal comment"
+        saveLabel="Save Comment"
+        deleteLabel="Delete Comment"
+        fields={proposalId ? { proposalId } : undefined}
+        updateAction={updateProposalCommentAction}
+        deleteAction={deleteProposalCommentAction}
+      />
       {createSharedDateNoteAction && (
         <DateTextForm
           action={createSharedDateNoteAction}
@@ -204,9 +250,25 @@ function SelectedDateDetails({
 function DateTextList({
   title,
   items,
+  currentParentId,
+  idFieldName,
+  editLabel,
+  saveLabel,
+  deleteLabel,
+  fields,
+  updateAction,
+  deleteAction,
 }: {
   title: string;
-  items: Array<{ id: string; body: string }>;
+  items: Array<{ id: string; authorParentId: string; body: string }>;
+  currentParentId?: string;
+  idFieldName: string;
+  editLabel: string;
+  saveLabel: string;
+  deleteLabel: string;
+  fields?: Record<string, string>;
+  updateAction?: (formData: FormData) => void | Promise<void>;
+  deleteAction?: (formData: FormData) => void | Promise<void>;
 }) {
   if (items.length === 0) return null;
 
@@ -219,13 +281,111 @@ function DateTextList({
         {items.map((item) => (
           <li
             key={item.id}
-            className="rounded border border-gray-100 p-2 text-sm"
+            className="space-y-2 rounded border border-gray-100 p-2 text-sm"
           >
-            {item.body}
+            <p>{item.body}</p>
+            {item.authorParentId === currentParentId && (
+              <DateTextEditControls
+                itemId={item.id}
+                idFieldName={idFieldName}
+                body={item.body}
+                editLabel={editLabel}
+                saveLabel={saveLabel}
+                deleteLabel={deleteLabel}
+                fields={fields}
+                updateAction={updateAction}
+                deleteAction={deleteAction}
+              />
+            )}
           </li>
         ))}
       </ul>
     </section>
+  );
+}
+
+function DateTextEditControls({
+  itemId,
+  idFieldName,
+  body,
+  editLabel,
+  saveLabel,
+  deleteLabel,
+  fields = {},
+  updateAction,
+  deleteAction,
+}: {
+  itemId: string;
+  idFieldName: string;
+  body: string;
+  editLabel: string;
+  saveLabel: string;
+  deleteLabel: string;
+  fields?: Record<string, string>;
+  updateAction?: (formData: FormData) => void | Promise<void>;
+  deleteAction?: (formData: FormData) => void | Promise<void>;
+}) {
+  return (
+    <div className="space-y-2">
+      {updateAction && (
+        <form action={updateAction} className="space-y-2">
+          <DateTextHiddenFields
+            idFieldName={idFieldName}
+            itemId={itemId}
+            fields={fields}
+          />
+          <label className="block text-sm font-medium text-gray-700">
+            {editLabel}
+            <textarea
+              name="body"
+              aria-label={editLabel}
+              defaultValue={body}
+              className="mt-1 block min-h-20 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            />
+          </label>
+          <button
+            type="submit"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
+          >
+            {saveLabel}
+          </button>
+        </form>
+      )}
+      {deleteAction && (
+        <form action={deleteAction}>
+          <DateTextHiddenFields
+            idFieldName={idFieldName}
+            itemId={itemId}
+            fields={fields}
+          />
+          <button
+            type="submit"
+            className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+          >
+            {deleteLabel}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function DateTextHiddenFields({
+  idFieldName,
+  itemId,
+  fields,
+}: {
+  idFieldName: string;
+  itemId: string;
+  fields: Record<string, string>;
+}) {
+  return (
+    <>
+      <input type="hidden" name={idFieldName} value={itemId} />
+      {Object.entries(fields).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
+    </>
   );
 }
 

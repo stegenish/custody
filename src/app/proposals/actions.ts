@@ -10,10 +10,14 @@ import {
   createProposalComment,
   createSharedDateNote,
   createSharedDraftProposal,
+  deleteProposalComment,
+  deleteSharedDateNote,
   rejectSharedProposal,
   resetSharedDraftProposal,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
+  updateProposalComment,
+  updateSharedDateNote,
   withdrawSharedProposal,
 } from "@/lib/supabase/sharedCalendarRepository";
 import { createClient } from "@/lib/supabase/server";
@@ -160,6 +164,78 @@ async function runProposalDateBodyAction(
   );
 }
 
+async function runNoteBodyAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    noteId: string,
+    body: string
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      requireFormString(formData, "noteId"),
+      requireFormString(formData, "body")
+    )
+  );
+}
+
+async function runNoteIdAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    noteId: string
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(supabase, groupId, requireFormString(formData, "noteId"))
+  );
+}
+
+async function runProposalCommentBodyAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    proposalId: string,
+    commentId: string,
+    body: string
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      requireFormString(formData, "proposalId"),
+      requireFormString(formData, "commentId"),
+      requireFormString(formData, "body")
+    )
+  );
+}
+
+async function runProposalCommentIdAction(
+  formData: FormData,
+  mutation: (
+    supabase: SupabaseServerClient,
+    groupId: string,
+    proposalId: string,
+    commentId: string
+  ) => Promise<unknown>
+): Promise<void> {
+  await runGroupAction((supabase, groupId) =>
+    mutation(
+      supabase,
+      groupId,
+      requireFormString(formData, "proposalId"),
+      requireFormString(formData, "commentId")
+    )
+  );
+}
+
 export async function startSharedDraftProposal(): Promise<void> {
   await runGroupAction(createSharedDraftProposal);
 }
@@ -214,4 +290,28 @@ export async function createProposalCommentAction(
   formData: FormData
 ): Promise<void> {
   await runProposalDateBodyAction(formData, createProposalComment);
+}
+
+export async function updateSharedDateNoteAction(
+  formData: FormData
+): Promise<void> {
+  await runNoteBodyAction(formData, updateSharedDateNote);
+}
+
+export async function deleteSharedDateNoteAction(
+  formData: FormData
+): Promise<void> {
+  await runNoteIdAction(formData, deleteSharedDateNote);
+}
+
+export async function updateProposalCommentAction(
+  formData: FormData
+): Promise<void> {
+  await runProposalCommentBodyAction(formData, updateProposalComment);
+}
+
+export async function deleteProposalCommentAction(
+  formData: FormData
+): Promise<void> {
+  await runProposalCommentIdAction(formData, deleteProposalComment);
 }

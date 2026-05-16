@@ -7,11 +7,15 @@ import {
   counterSharedProposalAction,
   createProposalCommentAction,
   createSharedDateNoteAction,
+  deleteProposalCommentAction,
+  deleteSharedDateNoteAction,
   rejectSharedProposalAction,
   resetSharedDraftProposalAction,
   saveSharedDraftProposalAction,
   sendSharedDraftProposalAction,
   startSharedDraftProposal,
+  updateProposalCommentAction,
+  updateSharedDateNoteAction,
   withdrawSharedProposalAction,
 } from "@/app/proposals/actions";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
@@ -67,7 +71,11 @@ export default async function Home() {
       rejectProposalAction={rejectSharedProposalAction}
       withdrawProposalAction={withdrawSharedProposalAction}
       createSharedDateNoteAction={createSharedDateNoteAction}
+      updateSharedDateNoteAction={updateSharedDateNoteAction}
+      deleteSharedDateNoteAction={deleteSharedDateNoteAction}
       createProposalCommentAction={createProposalCommentAction}
+      updateProposalCommentAction={updateProposalCommentAction}
+      deleteProposalCommentAction={deleteProposalCommentAction}
     />
   );
 }
