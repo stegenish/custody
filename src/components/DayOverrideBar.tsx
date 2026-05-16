@@ -44,12 +44,20 @@ export function DayOverrideBar({
           onClose();
         }
       }}
-      className="fixed bottom-0 inset-x-0 z-50 border-t border-gray-200 bg-white px-4 py-3 shadow-lg"
+      className="fixed inset-x-0 bottom-0 z-50 max-h-[55vh] overflow-y-auto border-t border-gray-200 bg-white px-4 py-3 shadow-lg sm:max-h-none sm:overflow-visible"
     >
-      <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-3">
+      <div className="mx-auto grid max-w-3xl grid-cols-[1fr_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-center">
         <span className="text-sm font-semibold">{dateKey}</span>
 
-        <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="justify-self-end rounded px-3 py-2 text-sm text-gray-500 sm:order-last sm:ml-auto"
+        >
+          Close
+        </button>
+
+        <div className="col-span-2 flex flex-wrap gap-2 sm:col-span-1">
           {labels.map((label) => (
             <button
               key={label.id}
@@ -79,19 +87,11 @@ export function DayOverrideBar({
           <button
             type="button"
             onClick={() => onRemoveOverride(dateKey)}
-            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            className="col-span-2 justify-self-start rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 sm:col-span-1"
           >
             Clear Override
           </button>
         )}
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="ml-auto rounded px-3 py-2 text-sm text-gray-500"
-        >
-          Close
-        </button>
       </div>
     </div>
   );
