@@ -35,6 +35,16 @@ export interface SharedCalendarSupabaseClient {
   from<T>(table: string): { select(columns?: string): QueryBuilder<T> };
 }
 
+async function callRpc<T>(
+  supabase: RpcClient,
+  functionName: string,
+  args: Record<string, unknown>,
+  errorMessage: string
+): Promise<T> {
+  const result = (await supabase.rpc(functionName, args)) as SupabaseResult<T>;
+  return requireSupabaseData(result, errorMessage);
+}
+
 async function loadProposalChildren(
   supabase: SharedCalendarSupabaseClient,
   proposalIds: string[]
@@ -141,10 +151,12 @@ export async function createSharedDraftProposal(
   supabase: RpcClient,
   groupId: string
 ): Promise<string> {
-  const result = (await supabase.rpc("create_draft_proposal", {
-    target_group_id: groupId,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to create draft proposal");
+  return callRpc<string>(
+    supabase,
+    "create_draft_proposal",
+    { target_group_id: groupId },
+    "Unable to create draft proposal"
+  );
 }
 
 export async function saveSharedDraftProposal(
@@ -152,21 +164,27 @@ export async function saveSharedDraftProposal(
   groupId: string,
   scheduleData: ScheduleData
 ): Promise<string> {
-  const result = (await supabase.rpc("save_draft_proposal", {
-    target_group_id: groupId,
-    proposed_schedule_data: scheduleData,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to save draft proposal");
+  return callRpc<string>(
+    supabase,
+    "save_draft_proposal",
+    {
+      target_group_id: groupId,
+      proposed_schedule_data: scheduleData,
+    },
+    "Unable to save draft proposal"
+  );
 }
 
 export async function resetSharedDraftProposal(
   supabase: RpcClient,
   groupId: string
 ): Promise<string> {
-  const result = (await supabase.rpc("reset_draft_proposal", {
-    target_group_id: groupId,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to reset draft proposal");
+  return callRpc<string>(
+    supabase,
+    "reset_draft_proposal",
+    { target_group_id: groupId },
+    "Unable to reset draft proposal"
+  );
 }
 
 export async function sendSharedDraftProposal(
@@ -174,11 +192,15 @@ export async function sendSharedDraftProposal(
   groupId: string,
   scheduleData: ScheduleData
 ): Promise<string> {
-  const result = (await supabase.rpc("send_draft_proposal", {
-    target_group_id: groupId,
-    proposed_schedule_data: scheduleData,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to send draft proposal");
+  return callRpc<string>(
+    supabase,
+    "send_draft_proposal",
+    {
+      target_group_id: groupId,
+      proposed_schedule_data: scheduleData,
+    },
+    "Unable to send draft proposal"
+  );
 }
 
 async function runActiveProposalMutation(
@@ -189,12 +211,16 @@ async function runActiveProposalMutation(
   revisionId: string,
   errorMessage: string
 ): Promise<string> {
-  const result = (await supabase.rpc(functionName, {
-    target_group_id: groupId,
-    target_proposal_id: proposalId,
-    viewed_revision_id: revisionId,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, errorMessage);
+  return callRpc<string>(
+    supabase,
+    functionName,
+    {
+      target_group_id: groupId,
+      target_proposal_id: proposalId,
+      viewed_revision_id: revisionId,
+    },
+    errorMessage
+  );
 }
 
 export async function withdrawSharedProposal(
@@ -235,12 +261,16 @@ export async function acceptSharedProposal(
   proposalId: string,
   revisionId: string
 ): Promise<number> {
-  const result = (await supabase.rpc("accept_active_proposal", {
-    target_group_id: groupId,
-    target_proposal_id: proposalId,
-    viewed_revision_id: revisionId,
-  })) as SupabaseResult<number>;
-  return requireSupabaseData(result, "Unable to accept proposal");
+  return callRpc<number>(
+    supabase,
+    "accept_active_proposal",
+    {
+      target_group_id: groupId,
+      target_proposal_id: proposalId,
+      viewed_revision_id: revisionId,
+    },
+    "Unable to accept proposal"
+  );
 }
 
 export async function counterSharedProposal(
@@ -250,13 +280,17 @@ export async function counterSharedProposal(
   revisionId: string,
   scheduleData: ScheduleData
 ): Promise<string> {
-  const result = (await supabase.rpc("counter_active_proposal", {
-    target_group_id: groupId,
-    target_proposal_id: proposalId,
-    viewed_revision_id: revisionId,
-    proposed_schedule_data: scheduleData,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to counter proposal");
+  return callRpc<string>(
+    supabase,
+    "counter_active_proposal",
+    {
+      target_group_id: groupId,
+      target_proposal_id: proposalId,
+      viewed_revision_id: revisionId,
+      proposed_schedule_data: scheduleData,
+    },
+    "Unable to counter proposal"
+  );
 }
 
 export async function createSharedDateNote(
@@ -265,12 +299,16 @@ export async function createSharedDateNote(
   date: string,
   body: string
 ): Promise<string> {
-  const result = (await supabase.rpc("create_shared_date_note", {
-    target_group_id: groupId,
-    note_date_key: date,
-    note_body: assertTextBodyLength(body, "Shared date note"),
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to create shared date note");
+  return callRpc<string>(
+    supabase,
+    "create_shared_date_note",
+    {
+      target_group_id: groupId,
+      note_date_key: date,
+      note_body: assertTextBodyLength(body, "Shared date note"),
+    },
+    "Unable to create shared date note"
+  );
 }
 
 export async function updateSharedDateNote(
@@ -279,12 +317,16 @@ export async function updateSharedDateNote(
   noteId: string,
   body: string
 ): Promise<string> {
-  const result = (await supabase.rpc("update_shared_date_note", {
-    target_group_id: groupId,
-    target_note_id: noteId,
-    note_body: assertTextBodyLength(body, "Shared date note"),
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to update shared date note");
+  return callRpc<string>(
+    supabase,
+    "update_shared_date_note",
+    {
+      target_group_id: groupId,
+      target_note_id: noteId,
+      note_body: assertTextBodyLength(body, "Shared date note"),
+    },
+    "Unable to update shared date note"
+  );
 }
 
 export async function deleteSharedDateNote(
@@ -292,11 +334,15 @@ export async function deleteSharedDateNote(
   groupId: string,
   noteId: string
 ): Promise<string> {
-  const result = (await supabase.rpc("delete_shared_date_note", {
-    target_group_id: groupId,
-    target_note_id: noteId,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to delete shared date note");
+  return callRpc<string>(
+    supabase,
+    "delete_shared_date_note",
+    {
+      target_group_id: groupId,
+      target_note_id: noteId,
+    },
+    "Unable to delete shared date note"
+  );
 }
 
 export async function createProposalComment(
@@ -306,13 +352,17 @@ export async function createProposalComment(
   date: string,
   body: string
 ): Promise<string> {
-  const result = (await supabase.rpc("create_proposal_comment", {
-    target_group_id: groupId,
-    target_proposal_id: proposalId,
-    comment_date_key: date,
-    comment_body: assertTextBodyLength(body, "Proposal comment"),
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to create proposal comment");
+  return callRpc<string>(
+    supabase,
+    "create_proposal_comment",
+    {
+      target_group_id: groupId,
+      target_proposal_id: proposalId,
+      comment_date_key: date,
+      comment_body: assertTextBodyLength(body, "Proposal comment"),
+    },
+    "Unable to create proposal comment"
+  );
 }
 
 export async function updateProposalComment(
@@ -322,13 +372,17 @@ export async function updateProposalComment(
   commentId: string,
   body: string
 ): Promise<string> {
-  const result = (await supabase.rpc("update_proposal_comment", {
-    target_group_id: groupId,
-    target_proposal_id: proposalId,
-    target_comment_id: commentId,
-    comment_body: assertTextBodyLength(body, "Proposal comment"),
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to update proposal comment");
+  return callRpc<string>(
+    supabase,
+    "update_proposal_comment",
+    {
+      target_group_id: groupId,
+      target_proposal_id: proposalId,
+      target_comment_id: commentId,
+      comment_body: assertTextBodyLength(body, "Proposal comment"),
+    },
+    "Unable to update proposal comment"
+  );
 }
 
 export async function deleteProposalComment(
@@ -337,10 +391,14 @@ export async function deleteProposalComment(
   proposalId: string,
   commentId: string
 ): Promise<string> {
-  const result = (await supabase.rpc("delete_proposal_comment", {
-    target_group_id: groupId,
-    target_proposal_id: proposalId,
-    target_comment_id: commentId,
-  })) as SupabaseResult<string>;
-  return requireSupabaseData(result, "Unable to delete proposal comment");
+  return callRpc<string>(
+    supabase,
+    "delete_proposal_comment",
+    {
+      target_group_id: groupId,
+      target_proposal_id: proposalId,
+      target_comment_id: commentId,
+    },
+    "Unable to delete proposal comment"
+  );
 }
