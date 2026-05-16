@@ -1,12 +1,15 @@
 import {
   acceptSharedProposal,
   counterSharedProposal,
+  createSharedDateNote,
   createSharedDraftProposal,
+  deleteSharedDateNote,
   loadSharedCalendarState,
   rejectSharedProposal,
   resetSharedDraftProposal,
   saveSharedDraftProposal,
   sendSharedDraftProposal,
+  updateSharedDateNote,
   withdrawSharedProposal,
 } from "./sharedCalendarRepository";
 
@@ -500,5 +503,67 @@ describe("counterSharedProposal", () => {
         { labels: [], schedules: [], overrides: [] }
       )
     ).rejects.toThrow("Only the receiver can counter this proposal");
+  });
+});
+
+describe("shared date note mutations", () => {
+  it("creates a shared date note", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "note-1", error: null }),
+    };
+
+    await expect(
+      createSharedDateNote(supabase, "group-1", "2026-06-01", "School event")
+    ).resolves.toBe("note-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("create_shared_date_note", {
+      target_group_id: "group-1",
+      note_date_key: "2026-06-01",
+      note_body: "School event",
+    });
+  });
+
+  it("updates a shared date note", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "note-1", error: null }),
+    };
+
+    await expect(
+      updateSharedDateNote(supabase, "group-1", "note-1", "Updated")
+    ).resolves.toBe("note-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("update_shared_date_note", {
+      target_group_id: "group-1",
+      target_note_id: "note-1",
+      note_body: "Updated",
+    });
+  });
+
+  it("soft-deletes a shared date note", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "note-1", error: null }),
+    };
+
+    await expect(
+      deleteSharedDateNote(supabase, "group-1", "note-1")
+    ).resolves.toBe("note-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("delete_shared_date_note", {
+      target_group_id: "group-1",
+      target_note_id: "note-1",
+    });
+  });
+
+  it("throws shared date note mutation errors", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: "Only the author can edit this note" },
+      }),
+    };
+
+    await expect(
+      updateSharedDateNote(supabase, "group-1", "note-1", "No")
+    ).rejects.toThrow("Only the author can edit this note");
   });
 });

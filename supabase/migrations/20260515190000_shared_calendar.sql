@@ -1187,6 +1187,139 @@ begin
 end;
 $$;
 
+create or replace function public.create_shared_date_note(
+  target_group_id uuid,
+  note_date_key date,
+  note_body text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  created_note_id uuid;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  insert into public.shared_date_notes (
+    group_id,
+    author_user_id,
+    date_key,
+    body
+  )
+  values (
+    target_group_id,
+    current_user_id,
+    note_date_key,
+    note_body
+  )
+  returning id into created_note_id;
+
+  return created_note_id;
+end;
+$$;
+
+create or replace function public.update_shared_date_note(
+  target_group_id uuid,
+  target_note_id uuid,
+  note_body text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  existing_note public.shared_date_notes%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select *
+    into existing_note
+  from public.shared_date_notes
+  where id = target_note_id
+    and group_id = target_group_id
+    and deleted_at is null
+  limit 1;
+
+  if existing_note.id is null then
+    raise exception 'Note not found';
+  end if;
+
+  if existing_note.author_user_id <> current_user_id then
+    raise exception 'Only the author can edit this note';
+  end if;
+
+  update public.shared_date_notes
+  set body = note_body,
+      updated_at = now()
+  where id = target_note_id;
+
+  return target_note_id;
+end;
+$$;
+
+create or replace function public.delete_shared_date_note(
+  target_group_id uuid,
+  target_note_id uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  existing_note public.shared_date_notes%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select *
+    into existing_note
+  from public.shared_date_notes
+  where id = target_note_id
+    and group_id = target_group_id
+    and deleted_at is null
+  limit 1;
+
+  if existing_note.id is null then
+    raise exception 'Note not found';
+  end if;
+
+  if existing_note.author_user_id <> current_user_id then
+    raise exception 'Only the author can delete this note';
+  end if;
+
+  update public.shared_date_notes
+  set deleted_at = now(),
+      updated_at = now()
+  where id = target_note_id;
+
+  return target_note_id;
+end;
+$$;
+
 grant execute on function public.ensure_initial_group() to authenticated;
 grant execute on function public.get_my_group_id() to authenticated;
 grant execute on function public.regenerate_group_invite(uuid, text) to authenticated;
@@ -1199,3 +1332,6 @@ grant execute on function public.withdraw_active_proposal(uuid, uuid, uuid) to a
 grant execute on function public.reject_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.counter_active_proposal(uuid, uuid, uuid, jsonb) to authenticated;
 grant execute on function public.accept_active_proposal(uuid, uuid, uuid) to authenticated;
+grant execute on function public.create_shared_date_note(uuid, date, text) to authenticated;
+grant execute on function public.update_shared_date_note(uuid, uuid, text) to authenticated;
+grant execute on function public.delete_shared_date_note(uuid, uuid) to authenticated;

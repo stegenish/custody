@@ -257,3 +257,43 @@ export async function counterSharedProposal(
   })) as SupabaseResult<string>;
   return requireSupabaseData(result, "Unable to counter proposal");
 }
+
+export async function createSharedDateNote(
+  supabase: RpcClient,
+  groupId: string,
+  date: string,
+  body: string
+): Promise<string> {
+  const result = (await supabase.rpc("create_shared_date_note", {
+    target_group_id: groupId,
+    note_date_key: date,
+    note_body: body,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to create shared date note");
+}
+
+export async function updateSharedDateNote(
+  supabase: RpcClient,
+  groupId: string,
+  noteId: string,
+  body: string
+): Promise<string> {
+  const result = (await supabase.rpc("update_shared_date_note", {
+    target_group_id: groupId,
+    target_note_id: noteId,
+    note_body: body,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to update shared date note");
+}
+
+export async function deleteSharedDateNote(
+  supabase: RpcClient,
+  groupId: string,
+  noteId: string
+): Promise<string> {
+  const result = (await supabase.rpc("delete_shared_date_note", {
+    target_group_id: groupId,
+    target_note_id: noteId,
+  })) as SupabaseResult<string>;
+  return requireSupabaseData(result, "Unable to delete shared date note");
+}
