@@ -13,4 +13,10 @@ describe("sanitizeNextPath", () => {
     expect(sanitizeNextPath("//example.com")).toBe("/");
     expect(sanitizeNextPath("\\\\example.com")).toBe("/");
   });
+
+  it("falls back to home for percent-encoded external destinations", () => {
+    expect(sanitizeNextPath("/%2F%2Fevil.example")).toBe("/");
+    expect(sanitizeNextPath("/%5Cevil.example")).toBe("/");
+    expect(sanitizeNextPath("/%252F%252Fevil.example")).toBe("/");
+  });
 });
