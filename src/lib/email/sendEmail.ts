@@ -16,6 +16,10 @@ function getResendConfig(): ResendEmailConfig | null {
   return { apiKey, from };
 }
 
+export function hasEmailNotificationEnv(): boolean {
+  return getResendConfig() !== null;
+}
+
 export async function sendEmailNotification(
   message: EmailMessage
 ): Promise<void> {

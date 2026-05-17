@@ -26,7 +26,8 @@ Current state:
 - Added an accept-time option to promote active, non-deleted proposal comments into shared date notes.
 - Added provider-agnostic email notification builders for proposal sent, countered, accepted, rejected, and comment-added events.
 - Wired proposal/comment server actions to send notification emails for sent, countered, accepted, rejected, and comment-added events.
+- Added tests for the Resend email delivery adapter and documented the required notification email environment variables.
 
 Next likely slice:
 
-- Configure and document the production email provider settings.
+- Review the remaining shared-calendar launch gaps and choose the next UI/server workflow slice.
