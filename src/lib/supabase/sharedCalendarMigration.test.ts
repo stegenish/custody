@@ -45,19 +45,29 @@ function getPolicySql(policyName: string): string {
 }
 
 describe("shared calendar migration proposal comment guards", () => {
-  it.each([
-    "create_proposal_comment",
-    "update_proposal_comment",
-    "delete_proposal_comment",
-  ])("requires %s to target an active sent proposal", (functionName) => {
-    expect(getFunctionSql(functionName)).toMatch(/status\s*=\s*'sent'/);
+  it("only creates proposal comments on draft or sent proposals", () => {
+    expect(getFunctionSql("create_proposal_comment")).toMatch(
+      /status\s+in\s+\('draft',\s*'sent'\)/
+    );
   });
 
-  it.each([
-    "parents can create proposal comments",
-    "comment authors can update active comments",
-  ])("requires %s to target active sent proposals", (policyName) => {
-    expect(getPolicySql(policyName)).toMatch(/status\s*=\s*'sent'/);
+  it.each(["update_proposal_comment", "delete_proposal_comment"])(
+    "does not require %s to target an active proposal",
+    (functionName) => {
+      expect(getFunctionSql(functionName)).not.toMatch(/status\s*=\s*'sent'/);
+    }
+  );
+
+  it("only permits direct proposal comment inserts on draft or sent proposals", () => {
+    expect(getPolicySql("parents can create proposal comments")).toMatch(
+      /status\s+in\s+\('draft',\s*'sent'\)/
+    );
+  });
+
+  it("does not require direct proposal comment updates to target active proposals", () => {
+    expect(getPolicySql("comment authors can update active comments")).not.toMatch(
+      /status\s*=\s*'sent'/
+    );
   });
 
   it("allows parents to read proposal comments outside active proposals", () => {

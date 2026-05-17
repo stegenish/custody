@@ -32,7 +32,7 @@ Current state:
 - Added direct invite server-action tests and stopped unauthenticated invite acceptance from continuing after redirecting to login.
 - Blocked stale proposal comment submissions when the active proposal is no longer present before writing or notifying.
 - Added selected-date agreed/proposed custody details for changed proposal dates.
-- Hardened proposal comment database policies and RPCs so comments can only be created, edited, or deleted on active sent proposals.
+- Hardened proposal comment database policies and RPCs so new comments can only be added to draft or sent proposals while existing author-owned comments remain editable after status changes.
 
 Next likely slice:
 

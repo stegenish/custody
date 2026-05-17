@@ -266,7 +266,7 @@ create policy "parents can create proposal comments"
     and exists (
       select 1 from public.proposals
       where proposals.id = proposal_comments.proposal_id
-        and proposals.status = 'sent'
+        and proposals.status in ('draft', 'sent')
         and public.is_group_parent(proposals.group_id)
     )
   );
@@ -279,7 +279,6 @@ create policy "comment authors can update active comments"
     and exists (
       select 1 from public.proposals
       where proposals.id = proposal_comments.proposal_id
-        and proposals.status = 'sent'
         and public.is_group_parent(proposals.group_id)
     )
   )
@@ -288,7 +287,6 @@ create policy "comment authors can update active comments"
     and exists (
       select 1 from public.proposals
       where proposals.id = proposal_comments.proposal_id
-        and proposals.status = 'sent'
         and public.is_group_parent(proposals.group_id)
     )
   );
@@ -1406,12 +1404,12 @@ begin
     from public.proposals
     where id = target_proposal_id
       and group_id = target_group_id
-      and status = 'sent'
+      and status in ('draft', 'sent')
   )
     into proposal_exists;
 
   if not proposal_exists then
-    raise exception 'Active proposal not found';
+    raise exception 'Proposal is not open for comments';
   end if;
 
   if not public.is_allowed_text_body_size(comment_body) then
@@ -1467,7 +1465,6 @@ begin
   where proposal_comments.id = target_comment_id
     and proposal_comments.proposal_id = target_proposal_id
     and proposals.group_id = target_group_id
-    and proposals.status = 'sent'
     and proposal_comments.deleted_at is null
   limit 1;
 
@@ -1522,7 +1519,6 @@ begin
   where proposal_comments.id = target_comment_id
     and proposal_comments.proposal_id = target_proposal_id
     and proposals.group_id = target_group_id
-    and proposals.status = 'sent'
     and proposal_comments.deleted_at is null
   limit 1;
 
