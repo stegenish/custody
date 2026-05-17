@@ -25,7 +25,8 @@ Current state:
 - Added direct server action tests for shared note and proposal comment update/delete form parsing.
 - Added an accept-time option to promote active, non-deleted proposal comments into shared date notes.
 - Added provider-agnostic email notification builders for proposal sent, countered, accepted, rejected, and comment-added events.
+- Wired proposal/comment server actions to send notification emails for sent, countered, accepted, rejected, and comment-added events.
 
 Next likely slice:
 
-- Wire email notification delivery into proposal/comment server actions.
+- Configure and document the production email provider settings.

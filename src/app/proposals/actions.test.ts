@@ -1,17 +1,28 @@
 import { redirect } from "next/navigation";
 import { getMyGroupId } from "@/lib/supabase/onboarding";
+import { sendEmailNotification } from "@/lib/email/sendEmail";
 import {
   acceptSharedProposal,
+  counterSharedProposal,
+  createProposalComment,
   deleteProposalComment,
   deleteSharedDateNote,
+  loadSharedCalendarState,
+  rejectSharedProposal,
+  sendSharedDraftProposal,
   updateProposalComment,
   updateSharedDateNote,
 } from "@/lib/supabase/sharedCalendarRepository";
+import type { CustodyGroupState } from "@/lib/sharedCalendarTypes";
 import { createClient } from "@/lib/supabase/server";
 import {
   deleteProposalCommentAction,
   deleteSharedDateNoteAction,
   acceptSharedProposalAction,
+  counterSharedProposalAction,
+  createProposalCommentAction,
+  rejectSharedProposalAction,
+  sendSharedDraftProposalAction,
   updateProposalCommentAction,
   updateSharedDateNoteAction,
 } from "./actions";
@@ -28,6 +39,10 @@ jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(),
 }));
 
+jest.mock("@/lib/email/sendEmail", () => ({
+  sendEmailNotification: jest.fn(),
+}));
+
 jest.mock("@/lib/supabase/sharedCalendarRepository", () => ({
   acceptSharedProposal: jest.fn(),
   counterSharedProposal: jest.fn(),
@@ -36,6 +51,7 @@ jest.mock("@/lib/supabase/sharedCalendarRepository", () => ({
   createSharedDraftProposal: jest.fn(),
   deleteProposalComment: jest.fn(),
   deleteSharedDateNote: jest.fn(),
+  loadSharedCalendarState: jest.fn(),
   rejectSharedProposal: jest.fn(),
   resetSharedDraftProposal: jest.fn(),
   saveSharedDraftProposal: jest.fn(),
@@ -48,20 +64,67 @@ jest.mock("@/lib/supabase/sharedCalendarRepository", () => ({
 const mockCreateClient = jest.mocked(createClient);
 const mockGetMyGroupId = jest.mocked(getMyGroupId);
 const mockRedirect = jest.mocked(redirect);
+const mockSendEmailNotification = jest.mocked(sendEmailNotification);
 const mockAcceptSharedProposal = jest.mocked(acceptSharedProposal);
+const mockCounterSharedProposal = jest.mocked(counterSharedProposal);
+const mockCreateProposalComment = jest.mocked(createProposalComment);
 const mockUpdateSharedDateNote = jest.mocked(updateSharedDateNote);
 const mockDeleteSharedDateNote = jest.mocked(deleteSharedDateNote);
+const mockLoadSharedCalendarState = jest.mocked(loadSharedCalendarState);
+const mockRejectSharedProposal = jest.mocked(rejectSharedProposal);
+const mockSendSharedDraftProposal = jest.mocked(sendSharedDraftProposal);
 const mockUpdateProposalComment = jest.mocked(updateProposalComment);
 const mockDeleteProposalComment = jest.mocked(deleteProposalComment);
 
 describe("proposal server note/comment actions", () => {
-  const supabase = { rpc: jest.fn() };
+  const supabase = {
+    rpc: jest.fn(),
+    auth: {
+      getUser: jest.fn().mockResolvedValue({
+        data: { user: { id: "parent-a" } },
+      }),
+    },
+  };
+  const stateWithActiveProposal: CustodyGroupState = {
+    groupId: "group-1",
+    parents: [
+      { id: "parent-a", email: "a@example.com", isInviteAdmin: true },
+      { id: "parent-b", email: "b@example.com", isInviteAdmin: false },
+    ],
+    agreedCalendar: {
+      version: 1,
+      scheduleData: { labels: [], schedules: [], overrides: [] },
+      updatedAt: "2026-05-16T00:00:00.000Z",
+    },
+    draftProposals: [],
+    activeProposal: {
+      id: "proposal-1",
+      status: "sent",
+      createdByParentId: "parent-a",
+      currentAuthorParentId: "parent-a",
+      receiverParentId: "parent-b",
+      baseCalendarVersion: 1,
+      currentRevisionId: "revision-1",
+      revisions: [],
+      comments: [],
+      createdAt: "2026-05-16T00:00:00.000Z",
+      updatedAt: "2026-05-16T00:00:00.000Z",
+    },
+    proposalHistory: [],
+    notes: [],
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockCreateClient.mockResolvedValue(supabase);
     mockGetMyGroupId.mockResolvedValue("group-1");
     mockAcceptSharedProposal.mockResolvedValue(2);
+    mockCounterSharedProposal.mockResolvedValue("revision-2");
+    mockCreateProposalComment.mockResolvedValue("comment-1");
+    mockLoadSharedCalendarState.mockResolvedValue(stateWithActiveProposal);
+    mockRejectSharedProposal.mockResolvedValue("proposal-1");
+    mockSendEmailNotification.mockResolvedValue(undefined);
+    mockSendSharedDraftProposal.mockResolvedValue("proposal-1");
     mockUpdateSharedDateNote.mockResolvedValue("note-1");
     mockDeleteSharedDateNote.mockResolvedValue("note-1");
     mockUpdateProposalComment.mockResolvedValue("comment-1");
@@ -100,6 +163,93 @@ describe("proposal server note/comment actions", () => {
       true
     );
     expect(mockRedirect).toHaveBeenCalledWith("/");
+  });
+
+  it("emails the receiver when a draft proposal is sent", async () => {
+    const formData = new FormData();
+    formData.set(
+      "scheduleData",
+      JSON.stringify({ labels: [], schedules: [], overrides: [] })
+    );
+
+    await sendSharedDraftProposalAction(formData);
+
+    expect(mockSendEmailNotification).toHaveBeenCalledWith({
+      to: "b@example.com",
+      subject: "Custody calendar proposal sent",
+      text: "A new custody calendar proposal is ready for review.\n\nOpen the app: http://localhost:3000/",
+    });
+  });
+
+  it("emails the new receiver when a proposal is countered", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "proposal-1");
+    formData.set("revisionId", "revision-1");
+    formData.set(
+      "scheduleData",
+      JSON.stringify({ labels: [], schedules: [], overrides: [] })
+    );
+    mockLoadSharedCalendarState.mockResolvedValue({
+      ...stateWithActiveProposal,
+      activeProposal: stateWithActiveProposal.activeProposal
+        ? {
+            ...stateWithActiveProposal.activeProposal,
+            currentAuthorParentId: "parent-b",
+            receiverParentId: "parent-a",
+          }
+        : null,
+    });
+
+    await counterSharedProposalAction(formData);
+
+    expect(mockSendEmailNotification).toHaveBeenCalledWith({
+      to: "a@example.com",
+      subject: "Custody calendar proposal countered",
+      text: "A custody calendar counterproposal is ready for review.\n\nOpen the app: http://localhost:3000/",
+    });
+  });
+
+  it("emails the sender when a proposal is accepted", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "proposal-1");
+    formData.set("revisionId", "revision-1");
+
+    await acceptSharedProposalAction(formData);
+
+    expect(mockSendEmailNotification).toHaveBeenCalledWith({
+      to: "a@example.com",
+      subject: "Custody calendar proposal accepted",
+      text: "A custody calendar proposal was accepted.\n\nOpen the app: http://localhost:3000/",
+    });
+  });
+
+  it("emails the sender when a proposal is rejected", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "proposal-1");
+    formData.set("revisionId", "revision-1");
+
+    await rejectSharedProposalAction(formData);
+
+    expect(mockSendEmailNotification).toHaveBeenCalledWith({
+      to: "a@example.com",
+      subject: "Custody calendar proposal rejected",
+      text: "A custody calendar proposal was rejected.\n\nOpen the app: http://localhost:3000/",
+    });
+  });
+
+  it("emails the other parent when a proposal comment is added", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "proposal-1");
+    formData.set("date", "2026-06-01");
+    formData.set("body", "Can we swap?");
+
+    await createProposalCommentAction(formData);
+
+    expect(mockSendEmailNotification).toHaveBeenCalledWith({
+      to: "b@example.com",
+      subject: "Custody calendar proposal comment added",
+      text: "A new comment was added to an active custody calendar proposal.\n\nOpen the app: http://localhost:3000/",
+    });
   });
 
   it("parses shared note delete fields", async () => {
