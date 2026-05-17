@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { signInWithGoogle } from "@/app/auth/actions";
 import { sanitizeNextPath } from "@/lib/auth/redirects";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
+
+export const metadata: Metadata = {
+  referrer: "no-referrer",
+};
 
 interface LoginPageProps {
   searchParams: Promise<{

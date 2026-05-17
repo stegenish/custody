@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { signInWithGoogle } from "@/app/auth/actions";
 import { acceptInvite } from "@/app/invite/actions";
+
+export const metadata: Metadata = {
+  referrer: "no-referrer",
+};
 
 interface InvitePageProps {
   params: Promise<{ token: string }>;

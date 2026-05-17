@@ -28,6 +28,7 @@ Current state:
 - Wired proposal/comment server actions to send notification emails for sent, countered, accepted, rejected, and comment-added events.
 - Added tests for the Resend email delivery adapter and documented the required notification email environment variables.
 - Added invite-link controls for the invite admin while the second parent has not joined, wired to the invite regeneration server action.
+- Added no-referrer metadata to invite and login pages so private invite tokens in URLs are not leaked by browser referrers.
 
 Next likely slice:
 
