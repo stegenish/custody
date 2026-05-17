@@ -252,6 +252,23 @@ describe("proposal server note/comment actions", () => {
     });
   });
 
+  it("does not create a proposal comment when the active proposal is gone", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "proposal-1");
+    formData.set("date", "2026-06-01");
+    formData.set("body", "Can we swap?");
+    mockLoadSharedCalendarState.mockResolvedValue({
+      ...stateWithActiveProposal,
+      activeProposal: null,
+    });
+
+    await expect(createProposalCommentAction(formData)).rejects.toThrow(
+      "Active proposal not found"
+    );
+    expect(mockCreateProposalComment).not.toHaveBeenCalled();
+    expect(mockSendEmailNotification).not.toHaveBeenCalled();
+  });
+
   it("parses shared note delete fields", async () => {
     const formData = new FormData();
     formData.set("noteId", "note-1");

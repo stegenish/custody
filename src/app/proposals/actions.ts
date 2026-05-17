@@ -400,6 +400,11 @@ export async function createProposalCommentAction(
 ): Promise<void> {
   const context = await getNotificationActionContext();
   const proposalId = requireFormString(formData, "proposalId");
+  const state = await loadCurrentSharedState(context);
+
+  if (!getActiveProposal(state, proposalId)) {
+    throw new Error("Active proposal not found");
+  }
 
   await createProposalComment(
     context.supabase,
@@ -409,7 +414,6 @@ export async function createProposalCommentAction(
     requireFormString(formData, "body")
   );
 
-  const state = await loadCurrentSharedState(context);
   await notifyProposalEmail(state, proposalId, ({ parents, proposal, appUrl }) =>
     buildProposalCommentAddedEmail({
       parents,
