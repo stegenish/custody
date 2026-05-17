@@ -1,14 +1,18 @@
 "use client";
 
 import { type ReactNode, useMemo } from "react";
-import { CalendarWorkspace } from "./CalendarWorkspace";
+import {
+  CalendarWorkspace,
+  type DateComparison,
+} from "./CalendarWorkspace";
 import { generateCalendar, getCalendarVisibleRange } from "@/lib/dateUtils";
 import { getChangedDateKeys } from "@/lib/proposalDiff";
+import { buildColorMap } from "@/lib/scheduleResolver";
 import type {
   ProposalComment,
   SharedDateNote,
 } from "@/lib/sharedCalendarTypes";
-import type { ScheduleData } from "@/lib/scheduleTypes";
+import type { DayColorResult, ScheduleData } from "@/lib/scheduleTypes";
 
 interface ProposalWorkspaceProps {
   today: Date;
@@ -65,6 +69,25 @@ export function ProposalWorkspace({
       )
     );
   }, [agreedScheduleData, calendar, proposedScheduleData]);
+  const dateComparisons = useMemo(() => {
+    const { firstDay, lastDay } = getCalendarVisibleRange(calendar);
+    const agreedColorMap = buildColorMap(firstDay, lastDay, agreedScheduleData);
+    const proposedColorMap = buildColorMap(
+      firstDay,
+      lastDay,
+      proposedScheduleData
+    );
+    const comparisons = new Map<string, DateComparison>();
+
+    for (const dateKey of changedDateKeys) {
+      comparisons.set(dateKey, {
+        agreed: formatCustodyValue(agreedColorMap.get(dateKey)),
+        proposed: formatCustodyValue(proposedColorMap.get(dateKey)),
+      });
+    }
+
+    return comparisons;
+  }, [agreedScheduleData, calendar, changedDateKeys, proposedScheduleData]);
 
   return (
     <CalendarWorkspace
@@ -73,6 +96,7 @@ export function ProposalWorkspace({
       calendar={calendar}
       scheduleData={proposedScheduleData}
       changedDateKeys={changedDateKeys}
+      dateComparisons={dateComparisons}
       noteDateKeys={noteDateKeys}
       commentDateKeys={commentDateKeys}
       sharedDateNotes={sharedDateNotes}
@@ -90,4 +114,10 @@ export function ProposalWorkspace({
       onUpdateScheduleData={onUpdateProposedScheduleData}
     />
   );
+}
+
+function formatCustodyValue(dayColor?: DayColorResult): string {
+  if (!dayColor) return "None";
+  const source = dayColor.isOverride ? "override" : "schedule";
+  return `${dayColor.label.name} (${source})`;
 }

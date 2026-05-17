@@ -17,12 +17,18 @@ import type {
 } from "@/lib/sharedCalendarTypes";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 
+export interface DateComparison {
+  agreed: string;
+  proposed: string;
+}
+
 interface CalendarWorkspaceProps {
   title: string;
   today: Date;
   calendar?: CalendarMonth[];
   scheduleData: ScheduleData;
   changedDateKeys?: Set<string>;
+  dateComparisons?: Map<string, DateComparison>;
   noteDateKeys?: Set<string>;
   commentDateKeys?: Set<string>;
   sharedDateNotes?: SharedDateNote[];
@@ -46,6 +52,7 @@ export function CalendarWorkspace({
   calendar,
   scheduleData,
   changedDateKeys,
+  dateComparisons,
   noteDateKeys,
   commentDateKeys,
   sharedDateNotes = [],
@@ -70,8 +77,13 @@ export function CalendarWorkspace({
   }, [visibleCalendar, scheduleData]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const selectedDayColor = selectedDate ? colorMap.get(selectedDate) : null;
+  const selectedDateComparison = selectedDate
+    ? dateComparisons?.get(selectedDate)
+    : undefined;
   const hasDateDetails =
-    sharedDateNotes.length > 0 || proposalComments.length > 0;
+    sharedDateNotes.length > 0 ||
+    proposalComments.length > 0 ||
+    Boolean(dateComparisons?.size);
   const selectedNotes = selectedDate
     ? sharedDateNotes.filter((note) => note.date === selectedDate)
     : [];
@@ -119,6 +131,7 @@ export function CalendarWorkspace({
           dateKey={selectedDate}
           notes={selectedNotes}
           comments={selectedComments}
+          comparison={selectedDateComparison}
           proposalId={proposalId}
           currentParentId={currentParentId}
           createSharedDateNoteAction={createSharedDateNoteAction}
@@ -153,6 +166,7 @@ function SelectedDateDetails({
   dateKey,
   notes,
   comments,
+  comparison,
   proposalId,
   currentParentId,
   createSharedDateNoteAction,
@@ -166,6 +180,7 @@ function SelectedDateDetails({
   dateKey: string;
   notes: SharedDateNote[];
   comments: ProposalComment[];
+  comparison?: DateComparison;
   proposalId?: string;
   currentParentId?: string;
   createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
@@ -182,6 +197,7 @@ function SelectedDateDetails({
   if (
     notes.length === 0 &&
     comments.length === 0 &&
+    !comparison &&
     !createSharedDateNoteAction &&
     !canCreateProposalComment
   ) {
@@ -226,6 +242,7 @@ function SelectedDateDetails({
         updateAction={updateProposalCommentAction}
         deleteAction={deleteProposalCommentAction}
       />
+      {comparison && <DateComparisonDetails comparison={comparison} />}
       {createSharedDateNoteAction && (
         <DateTextForm
           action={createSharedDateNoteAction}
@@ -244,6 +261,26 @@ function SelectedDateDetails({
         />
       )}
     </aside>
+  );
+}
+
+function DateComparisonDetails({
+  comparison,
+}: {
+  comparison: DateComparison;
+}) {
+  return (
+    <section className="mb-3 rounded border border-gray-100 p-2 text-sm">
+      <h3 className="mb-2 text-xs font-semibold uppercase text-gray-500">
+        Custody change
+      </h3>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+        <dt className="font-medium text-gray-700">Agreed</dt>
+        <dd>{comparison.agreed}</dd>
+        <dt className="font-medium text-gray-700">Proposed</dt>
+        <dd>{comparison.proposed}</dd>
+      </dl>
+    </section>
   );
 }
 

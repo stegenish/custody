@@ -31,6 +31,7 @@ Current state:
 - Added no-referrer metadata to invite and login pages so private invite tokens in URLs are not leaked by browser referrers.
 - Added direct invite server-action tests and stopped unauthenticated invite acceptance from continuing after redirecting to login.
 - Blocked stale proposal comment submissions when the active proposal is no longer present before writing or notifying.
+- Added selected-date agreed/proposed custody details for changed proposal dates.
 
 Next likely slice:
 

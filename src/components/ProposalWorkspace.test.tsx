@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ProposalWorkspace } from "./ProposalWorkspace";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 
@@ -38,6 +38,31 @@ describe("ProposalWorkspace", () => {
 
     expect(screen.getByText("Draft Proposal")).toBeInTheDocument();
     expect(screen.getByTestId("proposal-change-indicator")).toBeInTheDocument();
+  });
+
+  it("shows agreed and proposed custody details for selected changed dates", () => {
+    const proposedScheduleData: ScheduleData = {
+      ...agreedScheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    };
+
+    render(
+      <ProposalWorkspace
+        today={new Date(2026, 2, 1)}
+        agreedScheduleData={agreedScheduleData}
+        proposedScheduleData={proposedScheduleData}
+        readOnly
+        onUpdateProposedScheduleData={jest.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+
+    expect(screen.getByText("Custody change")).toBeInTheDocument();
+    expect(screen.getByText("Agreed")).toBeInTheDocument();
+    expect(screen.getByText("Mom (schedule)")).toBeInTheDocument();
+    expect(screen.getByText("Proposed")).toBeInTheDocument();
+    expect(screen.getByText("Dad (override)")).toBeInTheDocument();
   });
 
   it("does not render changed markers when proposed data matches agreed data", () => {
