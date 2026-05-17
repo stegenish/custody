@@ -27,7 +27,8 @@ Current state:
 - Added provider-agnostic email notification builders for proposal sent, countered, accepted, rejected, and comment-added events.
 - Wired proposal/comment server actions to send notification emails for sent, countered, accepted, rejected, and comment-added events.
 - Added tests for the Resend email delivery adapter and documented the required notification email environment variables.
+- Added invite-link controls for the invite admin while the second parent has not joined, wired to the invite regeneration server action.
 
 Next likely slice:
 
-- Review the remaining shared-calendar launch gaps and choose the next UI/server workflow slice.
+- Continue reviewing remaining shared-calendar launch gaps and choose the next UI/server workflow slice.

@@ -8,6 +8,11 @@ import {
   regenerateInviteLink,
 } from "@/lib/supabase/onboarding";
 
+interface InviteLinkActionState {
+  inviteLink?: string;
+  error?: string;
+}
+
 export async function createInviteLink(): Promise<string> {
   const supabase = await createClient();
   const groupId = await getMyGroupId(supabase);
@@ -17,6 +22,14 @@ export async function createInviteLink(): Promise<string> {
   }
 
   return regenerateInviteLink(supabase, groupId);
+}
+
+export async function createInviteLinkAction(): Promise<InviteLinkActionState> {
+  try {
+    return { inviteLink: await createInviteLink() };
+  } catch {
+    return { error: "Unable to create invite link" };
+  }
 }
 
 export async function acceptInvite(token: string): Promise<void> {

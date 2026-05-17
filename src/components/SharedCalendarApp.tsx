@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import {
   AppToolbar,
   AppToolbarButton,
@@ -34,7 +34,18 @@ export interface SharedCalendarAppProps {
   createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  createInviteLinkAction?: CreateInviteLinkAction;
 }
+
+export interface InviteLinkActionState {
+  inviteLink?: string;
+  error?: string;
+}
+
+export type CreateInviteLinkAction = (
+  state: InviteLinkActionState,
+  formData: FormData
+) => Promise<InviteLinkActionState>;
 
 export function SharedCalendarApp({
   state,
@@ -53,8 +64,13 @@ export function SharedCalendarApp({
   createProposalCommentAction,
   updateProposalCommentAction,
   deleteProposalCommentAction,
+  createInviteLinkAction,
 }: SharedCalendarAppProps) {
   const today = useClientToday();
+  const currentParent = useMemo(
+    () => state.parents.find((parent) => parent.id === currentParentId) ?? null,
+    [currentParentId, state.parents]
+  );
   const currentDraft = useMemo(
     () =>
       state.draftProposals.find(
@@ -81,6 +97,11 @@ export function SharedCalendarApp({
         ? dateKeysForProposalComments(state.activeProposal.comments)
         : undefined,
     [state.activeProposal]
+  );
+  const canCreateInviteLink = Boolean(
+    createInviteLinkAction &&
+      currentParent?.isInviteAdmin &&
+      state.parents.length < 2
   );
 
   if (!today) return null;
@@ -148,16 +169,72 @@ export function SharedCalendarApp({
       deleteSharedDateNoteAction={deleteSharedDateNoteAction}
       readOnly
       toolbar={
-        startDraftAction ? (
-          <AppToolbar>
-            <form action={startDraftAction}>
-              <AppToolbarSubmitButton>Start Draft</AppToolbarSubmitButton>
-            </form>
-          </AppToolbar>
+        startDraftAction || canCreateInviteLink ? (
+          <AgreedCalendarToolbar
+            startDraftAction={startDraftAction}
+            createInviteLinkAction={
+              canCreateInviteLink ? createInviteLinkAction : undefined
+            }
+          />
         ) : undefined
       }
       onUpdateScheduleData={() => undefined}
     />
+  );
+}
+
+function AgreedCalendarToolbar({
+  startDraftAction,
+  createInviteLinkAction,
+}: {
+  startDraftAction?: () => void | Promise<void>;
+  createInviteLinkAction?: CreateInviteLinkAction;
+}) {
+  return (
+    <>
+      {startDraftAction && (
+        <AppToolbar>
+          <form action={startDraftAction}>
+            <AppToolbarSubmitButton>Start Draft</AppToolbarSubmitButton>
+          </form>
+        </AppToolbar>
+      )}
+      {createInviteLinkAction && (
+        <InviteLinkPanel action={createInviteLinkAction} />
+      )}
+    </>
+  );
+}
+
+function InviteLinkPanel({ action }: { action: CreateInviteLinkAction }) {
+  const [state, formAction, isPending] = useActionState(action, {});
+
+  return (
+    <section className="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-gray-900">
+          Invite second parent
+        </h2>
+        <form action={formAction}>
+          <AppToolbarSubmitButton>
+            {isPending ? "Creating Invite Link" : "Create Invite Link"}
+          </AppToolbarSubmitButton>
+        </form>
+      </div>
+      {state.inviteLink && (
+        <input
+          aria-label="Invite link"
+          readOnly
+          value={state.inviteLink}
+          className="mt-3 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+        />
+      )}
+      {state.error && (
+        <p role="alert" className="mt-3 text-sm text-red-700">
+          {state.error}
+        </p>
+      )}
+    </section>
   );
 }
 

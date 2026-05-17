@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
+import { createInviteLinkAction } from "@/app/invite/actions";
 import { LocalCalendarShell } from "@/components/LocalCalendarShell";
 import type { SharedCalendarAppProps } from "@/components/SharedCalendarApp";
 import {
@@ -76,6 +77,7 @@ export default async function Home() {
       createProposalCommentAction={createProposalCommentAction}
       updateProposalCommentAction={updateProposalCommentAction}
       deleteProposalCommentAction={deleteProposalCommentAction}
+      createInviteLinkAction={createInviteLinkAction}
     />
   );
 }

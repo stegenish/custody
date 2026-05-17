@@ -98,6 +98,62 @@ describe("SharedCalendarApp", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("renders invite controls for an invite admin before the second parent joins", () => {
+    render(
+      <SharedCalendarApp
+        state={{ ...state, parents: [state.parents[0]] }}
+        currentParentId="parent-a"
+        createInviteLinkAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByText("Invite second parent")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Create Invite Link" })
+    ).toBeInTheDocument();
+  });
+
+  it("does not render invite controls once both parents have joined", () => {
+    render(
+      <SharedCalendarApp
+        state={state}
+        currentParentId="parent-a"
+        createInviteLinkAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.queryByText("Invite second parent")).not.toBeInTheDocument();
+  });
+
+  it("does not render invite controls for a non-admin parent", () => {
+    render(
+      <SharedCalendarApp
+        state={{
+          ...state,
+          parents: [
+            { id: "parent-b", email: "b@example.com", isInviteAdmin: false },
+          ],
+        }}
+        currentParentId="parent-b"
+        createInviteLinkAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.queryByText("Invite second parent")).not.toBeInTheDocument();
+  });
+
   it("renders shared date note indicators on the agreed calendar", () => {
     const stateWithNote: CustodyGroupState = {
       ...state,
