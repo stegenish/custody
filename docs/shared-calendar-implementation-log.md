@@ -24,7 +24,8 @@ Current state:
 - Shared note and proposal comment update/delete server actions are wired through the shared app entry point.
 - Added direct server action tests for shared note and proposal comment update/delete form parsing.
 - Added an accept-time option to promote active, non-deleted proposal comments into shared date notes.
+- Added provider-agnostic email notification builders for proposal sent, countered, accepted, rejected, and comment-added events.
 
 Next likely slice:
 
-- Continue email notifications for proposal/comment events.
+- Wire email notification delivery into proposal/comment server actions.
