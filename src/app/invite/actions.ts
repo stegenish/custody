@@ -39,6 +39,7 @@ export async function acceptInvite(token: string): Promise<void> {
   } = await supabase.auth.getUser();
   if (!user) {
     redirect(`/login?next=${encodeURIComponent(`/invite/${token}`)}`);
+    return;
   }
   await joinGroupWithInvite(supabase, token);
   redirect("/");
