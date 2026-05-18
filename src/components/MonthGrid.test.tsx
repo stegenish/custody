@@ -72,7 +72,7 @@ describe("MonthGrid", () => {
     expect(screen.getByText("Custody: Mom")).toBeInTheDocument();
   });
 
-  it("renders a visible custody initial for colored days", () => {
+  it("does not render visible custody initials for colored days", () => {
     const colorMap = new Map<string, DayColorResult>([
       [
         "2026-03-02",
@@ -84,7 +84,7 @@ describe("MonthGrid", () => {
     ]);
     render(<MonthGrid month={month} colorMap={colorMap} />);
 
-    expect(screen.getByTestId("custody-label-indicator")).toHaveTextContent("M");
+    expect(screen.queryByTestId("custody-label-indicator")).not.toBeInTheDocument();
   });
 
   it("renders non-color changeover text for split-color days", () => {
@@ -187,7 +187,7 @@ describe("MonthGrid", () => {
     expect(feb23?.className).not.toContain("text-red-600");
   });
 
-  it("renders a separate school holiday indicator", () => {
+  it("renders school holidays as blue day numbers without an underline", () => {
     const monthWithSchoolHoliday = generateMonthGrid(
       2026,
       2,
@@ -196,7 +196,29 @@ describe("MonthGrid", () => {
       new Set(["2026-03-02"])
     );
     render(<MonthGrid month={monthWithSchoolHoliday} />);
-    expect(screen.getByTestId("school-holiday-indicator")).toBeInTheDocument();
+    const mar2 = screen
+      .getAllByTestId("day-current-month")
+      .find((cell) => cell.textContent?.startsWith("2"));
+
+    expect(mar2?.className).toContain("text-sky-600");
+    expect(screen.queryByTestId("school-holiday-indicator")).not.toBeInTheDocument();
+  });
+
+  it("renders red days as red even when they are school holidays", () => {
+    const monthWithSchoolHoliday = generateMonthGrid(
+      2026,
+      2,
+      today,
+      new Set(["2026-03-02"]),
+      new Set(["2026-03-02"])
+    );
+    render(<MonthGrid month={monthWithSchoolHoliday} />);
+    const mar2 = screen
+      .getAllByTestId("day-current-month")
+      .find((cell) => cell.textContent?.startsWith("2"));
+
+    expect(mar2?.className).toContain("text-red-600");
+    expect(mar2?.className).not.toContain("text-sky-600");
   });
 
   it("renders a proposal change indicator for changed dates", () => {

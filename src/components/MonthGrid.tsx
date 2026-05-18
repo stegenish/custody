@@ -45,19 +45,6 @@ function dateStatusDescriptions({
   ].filter((description): description is string => Boolean(description));
 }
 
-function labelInitial(labelName: string): string {
-  return labelName.trim().slice(0, 1).toUpperCase() || "?";
-}
-
-function custodyIndicator(dayColor?: DayColorResult): string | null {
-  if (!dayColor) return null;
-  const currentInitial = labelInitial(dayColor.label.name);
-  if (dayColor.outgoingLabel) {
-    return `${labelInitial(dayColor.outgoingLabel.name)}/${currentInitial}`;
-  }
-  return currentInitial;
-}
-
 function DayIndicators({
   dayColor,
   isSchoolHoliday,
@@ -78,7 +65,6 @@ function DayIndicators({
     hasSharedNote,
     hasProposalComment,
   });
-  const indicator = custodyIndicator(dayColor);
   return (
     <>
       {descriptions.map((description) => (
@@ -86,22 +72,6 @@ function DayIndicators({
           {description}
         </span>
       ))}
-      {indicator && (
-        <span
-          aria-hidden="true"
-          data-testid="custody-label-indicator"
-          className="pointer-events-none absolute right-0.5 top-0.5 min-w-3 rounded-sm bg-white/80 px-0.5 text-center text-[9px] font-semibold leading-3 text-gray-900"
-        >
-          {indicator}
-        </span>
-      )}
-      {isSchoolHoliday && (
-        <span
-          aria-hidden="true"
-          data-testid="school-holiday-indicator"
-          className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
-        />
-      )}
       {hasSharedNote && (
         <span
           aria-hidden="true"
@@ -136,15 +106,16 @@ function dayCellClassName(
   day: CalendarDay,
   clickable: boolean
 ): string {
+  const dayTextClass = day.isRedDay
+    ? "text-red-600"
+    : day.isSchoolHoliday
+      ? "text-sky-600"
+      : "text-gray-700";
   const dateClass = day.isToday
-    ? `rounded-full ring-2 ring-blue-600 font-bold ${
-        day.isRedDay ? "text-red-600" : ""
-      }`
+    ? `rounded-full ring-2 ring-blue-600 font-bold ${dayTextClass}`
     : !day.isCurrentMonth
       ? "opacity-30"
-      : day.isRedDay
-        ? "text-red-600"
-        : "text-gray-700";
+      : dayTextClass;
   return `relative text-center tabular-nums ${
     clickable ? "cursor-pointer" : ""
   } ${dateClass}`;
