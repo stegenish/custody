@@ -221,6 +221,7 @@ function AgreedCalendarToolbar({
 
 function InviteLinkPanel({ action }: { action: CreateInviteLinkAction }) {
   const [state, formAction, isPending] = useActionState(action, {});
+  const inviteLink = state.inviteLink;
 
   return (
     <section className="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -234,13 +235,22 @@ function InviteLinkPanel({ action }: { action: CreateInviteLinkAction }) {
           </AppToolbarSubmitButton>
         </form>
       </div>
-      {state.inviteLink && (
-        <input
-          aria-label="Invite link"
-          readOnly
-          value={state.inviteLink}
-          className="mt-3 w-full rounded border border-gray-300 px-3 py-2 text-sm"
-        />
+      {inviteLink && (
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            aria-label="Invite link"
+            readOnly
+            value={inviteLink}
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          />
+          <button
+            type="button"
+            onClick={() => void navigator.clipboard?.writeText(inviteLink)}
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
+          >
+            Copy Invite Link
+          </button>
+        </div>
       )}
       {state.error && (
         <p role="alert" className="mt-3 text-sm text-red-700">

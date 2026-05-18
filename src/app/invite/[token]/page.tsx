@@ -8,10 +8,19 @@ export const metadata: Metadata = {
 
 interface InvitePageProps {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ error?: string | string[] }>;
 }
 
-export default async function InvitePage({ params }: InvitePageProps) {
+function firstSearchParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function InvitePage({
+  params,
+  searchParams,
+}: InvitePageProps) {
   const { token } = await params;
+  const error = firstSearchParam((await searchParams).error);
   const accept = acceptInvite.bind(null, token);
   const nextPath = `/invite/${encodeURIComponent(token)}`;
 
@@ -24,6 +33,12 @@ export default async function InvitePage({ params }: InvitePageProps) {
         <p className="mt-2 text-sm text-gray-600">
           Sign in with Google first if needed, then accept this private invite.
         </p>
+        {error === "invalid-invite" && (
+          <p role="alert" className="mt-4 text-sm text-red-700">
+            This invite link is invalid, expired, already used, or the custody
+            group is already full.
+          </p>
+        )}
         <form action={signInWithGoogle} className="mt-6">
           <input type="hidden" name="next" value={nextPath} />
           <button

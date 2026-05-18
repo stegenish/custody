@@ -117,6 +117,39 @@ describe("SharedCalendarApp", () => {
     ).toBeInTheDocument();
   });
 
+  it("copies a generated invite link", async () => {
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    render(
+      <SharedCalendarApp
+        state={{ ...state, parents: [state.parents[0]] }}
+        currentParentId="parent-a"
+        createInviteLinkAction={async () => ({
+          inviteLink: "https://example.com/invite/private-token",
+        })}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Create Invite Link" })
+    );
+    expect(
+      await screen.findByDisplayValue("https://example.com/invite/private-token")
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Copy Invite Link" }));
+
+    expect(writeText).toHaveBeenCalledWith(
+      "https://example.com/invite/private-token"
+    );
+  });
+
   it("does not render invite controls once both parents have joined", () => {
     render(
       <SharedCalendarApp

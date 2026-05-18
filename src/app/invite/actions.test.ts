@@ -96,4 +96,14 @@ describe("invite server actions", () => {
     );
     expect(mockRedirect).toHaveBeenCalledWith("/");
   });
+
+  it("redirects back to the invite page with an error when acceptance fails", async () => {
+    mockJoinGroupWithInvite.mockRejectedValue(new Error("Invite is invalid"));
+
+    await acceptInvite("private-token");
+
+    expect(mockRedirect).toHaveBeenCalledWith(
+      "/invite/private-token?error=invalid-invite"
+    );
+  });
 });

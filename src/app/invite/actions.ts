@@ -41,6 +41,11 @@ export async function acceptInvite(token: string): Promise<void> {
     redirect(`/login?next=${encodeURIComponent(`/invite/${token}`)}`);
     return;
   }
-  await joinGroupWithInvite(supabase, token);
+  try {
+    await joinGroupWithInvite(supabase, token);
+  } catch {
+    redirect(`/invite/${encodeURIComponent(token)}?error=invalid-invite`);
+    return;
+  }
   redirect("/");
 }

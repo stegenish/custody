@@ -36,6 +36,7 @@ Current state:
 - Show carried proposal comments on restored draft proposals, including date indicators and author edit/delete controls.
 - Added new proposal comment creation from draft proposals without sending active-proposal notification emails.
 - Added a shared-calendar launch checklist for Vercel, Supabase, Google OAuth, email, and production smoke testing.
+- Added friendly invalid/full/used invite acceptance feedback and a copy control for generated invite links.
 
 Next likely slice:
 
