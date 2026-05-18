@@ -39,6 +39,7 @@ Current state:
 - Added friendly invalid/full/used invite acceptance feedback and a copy control for generated invite links.
 - Added proposal conflict feedback so stale or no-longer-available proposal actions reload the calendar with a friendly review-before-retry message.
 - Added active proposal discard support so a sender can remove a pending proposal without restoring it as a draft, while preserving withdrawn history.
+- Made date-key formatting/parsing explicitly use Europe/Oslo semantics and documented the Bodø school holiday data freshness boundary.
 
 Next likely slice:
 

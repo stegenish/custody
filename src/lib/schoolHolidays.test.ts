@@ -1,9 +1,16 @@
 import {
+  BODO_SCHOOL_HOLIDAYS_LAST_KNOWN_DATE,
+  BODO_SCHOOL_HOLIDAYS_SOURCE_CHECKED_AT,
   getBodoSchoolHolidaySet,
   getBodoSchoolHolidays,
 } from "./schoolHolidays";
 
 describe("getBodoSchoolHolidays", () => {
+  it("documents the data freshness boundary", () => {
+    expect(BODO_SCHOOL_HOLIDAYS_SOURCE_CHECKED_AT).toBe("2026-05-15");
+    expect(BODO_SCHOOL_HOLIDAYS_LAST_KNOWN_DATE).toBe("2028-05-26");
+  });
+
   it("includes known Bodo school breaks and student-free days", () => {
     const holidays = getBodoSchoolHolidays();
     expect(holidays).toContain("2026-03-02");

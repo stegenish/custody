@@ -5,6 +5,9 @@ interface DateRange {
   end: string;
 }
 
+export const BODO_SCHOOL_HOLIDAYS_SOURCE_CHECKED_AT = "2026-05-15";
+export const BODO_SCHOOL_HOLIDAYS_LAST_KNOWN_DATE = "2028-05-26";
+
 const BODO_SCHOOL_HOLIDAY_RANGES: DateRange[] = [
   { start: "2025-09-29", end: "2025-10-03" },
   { start: "2025-11-21", end: "2025-11-21" },

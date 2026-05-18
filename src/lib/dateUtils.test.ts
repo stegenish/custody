@@ -38,6 +38,12 @@ describe("formatDateKey", () => {
   it("formats a date as YYYY-MM-DD", () => {
     expect(formatDateKey(new Date(2026, 2, 1))).toBe("2026-03-01");
   });
+
+  it("formats dates using Norway local date semantics", () => {
+    expect(formatDateKey(new Date("2026-03-29T22:30:00.000Z"))).toBe(
+      "2026-03-30"
+    );
+  });
 });
 
 describe("parseDateKey", () => {
@@ -48,6 +54,12 @@ describe("parseDateKey", () => {
     expect(parsed.getFullYear()).toBe(2026);
     expect(parsed.getMonth()).toBe(0);
     expect(parsed.getDate()).toBe(15);
+  });
+
+  it("parses date keys into a stable instant that formats back to Norway date", () => {
+    const parsed = parseDateKey("2026-10-25");
+
+    expect(formatDateKey(parsed)).toBe("2026-10-25");
   });
 
   it("throws for malformed date keys", () => {
