@@ -45,6 +45,21 @@ function getPolicySql(policyName: string): string {
 }
 
 describe("shared calendar migration proposal comment guards", () => {
+  it.each([
+    ["send_draft_proposal", "sent"],
+    ["reset_draft_proposal", "withdrawn"],
+    ["withdraw_active_proposal", "withdrawn"],
+    ["discard_active_proposal", "withdrawn"],
+    ["reject_active_proposal", "rejected"],
+    ["counter_active_proposal", "countered"],
+    ["accept_active_proposal", "accepted"],
+  ])("%s records a %s proposal status event", (functionName, status) => {
+    const functionSql = getFunctionSql(functionName);
+
+    expect(functionSql).toMatch(/insert into public\.proposal_status_events/);
+    expect(functionSql).toMatch(new RegExp(`'${status}'`));
+  });
+
   it("supports discarding active proposals without restoring a draft", () => {
     const functionSql = getFunctionSql("discard_active_proposal");
 
