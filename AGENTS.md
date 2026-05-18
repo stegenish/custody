@@ -10,6 +10,9 @@
 ## Responsive design
 The app must work in desktop and mobile browsers.
 
+## Shell usage
+- Run PowerShell commands with profiles disabled when possible.
+
 ## Code guidelines
 - Write and run tests incrementally (TDD) — tests should fail before implementing functionality. Use Jest.
 - Prefer reasonably short functions.
