@@ -120,6 +120,12 @@ describe("resolveScheduleLabel", () => {
     // Day 28 (Fri Apr 10) → mom again
     expect(resolveScheduleLabel(new Date(2026, 3, 10), fridaySchedule)).toBe("mom");
   });
+
+  it("rejects dates before the schedule start", () => {
+    expect(() =>
+      resolveScheduleLabel(new Date(2026, 1, 22), schedule)
+    ).toThrow("Date is before schedule start");
+  });
 });
 
 // --- resolveDayColor ---

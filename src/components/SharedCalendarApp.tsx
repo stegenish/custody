@@ -17,6 +17,7 @@ import { useClientToday } from "./useClientToday";
 import { getCurrentRevision } from "@/lib/sharedCalendarWorkflowHelpers";
 import {
   applyLabelPreferences,
+  parsePersonalLabelPreferences,
   type PersonalLabelPreferences,
 } from "@/lib/personalLabels";
 import type { ScheduleData } from "@/lib/scheduleTypes";
@@ -259,13 +260,11 @@ function usePersonalLabelPreferences(
 
   const updatePreference = useCallback(
     (id: string, name: string, color: string) => {
-      setPreferences((current) => {
-        const next = { ...current, [id]: { name, color } };
-        localStorage.setItem(storageKey, JSON.stringify(next));
-        return next;
-      });
+      const next = { ...preferences, [id]: { name, color } };
+      localStorage.setItem(storageKey, JSON.stringify(next));
+      setPreferences(next);
     },
-    [storageKey]
+    [preferences, storageKey]
   );
 
   return [preferences, updatePreference];
@@ -277,7 +276,9 @@ function readPersonalLabelPreferences(
   if (typeof localStorage === "undefined") return {};
 
   try {
-    return JSON.parse(localStorage.getItem(storageKey) ?? "{}");
+    return parsePersonalLabelPreferences(
+      JSON.parse(localStorage.getItem(storageKey) ?? "{}")
+    );
   } catch {
     return {};
   }

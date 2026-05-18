@@ -57,9 +57,10 @@ export function getISOWeekNumber(date: Date): number {
   // Set to nearest Thursday: current date + 4 - current day number (Mon=1..Sun=7)
   const dayOfWeek = d.getDay() || 7; // Convert Sunday from 0 to 7
   d.setDate(d.getDate() + 4 - dayOfWeek);
-  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const dateUtc = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const yearStartUtc = Date.UTC(d.getFullYear(), 0, 1);
   const weekNumber = Math.ceil(
-    ((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7
+    ((dateUtc - yearStartUtc) / 86400000 + 1) / 7
   );
   return weekNumber;
 }

@@ -18,5 +18,6 @@ describe("sanitizeNextPath", () => {
     expect(sanitizeNextPath("/%2F%2Fevil.example")).toBe("/");
     expect(sanitizeNextPath("/%5Cevil.example")).toBe("/");
     expect(sanitizeNextPath("/%252F%252Fevil.example")).toBe("/");
+    expect(sanitizeNextPath("/%25252F%25252Fevil.example")).toBe("/");
   });
 });

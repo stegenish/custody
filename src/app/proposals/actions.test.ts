@@ -235,10 +235,31 @@ describe("proposal server note/comment actions", () => {
     mockAcceptSharedProposal.mockRejectedValue(
       new Error("Proposal changed since it was viewed")
     );
+    mockRedirect.mockImplementationOnce(() => {
+      throw new Error("redirected");
+    });
 
-    await acceptSharedProposalAction(formData);
+    await expect(acceptSharedProposalAction(formData)).rejects.toThrow(
+      "redirected"
+    );
 
     expect(mockRedirect).toHaveBeenCalledWith(
+      "/?proposalError=proposal-conflict"
+    );
+    expect(mockSendEmailNotification).not.toHaveBeenCalled();
+  });
+
+  it("rethrows non-conflict proposal mutation failures", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "proposal-1");
+    formData.set("revisionId", "revision-1");
+    mockAcceptSharedProposal.mockRejectedValue(new Error("Database offline"));
+
+    await expect(acceptSharedProposalAction(formData)).rejects.toThrow(
+      "Database offline"
+    );
+
+    expect(mockRedirect).not.toHaveBeenCalledWith(
       "/?proposalError=proposal-conflict"
     );
     expect(mockSendEmailNotification).not.toHaveBeenCalled();

@@ -8,6 +8,10 @@ import type {
 
 export const MAX_SCHEDULE_DATA_LENGTH = 64 * 1024;
 export const MAX_TEXT_BODY_LENGTH = 4 * 1024;
+export const MAX_LABEL_NAME_LENGTH = 64;
+export const MAX_LABEL_COUNT = 50;
+export const MAX_OVERRIDE_COUNT = 5000;
+const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{3,8}$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -28,7 +32,9 @@ function isLabel(value: unknown): value is CustodyLabel {
     isRecord(value) &&
     typeof value.id === "string" &&
     typeof value.name === "string" &&
-    typeof value.color === "string"
+    value.name.length <= MAX_LABEL_NAME_LENGTH &&
+    typeof value.color === "string" &&
+    COLOR_HEX_PATTERN.test(value.color)
   );
 }
 
@@ -65,13 +71,28 @@ function isOverride(value: unknown): value is DayOverride {
 
 export function isScheduleData(value: unknown): value is ScheduleData {
   if (!isRecord(value)) return false;
+  if (
+    !Array.isArray(value.labels) ||
+    !Array.isArray(value.schedules) ||
+    !Array.isArray(value.overrides)
+  ) {
+    return false;
+  }
+  if (
+    value.labels.length > MAX_LABEL_COUNT ||
+    value.overrides.length > MAX_OVERRIDE_COUNT ||
+    !value.labels.every(isLabel) ||
+    !value.schedules.every(isSchedule) ||
+    !value.overrides.every(isOverride)
+  ) {
+    return false;
+  }
+  const labelIds = new Set(value.labels.map((label) => label.id));
   return (
-    Array.isArray(value.labels) &&
-    value.labels.every(isLabel) &&
-    Array.isArray(value.schedules) &&
-    value.schedules.every(isSchedule) &&
-    Array.isArray(value.overrides) &&
-    value.overrides.every(isOverride)
+    value.schedules.every((schedule) =>
+      schedule.labelIds.every((labelId) => labelIds.has(labelId))
+    ) &&
+    value.overrides.every((override) => labelIds.has(override.labelId))
   );
 }
 

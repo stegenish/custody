@@ -121,6 +121,11 @@ describe("getISOWeekNumber", () => {
     // March 1, 2026 is a Sunday — last day of ISO week 9
     expect(getISOWeekNumber(new Date(2026, 2, 1))).toBe(9);
   });
+
+  it("stays stable across Norway daylight-saving transitions", () => {
+    expect(getISOWeekNumber(parseDateKey("2026-03-30"))).toBe(14);
+    expect(getISOWeekNumber(parseDateKey("2026-10-26"))).toBe(44);
+  });
 });
 
 // --- getMonthRange ---

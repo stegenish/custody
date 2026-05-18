@@ -266,7 +266,13 @@ create policy "parents can create proposal comments"
     and exists (
       select 1 from public.proposals
       where proposals.id = proposal_comments.proposal_id
-        and proposals.status in ('draft', 'sent')
+        and (
+          proposals.status = 'sent'
+          or (
+            proposals.status = 'draft'
+            and proposals.current_author_user_id = auth.uid()
+          )
+        )
         and public.is_group_parent(proposals.group_id)
     )
   );
@@ -1468,7 +1474,13 @@ begin
     from public.proposals
     where id = target_proposal_id
       and group_id = target_group_id
-      and status in ('draft', 'sent')
+      and (
+        status = 'sent'
+        or (
+          status = 'draft'
+          and current_author_user_id = current_user_id
+        )
+      )
   )
     into proposal_exists;
 

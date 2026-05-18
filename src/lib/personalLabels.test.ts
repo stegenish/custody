@@ -1,4 +1,7 @@
-import { applyLabelPreferences } from "./personalLabels";
+import {
+  applyLabelPreferences,
+  parsePersonalLabelPreferences,
+} from "./personalLabels";
 import type { ScheduleData } from "./scheduleTypes";
 
 const scheduleData: ScheduleData = {
@@ -31,5 +34,25 @@ describe("applyLabelPreferences", () => {
     expect(result.labels[1]).toEqual(scheduleData.labels[1]);
     expect(result.schedules).toBe(scheduleData.schedules);
     expect(result.overrides).toBe(scheduleData.overrides);
+  });
+});
+
+describe("parsePersonalLabelPreferences", () => {
+  it("keeps valid personal label preferences", () => {
+    expect(
+      parsePersonalLabelPreferences({
+        mom: { name: "Thomas", color: "#123456" },
+      })
+    ).toEqual({ mom: { name: "Thomas", color: "#123456" } });
+  });
+
+  it("drops malformed or unsafe personal label preferences", () => {
+    expect(
+      parsePersonalLabelPreferences({
+        mom: { id: "changed", name: "Thomas", color: "#123456" },
+        dad: { name: "Dad", color: "url(/bad)" },
+        other: null,
+      })
+    ).toEqual({});
   });
 });

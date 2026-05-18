@@ -69,9 +69,20 @@ describe("shared calendar migration proposal comment guards", () => {
   });
 
   it("only creates proposal comments on draft or sent proposals", () => {
-    expect(getFunctionSql("create_proposal_comment")).toMatch(
-      /status\s+in\s+\('draft',\s*'sent'\)/
-    );
+    const functionSql = getFunctionSql("create_proposal_comment");
+
+    expect(functionSql).toMatch(/status\s*=\s*'sent'/);
+    expect(functionSql).toMatch(/status\s*=\s*'draft'/);
+  });
+
+  it("only allows draft proposal comments by the current draft author", () => {
+    const functionSql = getFunctionSql("create_proposal_comment");
+    const policySql = getPolicySql("parents can create proposal comments");
+
+    expect(functionSql).toMatch(/status\s*=\s*'sent'/);
+    expect(functionSql).toMatch(/current_author_user_id\s*=\s*current_user_id/);
+    expect(policySql).toMatch(/status\s*=\s*'sent'/);
+    expect(policySql).toMatch(/current_author_user_id\s*=\s*auth\.uid\(\)/);
   });
 
   it.each(["update_proposal_comment", "delete_proposal_comment"])(
@@ -82,9 +93,10 @@ describe("shared calendar migration proposal comment guards", () => {
   );
 
   it("only permits direct proposal comment inserts on draft or sent proposals", () => {
-    expect(getPolicySql("parents can create proposal comments")).toMatch(
-      /status\s+in\s+\('draft',\s*'sent'\)/
-    );
+    const policySql = getPolicySql("parents can create proposal comments");
+
+    expect(policySql).toMatch(/status\s*=\s*'sent'/);
+    expect(policySql).toMatch(/status\s*=\s*'draft'/);
   });
 
   it("does not require direct proposal comment updates to target active proposals", () => {

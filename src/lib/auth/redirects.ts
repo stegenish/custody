@@ -1,6 +1,6 @@
 function safelyDecodePath(value: string): string | null {
   let decoded = value;
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 5; i++) {
     try {
       const next = decodeURIComponent(decoded);
       if (next === decoded) return decoded;

@@ -189,14 +189,28 @@ async function runGroupAction(
 
 async function runProposalMutationOrRedirect(
   mutation: () => Promise<unknown>
-): Promise<boolean> {
+): Promise<void> {
   try {
     await mutation();
-    return true;
-  } catch {
+  } catch (error) {
+    if (!isProposalConflictError(error)) {
+      throw error;
+    }
     redirect("/?proposalError=proposal-conflict");
-    return false;
   }
+}
+
+function isProposalConflictError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return [
+    "Proposal changed since it was viewed",
+    "Shared calendar changed since this proposal was created",
+    "No active proposal to",
+    "There is already an active proposal",
+    "Draft proposal not found",
+    "Parent already has a draft proposal",
+    "Sender already has a draft proposal",
+  ].some((message) => error.message.includes(message));
 }
 
 async function runGroupScheduleAction(
@@ -327,13 +341,11 @@ export async function withdrawSharedProposalAction(
   const { supabase, groupId } = await getGroupActionContext();
   const proposalId = requireFormString(formData, "proposalId");
   const revisionId = requireFormString(formData, "revisionId");
-  const completed = await runProposalMutationOrRedirect(() =>
+  await runProposalMutationOrRedirect(() =>
     withdrawSharedProposal(supabase, groupId, proposalId, revisionId)
   );
 
-  if (completed) {
-    redirect("/");
-  }
+  redirect("/");
 }
 
 export async function discardSharedProposalAction(
@@ -342,13 +354,11 @@ export async function discardSharedProposalAction(
   const { supabase, groupId } = await getGroupActionContext();
   const proposalId = requireFormString(formData, "proposalId");
   const revisionId = requireFormString(formData, "revisionId");
-  const completed = await runProposalMutationOrRedirect(() =>
+  await runProposalMutationOrRedirect(() =>
     discardSharedProposal(supabase, groupId, proposalId, revisionId)
   );
 
-  if (completed) {
-    redirect("/");
-  }
+  redirect("/");
 }
 
 export async function rejectSharedProposalAction(
@@ -359,7 +369,7 @@ export async function rejectSharedProposalAction(
   const revisionId = requireFormString(formData, "revisionId");
   const state = await loadCurrentSharedState(context);
 
-  const completed = await runProposalMutationOrRedirect(() =>
+  await runProposalMutationOrRedirect(() =>
     rejectSharedProposal(
       context.supabase,
       context.groupId,
@@ -367,7 +377,6 @@ export async function rejectSharedProposalAction(
       revisionId
     )
   );
-  if (!completed) return;
 
   await notifyProposalEmail(state, proposalId, buildProposalRejectedEmail);
   redirect("/");
@@ -381,7 +390,7 @@ export async function acceptSharedProposalAction(
   const revisionId = requireFormString(formData, "revisionId");
   const state = await loadCurrentSharedState(context);
 
-  const completed = await runProposalMutationOrRedirect(() =>
+  await runProposalMutationOrRedirect(() =>
     acceptSharedProposal(
       context.supabase,
       context.groupId,
@@ -390,7 +399,6 @@ export async function acceptSharedProposalAction(
       formData.get("promoteProposalComments") === "on"
     )
   );
-  if (!completed) return;
 
   await notifyProposalEmail(state, proposalId, buildProposalAcceptedEmail);
   redirect("/");
@@ -404,7 +412,7 @@ export async function counterSharedProposalAction(
   const revisionId = requireFormString(formData, "revisionId");
   const scheduleData = parseScheduleData(formData.get("scheduleData"));
 
-  const completed = await runProposalMutationOrRedirect(() =>
+  await runProposalMutationOrRedirect(() =>
     counterSharedProposal(
       context.supabase,
       context.groupId,
@@ -413,7 +421,6 @@ export async function counterSharedProposalAction(
       scheduleData
     )
   );
-  if (!completed) return;
 
   const state = await loadCurrentSharedState(context);
   await notifyProposalEmail(state, proposalId, buildProposalCounteredEmail);
@@ -426,14 +433,13 @@ export async function sendSharedDraftProposalAction(
   const context = await getNotificationActionContext();
   const scheduleData = parseScheduleData(formData.get("scheduleData"));
   let proposalId = "";
-  const completed = await runProposalMutationOrRedirect(async () => {
+  await runProposalMutationOrRedirect(async () => {
     proposalId = await sendSharedDraftProposal(
       context.supabase,
       context.groupId,
       scheduleData
     );
   });
-  if (!completed) return;
 
   const state = await loadCurrentSharedState(context);
 

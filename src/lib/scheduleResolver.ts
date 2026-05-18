@@ -45,6 +45,9 @@ export function resolveScheduleLabel(
   const diffDays = Math.round(
     (d.getTime() - scheduleStart.getTime()) / (24 * 60 * 60 * 1000)
   );
+  if (diffDays < 0) {
+    throw new Error("Date is before schedule start");
+  }
   const diffWeeks = Math.floor(diffDays / 7);
   const cyclePosition = Math.floor(diffWeeks / schedule.cycleWeeks) % 2;
   return schedule.labelIds[cyclePosition];

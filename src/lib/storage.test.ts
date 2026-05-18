@@ -58,7 +58,10 @@ describe("loadScheduleData", () => {
 describe("saveScheduleData + loadScheduleData", () => {
   it("round-trips correctly", () => {
     const data: ScheduleData = {
-      labels: [{ id: "1", name: "Mom", color: "#bbf7d0" }],
+      labels: [
+        { id: "1", name: "Mom", color: "#bbf7d0" },
+        { id: "2", name: "Dad", color: "#fef08a" },
+      ],
       schedules: [
         {
           id: "s1",

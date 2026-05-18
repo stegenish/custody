@@ -10,7 +10,10 @@ describe("isScheduleData", () => {
   it("accepts valid schedule data", () => {
     expect(
       isScheduleData({
-        labels: [{ id: "mom", name: "Mom", color: "#bbf7d0" }],
+        labels: [
+          { id: "mom", name: "Mom", color: "#bbf7d0" },
+          { id: "dad", name: "Dad", color: "#fef08a" },
+        ],
         schedules: [
           {
             id: "schedule-1",
@@ -60,6 +63,51 @@ describe("isScheduleData", () => {
         labels: [],
         schedules: [],
         overrides: [{ date: "2026-02-31", labelId: "mom" }],
+      })
+    ).toBe(false);
+  });
+
+  it("rejects schedule data with dangling label references", () => {
+    expect(
+      isScheduleData({
+        labels: [{ id: "mom", name: "Mom", color: "#bbf7d0" }],
+        schedules: [
+          {
+            id: "schedule-1",
+            startDate: "2026-03-02",
+            cycleWeeks: 2,
+            labelIds: ["mom", "dad"],
+          },
+        ],
+        overrides: [],
+      })
+    ).toBe(false);
+
+    expect(
+      isScheduleData({
+        labels: [{ id: "mom", name: "Mom", color: "#bbf7d0" }],
+        schedules: [],
+        overrides: [{ date: "2026-03-03", labelId: "dad" }],
+      })
+    ).toBe(false);
+  });
+
+  it("rejects invalid label colors and overlong label names", () => {
+    expect(
+      isScheduleData({
+        labels: [{ id: "mom", name: "Mom", color: "url(/bad)" }],
+        schedules: [],
+        overrides: [],
+      })
+    ).toBe(false);
+
+    expect(
+      isScheduleData({
+        labels: [
+          { id: "mom", name: "x".repeat(65), color: "#bbf7d0" },
+        ],
+        schedules: [],
+        overrides: [],
       })
     ).toBe(false);
   });

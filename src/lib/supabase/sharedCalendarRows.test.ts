@@ -18,7 +18,7 @@ const baseRows: SharedCalendarRows = {
   latestCalendarVersion: {
     version: 2,
     schedule_data: {
-      labels: [],
+      labels: [{ id: "mom", name: "Mom", color: "#bbf7d0" }],
       schedules: [],
       overrides: [{ date: "2026-06-01", labelId: "mom" }],
     },
