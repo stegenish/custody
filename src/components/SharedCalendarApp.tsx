@@ -1,6 +1,11 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import {
   AppToolbar,
   AppToolbarButton,
@@ -10,6 +15,10 @@ import { CalendarWorkspace } from "./CalendarWorkspace";
 import { ProposalWorkspace } from "./ProposalWorkspace";
 import { useClientToday } from "./useClientToday";
 import { getCurrentRevision } from "@/lib/sharedCalendarWorkflowHelpers";
+import {
+  applyLabelPreferences,
+  type PersonalLabelPreferences,
+} from "@/lib/personalLabels";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 import type {
   CustodyGroupState,
@@ -116,6 +125,16 @@ export function SharedCalendarApp({
       currentParent?.isInviteAdmin &&
       state.parents.length < 2
   );
+  const [labelPreferences, updateLabelPreference] =
+    usePersonalLabelPreferences(state.groupId, currentParentId);
+  const displayAgreedScheduleData = useMemo(
+    () =>
+      applyLabelPreferences(
+        state.agreedCalendar.scheduleData,
+        labelPreferences
+      ),
+    [labelPreferences, state.agreedCalendar.scheduleData]
+  );
 
   if (!today) return null;
 
@@ -132,6 +151,8 @@ export function SharedCalendarApp({
           today={today}
           agreedScheduleData={state.agreedCalendar.scheduleData}
           proposedScheduleData={currentActiveRevision.scheduleData}
+          displayAgreedScheduleData={displayAgreedScheduleData}
+          labelPreferences={labelPreferences}
           noteDateKeys={noteDateKeys}
           commentDateKeys={activeProposalCommentDateKeys}
           sharedDateNotes={state.notes}
@@ -154,6 +175,7 @@ export function SharedCalendarApp({
           rejectProposalAction={rejectProposalAction}
           withdrawProposalAction={withdrawProposalAction}
           discardProposalAction={discardProposalAction}
+          onUpdateLabelPreference={updateLabelPreference}
         />
       </>
     );
@@ -168,6 +190,8 @@ export function SharedCalendarApp({
           today={today}
           agreedScheduleData={state.agreedCalendar.scheduleData}
           initialScheduleData={currentDraftRevision.scheduleData}
+          displayAgreedScheduleData={displayAgreedScheduleData}
+          labelPreferences={labelPreferences}
           noteDateKeys={noteDateKeys}
           commentDateKeys={currentDraftCommentDateKeys}
           sharedDateNotes={state.notes}
@@ -183,6 +207,7 @@ export function SharedCalendarApp({
           saveDraftAction={saveDraftAction}
           sendDraftAction={sendDraftAction}
           resetDraftAction={resetDraftAction}
+          onUpdateLabelPreference={updateLabelPreference}
         />
       </>
     );
@@ -195,6 +220,7 @@ export function SharedCalendarApp({
         title="Custody Calendar"
         today={today}
         scheduleData={state.agreedCalendar.scheduleData}
+        displayScheduleData={displayAgreedScheduleData}
         noteDateKeys={noteDateKeys}
         sharedDateNotes={state.notes}
         currentParentId={currentParentId}
@@ -202,6 +228,7 @@ export function SharedCalendarApp({
         updateSharedDateNoteAction={updateSharedDateNoteAction}
         deleteSharedDateNoteAction={deleteSharedDateNoteAction}
         readOnly
+        onUpdateLabelPreference={updateLabelPreference}
         toolbar={
           startDraftAction || canCreateInviteLink ? (
             <AgreedCalendarToolbar
@@ -216,6 +243,44 @@ export function SharedCalendarApp({
       />
     </>
   );
+}
+
+function usePersonalLabelPreferences(
+  groupId: string,
+  currentParentId: string
+): [
+  PersonalLabelPreferences,
+  (id: string, name: string, color: string) => void,
+] {
+  const storageKey = `custody:personal-labels:${groupId}:${currentParentId}`;
+  const [preferences, setPreferences] = useState<PersonalLabelPreferences>(() =>
+    readPersonalLabelPreferences(storageKey)
+  );
+
+  const updatePreference = useCallback(
+    (id: string, name: string, color: string) => {
+      setPreferences((current) => {
+        const next = { ...current, [id]: { name, color } };
+        localStorage.setItem(storageKey, JSON.stringify(next));
+        return next;
+      });
+    },
+    [storageKey]
+  );
+
+  return [preferences, updatePreference];
+}
+
+function readPersonalLabelPreferences(
+  storageKey: string
+): PersonalLabelPreferences {
+  if (typeof localStorage === "undefined") return {};
+
+  try {
+    return JSON.parse(localStorage.getItem(storageKey) ?? "{}");
+  } catch {
+    return {};
+  }
 }
 
 function ProposalActionAlert({
@@ -310,6 +375,8 @@ interface ActiveProposalReviewProps {
   today: Date;
   agreedScheduleData: ScheduleData;
   proposedScheduleData: ScheduleData;
+  displayAgreedScheduleData?: ScheduleData;
+  labelPreferences?: PersonalLabelPreferences;
   noteDateKeys?: Set<string>;
   commentDateKeys?: Set<string>;
   sharedDateNotes?: SharedDateNote[];
@@ -330,12 +397,19 @@ interface ActiveProposalReviewProps {
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
   withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
   discardProposalAction?: (formData: FormData) => void | Promise<void>;
+  onUpdateLabelPreference?: (
+    id: string,
+    name: string,
+    color: string
+  ) => void;
 }
 
 function ActiveProposalReview({
   today,
   agreedScheduleData,
   proposedScheduleData,
+  displayAgreedScheduleData,
+  labelPreferences = {},
   noteDateKeys,
   commentDateKeys,
   sharedDateNotes,
@@ -356,10 +430,15 @@ function ActiveProposalReview({
   rejectProposalAction,
   withdrawProposalAction,
   discardProposalAction,
+  onUpdateLabelPreference,
 }: ActiveProposalReviewProps) {
   const [counterScheduleData, setCounterScheduleData] =
     useState<ScheduleData>(proposedScheduleData);
   const [isCounterEditing, setIsCounterEditing] = useState(false);
+  const displayProposedScheduleData = useMemo(
+    () => applyLabelPreferences(counterScheduleData, labelPreferences),
+    [counterScheduleData, labelPreferences]
+  );
 
   return (
     <ProposalWorkspace
@@ -367,6 +446,8 @@ function ActiveProposalReview({
       today={today}
       agreedScheduleData={agreedScheduleData}
       proposedScheduleData={counterScheduleData}
+      displayAgreedScheduleData={displayAgreedScheduleData}
+      displayProposedScheduleData={displayProposedScheduleData}
       noteDateKeys={noteDateKeys}
       commentDateKeys={commentDateKeys}
       sharedDateNotes={sharedDateNotes}
@@ -397,6 +478,7 @@ function ActiveProposalReview({
         />
       }
       onUpdateProposedScheduleData={setCounterScheduleData}
+      onUpdateLabelPreference={onUpdateLabelPreference}
     />
   );
 }
@@ -528,6 +610,8 @@ interface EditableDraftProposalProps {
   today: Date;
   agreedScheduleData: ScheduleData;
   initialScheduleData: ScheduleData;
+  displayAgreedScheduleData?: ScheduleData;
+  labelPreferences?: PersonalLabelPreferences;
   noteDateKeys?: Set<string>;
   commentDateKeys?: Set<string>;
   sharedDateNotes?: SharedDateNote[];
@@ -543,12 +627,19 @@ interface EditableDraftProposalProps {
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
   sendDraftAction?: (formData: FormData) => void | Promise<void>;
   resetDraftAction?: () => void | Promise<void>;
+  onUpdateLabelPreference?: (
+    id: string,
+    name: string,
+    color: string
+  ) => void;
 }
 
 function EditableDraftProposal({
   today,
   agreedScheduleData,
   initialScheduleData,
+  displayAgreedScheduleData,
+  labelPreferences = {},
   noteDateKeys,
   commentDateKeys,
   sharedDateNotes,
@@ -564,15 +655,22 @@ function EditableDraftProposal({
   saveDraftAction,
   sendDraftAction,
   resetDraftAction,
+  onUpdateLabelPreference,
 }: EditableDraftProposalProps) {
   const [draftScheduleData, setDraftScheduleData] =
     useState<ScheduleData>(initialScheduleData);
+  const displayDraftScheduleData = useMemo(
+    () => applyLabelPreferences(draftScheduleData, labelPreferences),
+    [draftScheduleData, labelPreferences]
+  );
 
   return (
     <ProposalWorkspace
       today={today}
       agreedScheduleData={agreedScheduleData}
       proposedScheduleData={draftScheduleData}
+      displayAgreedScheduleData={displayAgreedScheduleData}
+      displayProposedScheduleData={displayDraftScheduleData}
       noteDateKeys={noteDateKeys}
       commentDateKeys={commentDateKeys}
       sharedDateNotes={sharedDateNotes}
@@ -586,6 +684,7 @@ function EditableDraftProposal({
       updateProposalCommentAction={updateProposalCommentAction}
       deleteProposalCommentAction={deleteProposalCommentAction}
       onUpdateProposedScheduleData={setDraftScheduleData}
+      onUpdateLabelPreference={onUpdateLabelPreference}
       toolbar={
         saveDraftAction || sendDraftAction || resetDraftAction ? (
           <AppToolbar>

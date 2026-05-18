@@ -67,6 +67,7 @@ function createActiveProposal(
 
 describe("SharedCalendarApp", () => {
   beforeEach(() => {
+    localStorage.clear();
     jest.useFakeTimers();
     jest.setSystemTime(new Date(2026, 2, 1));
   });
@@ -411,6 +412,43 @@ describe("SharedCalendarApp", () => {
         'input[name="scheduleData"]'
       )[0]?.value
     ).toContain('"date":"2026-03-02"');
+  });
+
+  it("keeps personal label preferences out of draft save payloads", async () => {
+    localStorage.setItem(
+      "custody:personal-labels:group-1:parent-a",
+      JSON.stringify({ mom: { name: "Thomas", color: "#123456" } })
+    );
+    const stateWithDraft: CustodyGroupState = {
+      ...state,
+      draftProposals: [
+        {
+          ...createActiveProposal(),
+          status: "draft",
+          receiverParentId: undefined,
+        },
+      ],
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithDraft}
+        currentParentId="parent-a"
+        saveDraftAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(await screen.findAllByText("Thomas")).not.toHaveLength(0);
+    const schedulePayload = document.querySelector<HTMLInputElement>(
+      'input[name="scheduleData"]'
+    )?.value;
+
+    expect(schedulePayload).toContain('"name":"Mom"');
+    expect(schedulePayload).not.toContain("Thomas");
   });
 
   it("shows carried proposal comments on the current parent's draft proposal", () => {

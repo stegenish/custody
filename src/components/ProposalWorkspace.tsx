@@ -19,6 +19,8 @@ interface ProposalWorkspaceProps {
   title?: string;
   agreedScheduleData: ScheduleData;
   proposedScheduleData: ScheduleData;
+  displayAgreedScheduleData?: ScheduleData;
+  displayProposedScheduleData?: ScheduleData;
   noteDateKeys?: Set<string>;
   commentDateKeys?: Set<string>;
   sharedDateNotes?: SharedDateNote[];
@@ -34,6 +36,11 @@ interface ProposalWorkspaceProps {
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateProposedScheduleData: (data: ScheduleData) => void;
+  onUpdateLabelPreference?: (
+    id: string,
+    name: string,
+    color: string
+  ) => void;
 }
 
 export function ProposalWorkspace({
@@ -41,6 +48,8 @@ export function ProposalWorkspace({
   title = "Draft Proposal",
   agreedScheduleData,
   proposedScheduleData,
+  displayAgreedScheduleData,
+  displayProposedScheduleData,
   noteDateKeys,
   commentDateKeys,
   sharedDateNotes,
@@ -56,8 +65,13 @@ export function ProposalWorkspace({
   toolbar,
   readOnly = false,
   onUpdateProposedScheduleData,
+  onUpdateLabelPreference,
 }: ProposalWorkspaceProps) {
   const calendar = useMemo(() => generateCalendar(today), [today]);
+  const visibleAgreedScheduleData =
+    displayAgreedScheduleData ?? agreedScheduleData;
+  const visibleProposedScheduleData =
+    displayProposedScheduleData ?? proposedScheduleData;
   const changedDateKeys = useMemo(() => {
     const { firstDay, lastDay } = getCalendarVisibleRange(calendar);
     return new Set(
@@ -71,11 +85,15 @@ export function ProposalWorkspace({
   }, [agreedScheduleData, calendar, proposedScheduleData]);
   const dateComparisons = useMemo(() => {
     const { firstDay, lastDay } = getCalendarVisibleRange(calendar);
-    const agreedColorMap = buildColorMap(firstDay, lastDay, agreedScheduleData);
+    const agreedColorMap = buildColorMap(
+      firstDay,
+      lastDay,
+      visibleAgreedScheduleData
+    );
     const proposedColorMap = buildColorMap(
       firstDay,
       lastDay,
-      proposedScheduleData
+      visibleProposedScheduleData
     );
     const comparisons = new Map<string, DateComparison>();
 
@@ -87,7 +105,12 @@ export function ProposalWorkspace({
     }
 
     return comparisons;
-  }, [agreedScheduleData, calendar, changedDateKeys, proposedScheduleData]);
+  }, [
+    calendar,
+    changedDateKeys,
+    visibleAgreedScheduleData,
+    visibleProposedScheduleData,
+  ]);
 
   return (
     <CalendarWorkspace
@@ -95,6 +118,7 @@ export function ProposalWorkspace({
       today={today}
       calendar={calendar}
       scheduleData={proposedScheduleData}
+      displayScheduleData={visibleProposedScheduleData}
       changedDateKeys={changedDateKeys}
       dateComparisons={dateComparisons}
       noteDateKeys={noteDateKeys}
@@ -112,6 +136,7 @@ export function ProposalWorkspace({
       toolbar={toolbar}
       readOnly={readOnly}
       onUpdateScheduleData={onUpdateProposedScheduleData}
+      onUpdateLabelPreference={onUpdateLabelPreference}
     />
   );
 }

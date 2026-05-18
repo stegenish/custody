@@ -53,4 +53,38 @@ describe("ScheduleEditor", () => {
     expect(newData.labels).toHaveLength(1);
     expect(newData.labels[0].name).toBe("Mom");
   });
+
+  it("can route existing label edits to personal label preferences", () => {
+    const onUpdate = jest.fn();
+    const onUpdateLabelPreference = jest.fn();
+    const scheduleData: ScheduleData = {
+      labels: [{ id: "mom", name: "Mom", color: "#bbf7d0" }],
+      schedules: [],
+      overrides: [],
+    };
+
+    render(
+      <ScheduleEditor
+        scheduleData={scheduleData}
+        onUpdateScheduleData={onUpdate}
+        onUpdateLabelPreference={onUpdateLabelPreference}
+      />
+    );
+
+    fireEvent.click(screen.getByText("Edit"));
+    fireEvent.change(screen.getByLabelText("Edit Mom name"), {
+      target: { value: "Thomas" },
+    });
+    fireEvent.change(screen.getByLabelText("Edit Mom color"), {
+      target: { value: "#123456" },
+    });
+    fireEvent.click(screen.getByText("Save"));
+
+    expect(onUpdateLabelPreference).toHaveBeenCalledWith(
+      "mom",
+      "Thomas",
+      "#123456"
+    );
+    expect(onUpdate).not.toHaveBeenCalled();
+  });
 });

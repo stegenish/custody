@@ -12,14 +12,23 @@ import { ScheduleList } from "./ScheduleList";
 
 interface ScheduleEditorProps {
   scheduleData: ScheduleData;
+  displayScheduleData?: ScheduleData;
   onUpdateScheduleData: (data: ScheduleData) => void;
+  onUpdateLabelPreference?: (
+    id: string,
+    name: string,
+    color: string
+  ) => void;
 }
 
 export function ScheduleEditor({
   scheduleData,
+  displayScheduleData,
   onUpdateScheduleData,
+  onUpdateLabelPreference,
 }: ScheduleEditorProps) {
-  const hasLabels = scheduleData.labels.length > 0;
+  const visibleScheduleData = displayScheduleData ?? scheduleData;
+  const hasLabels = visibleScheduleData.labels.length > 0;
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -44,12 +53,16 @@ export function ScheduleEditor({
           )}
 
           <LabelManager
-            labels={scheduleData.labels}
+            labels={visibleScheduleData.labels}
             onAddLabel={(name, color) =>
               onUpdateScheduleData(addLabel(scheduleData, name, color))
             }
             onUpdateLabel={(id, name, color) =>
-              onUpdateScheduleData(updateLabel(scheduleData, id, name, color))
+              onUpdateLabelPreference
+                ? onUpdateLabelPreference(id, name, color)
+                : onUpdateScheduleData(
+                    updateLabel(scheduleData, id, name, color)
+                  )
             }
             onDeleteLabel={(id) =>
               onUpdateScheduleData(deleteLabel(scheduleData, id))
@@ -58,7 +71,7 @@ export function ScheduleEditor({
 
           <ScheduleList
             schedules={scheduleData.schedules}
-            labels={scheduleData.labels}
+            labels={visibleScheduleData.labels}
             onAddSchedule={(startDate, cycleWeeks, labelIds) =>
               onUpdateScheduleData(
                 addSchedule(scheduleData, startDate, cycleWeeks, labelIds)

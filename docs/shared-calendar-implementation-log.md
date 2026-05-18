@@ -41,6 +41,7 @@ Current state:
 - Added active proposal discard support so a sender can remove a pending proposal without restoring it as a draft, while preserving withdrawn history.
 - Made date-key formatting/parsing explicitly use Europe/Oslo semantics and documented the Bodø school holiday data freshness boundary.
 - Added migration-level audit checks that proposal lifecycle RPCs record status events for sent, withdrawn, rejected, countered, and accepted transitions.
+- Added browser-local personal label preferences for existing labels in the shared app, keeping personal names/colors out of proposal save payloads.
 
 Next likely slice:
 

@@ -27,6 +27,7 @@ interface CalendarWorkspaceProps {
   today: Date;
   calendar?: CalendarMonth[];
   scheduleData: ScheduleData;
+  displayScheduleData?: ScheduleData;
   changedDateKeys?: Set<string>;
   dateComparisons?: Map<string, DateComparison>;
   noteDateKeys?: Set<string>;
@@ -44,6 +45,11 @@ interface CalendarWorkspaceProps {
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateScheduleData: (data: ScheduleData) => void;
+  onUpdateLabelPreference?: (
+    id: string,
+    name: string,
+    color: string
+  ) => void;
 }
 
 export function CalendarWorkspace({
@@ -51,6 +57,7 @@ export function CalendarWorkspace({
   today,
   calendar,
   scheduleData,
+  displayScheduleData,
   changedDateKeys,
   dateComparisons,
   noteDateKeys,
@@ -68,13 +75,15 @@ export function CalendarWorkspace({
   toolbar,
   readOnly = false,
   onUpdateScheduleData,
+  onUpdateLabelPreference,
 }: CalendarWorkspaceProps) {
   const generatedCalendar = useMemo(() => generateCalendar(today), [today]);
   const visibleCalendar = calendar ?? generatedCalendar;
+  const visibleScheduleData = displayScheduleData ?? scheduleData;
   const colorMap = useMemo(() => {
     const { firstDay, lastDay } = getCalendarVisibleRange(visibleCalendar);
-    return buildColorMap(firstDay, lastDay, scheduleData);
-  }, [visibleCalendar, scheduleData]);
+    return buildColorMap(firstDay, lastDay, visibleScheduleData);
+  }, [visibleCalendar, visibleScheduleData]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const selectedDayColor = selectedDate ? colorMap.get(selectedDate) : null;
   const selectedDateComparison = selectedDate
@@ -111,7 +120,9 @@ export function CalendarWorkspace({
       {!readOnly && (
         <ScheduleEditor
           scheduleData={scheduleData}
+          displayScheduleData={visibleScheduleData}
           onUpdateScheduleData={onUpdateScheduleData}
+          onUpdateLabelPreference={onUpdateLabelPreference}
         />
       )}
       <CalendarGrid
@@ -148,7 +159,7 @@ export function CalendarWorkspace({
           dateKey={selectedDate}
           currentLabelId={selectedDayColor?.label.id ?? null}
           isOverride={selectedDayColor?.isOverride ?? false}
-          labels={scheduleData.labels}
+          labels={visibleScheduleData.labels}
           onSetOverride={(date, labelId) =>
             onUpdateScheduleData(setDayOverride(scheduleData, date, labelId))
           }
