@@ -43,6 +43,7 @@ Current state:
 - Added migration-level audit checks that proposal lifecycle RPCs record status events for sent, withdrawn, rejected, countered, and accepted transitions.
 - Added browser-local personal label preferences for existing labels in the shared app, keeping personal names/colors out of proposal save payloads.
 
-Next likely slice:
+Current remaining work:
 
-- Continue reviewing remaining shared-calendar launch gaps and choose the next UI/server workflow slice.
+- No known implementation items remain from `docs/shared-calendar-design.md`.
+- Production setup still needs the external checklist in `docs/shared-calendar-launch-checklist.md`: Supabase project/migration, Google OAuth, Vercel environment variables, Resend, and smoke testing.
