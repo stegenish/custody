@@ -37,6 +37,7 @@ Current state:
 - Added new proposal comment creation from draft proposals without sending active-proposal notification emails.
 - Added a shared-calendar launch checklist for Vercel, Supabase, Google OAuth, email, and production smoke testing.
 - Added friendly invalid/full/used invite acceptance feedback and a copy control for generated invite links.
+- Added proposal conflict feedback so stale or no-longer-available proposal actions reload the calendar with a friendly review-before-retry message.
 
 Next likely slice:
 

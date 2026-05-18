@@ -35,7 +35,21 @@ const SharedCalendarApp = dynamic<SharedCalendarAppProps>(() =>
   )
 );
 
-export default async function Home() {
+interface HomeProps {
+  searchParams: Promise<{ proposalError?: string | string[] }>;
+}
+
+function firstSearchParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function proposalActionErrorFromParam(
+  value: string | undefined
+): SharedCalendarAppProps["proposalActionError"] {
+  return value === "proposal-conflict" ? value : undefined;
+}
+
+export default async function Home({ searchParams }: HomeProps) {
   if (!hasSupabaseEnv()) {
     return <LocalCalendarShell />;
   }
@@ -59,10 +73,15 @@ export default async function Home() {
     groupId,
     user.id
   );
+  const proposalActionError = proposalActionErrorFromParam(
+    firstSearchParam((await searchParams).proposalError)
+  );
+
   return (
     <SharedCalendarApp
       state={state}
       currentParentId={user.id}
+      proposalActionError={proposalActionError}
       startDraftAction={startSharedDraftProposal}
       saveDraftAction={saveSharedDraftProposalAction}
       sendDraftAction={sendSharedDraftProposalAction}

@@ -98,6 +98,24 @@ describe("SharedCalendarApp", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("renders friendly proposal action errors", () => {
+    render(
+      <SharedCalendarApp
+        state={state}
+        currentParentId="parent-a"
+        proposalActionError="proposal-conflict"
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The proposal changed or is no longer available. Reloaded the latest calendar; review it before trying again."
+    );
+  });
+
   it("renders invite controls for an invite admin before the second parent joins", () => {
     render(
       <SharedCalendarApp

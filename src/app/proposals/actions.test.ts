@@ -223,6 +223,22 @@ describe("proposal server note/comment actions", () => {
     });
   });
 
+  it("redirects proposal mutation conflicts to the calendar with a friendly error", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "proposal-1");
+    formData.set("revisionId", "revision-1");
+    mockAcceptSharedProposal.mockRejectedValue(
+      new Error("Proposal changed since it was viewed")
+    );
+
+    await acceptSharedProposalAction(formData);
+
+    expect(mockRedirect).toHaveBeenCalledWith(
+      "/?proposalError=proposal-conflict"
+    );
+    expect(mockSendEmailNotification).not.toHaveBeenCalled();
+  });
+
   it("emails the sender when a proposal is rejected", async () => {
     const formData = new FormData();
     formData.set("proposalId", "proposal-1");

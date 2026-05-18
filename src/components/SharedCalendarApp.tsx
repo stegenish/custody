@@ -20,6 +20,7 @@ import type {
 export interface SharedCalendarAppProps {
   state: CustodyGroupState;
   currentParentId: string;
+  proposalActionError?: ProposalActionErrorCode;
   startDraftAction?: () => void | Promise<void>;
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
   sendDraftAction?: (formData: FormData) => void | Promise<void>;
@@ -42,6 +43,8 @@ export interface InviteLinkActionState {
   error?: string;
 }
 
+export type ProposalActionErrorCode = "proposal-conflict";
+
 export type CreateInviteLinkAction = (
   state: InviteLinkActionState,
   formData: FormData
@@ -50,6 +53,7 @@ export type CreateInviteLinkAction = (
 export function SharedCalendarApp({
   state,
   currentParentId,
+  proposalActionError,
   startDraftAction,
   saveDraftAction,
   sendDraftAction,
@@ -113,89 +117,127 @@ export function SharedCalendarApp({
 
   if (!today) return null;
 
+  const actionAlert = (
+    <ProposalActionAlert errorCode={proposalActionError} />
+  );
+
   if (state.activeProposal && currentActiveRevision) {
     return (
-      <ActiveProposalReview
-        key={currentActiveRevision.id}
-        today={today}
-        agreedScheduleData={state.agreedCalendar.scheduleData}
-        proposedScheduleData={currentActiveRevision.scheduleData}
-        noteDateKeys={noteDateKeys}
-        commentDateKeys={activeProposalCommentDateKeys}
-        sharedDateNotes={state.notes}
-        proposalComments={state.activeProposal.comments}
-        proposalId={state.activeProposal.id}
-        currentParentId={currentParentId}
-        createSharedDateNoteAction={createSharedDateNoteAction}
-        updateSharedDateNoteAction={updateSharedDateNoteAction}
-        deleteSharedDateNoteAction={deleteSharedDateNoteAction}
-        createProposalCommentAction={createProposalCommentAction}
-        updateProposalCommentAction={updateProposalCommentAction}
-        deleteProposalCommentAction={deleteProposalCommentAction}
-        revisionId={currentActiveRevision.id}
-        isReceiver={state.activeProposal.receiverParentId === currentParentId}
-        isSender={state.activeProposal.currentAuthorParentId === currentParentId}
-        acceptProposalAction={acceptProposalAction}
-        counterProposalAction={counterProposalAction}
-        rejectProposalAction={rejectProposalAction}
-        withdrawProposalAction={withdrawProposalAction}
-      />
+      <>
+        {actionAlert}
+        <ActiveProposalReview
+          key={currentActiveRevision.id}
+          today={today}
+          agreedScheduleData={state.agreedCalendar.scheduleData}
+          proposedScheduleData={currentActiveRevision.scheduleData}
+          noteDateKeys={noteDateKeys}
+          commentDateKeys={activeProposalCommentDateKeys}
+          sharedDateNotes={state.notes}
+          proposalComments={state.activeProposal.comments}
+          proposalId={state.activeProposal.id}
+          currentParentId={currentParentId}
+          createSharedDateNoteAction={createSharedDateNoteAction}
+          updateSharedDateNoteAction={updateSharedDateNoteAction}
+          deleteSharedDateNoteAction={deleteSharedDateNoteAction}
+          createProposalCommentAction={createProposalCommentAction}
+          updateProposalCommentAction={updateProposalCommentAction}
+          deleteProposalCommentAction={deleteProposalCommentAction}
+          revisionId={currentActiveRevision.id}
+          isReceiver={state.activeProposal.receiverParentId === currentParentId}
+          isSender={
+            state.activeProposal.currentAuthorParentId === currentParentId
+          }
+          acceptProposalAction={acceptProposalAction}
+          counterProposalAction={counterProposalAction}
+          rejectProposalAction={rejectProposalAction}
+          withdrawProposalAction={withdrawProposalAction}
+        />
+      </>
     );
   }
 
   if (currentDraft && currentDraftRevision) {
     return (
-      <EditableDraftProposal
-        key={currentDraftRevision.id}
-        today={today}
-        agreedScheduleData={state.agreedCalendar.scheduleData}
-        initialScheduleData={currentDraftRevision.scheduleData}
-        noteDateKeys={noteDateKeys}
-        commentDateKeys={currentDraftCommentDateKeys}
-        sharedDateNotes={state.notes}
-        proposalComments={currentDraft.comments}
-        proposalId={currentDraft.id}
-        currentParentId={currentParentId}
-        createSharedDateNoteAction={createSharedDateNoteAction}
-        updateSharedDateNoteAction={updateSharedDateNoteAction}
-        deleteSharedDateNoteAction={deleteSharedDateNoteAction}
-        createProposalCommentAction={createProposalCommentAction}
-        updateProposalCommentAction={updateProposalCommentAction}
-        deleteProposalCommentAction={deleteProposalCommentAction}
-        saveDraftAction={saveDraftAction}
-        sendDraftAction={sendDraftAction}
-        resetDraftAction={resetDraftAction}
-      />
+      <>
+        {actionAlert}
+        <EditableDraftProposal
+          key={currentDraftRevision.id}
+          today={today}
+          agreedScheduleData={state.agreedCalendar.scheduleData}
+          initialScheduleData={currentDraftRevision.scheduleData}
+          noteDateKeys={noteDateKeys}
+          commentDateKeys={currentDraftCommentDateKeys}
+          sharedDateNotes={state.notes}
+          proposalComments={currentDraft.comments}
+          proposalId={currentDraft.id}
+          currentParentId={currentParentId}
+          createSharedDateNoteAction={createSharedDateNoteAction}
+          updateSharedDateNoteAction={updateSharedDateNoteAction}
+          deleteSharedDateNoteAction={deleteSharedDateNoteAction}
+          createProposalCommentAction={createProposalCommentAction}
+          updateProposalCommentAction={updateProposalCommentAction}
+          deleteProposalCommentAction={deleteProposalCommentAction}
+          saveDraftAction={saveDraftAction}
+          sendDraftAction={sendDraftAction}
+          resetDraftAction={resetDraftAction}
+        />
+      </>
     );
   }
 
   return (
-    <CalendarWorkspace
-      title="Custody Calendar"
-      today={today}
-      scheduleData={state.agreedCalendar.scheduleData}
-      noteDateKeys={noteDateKeys}
-      sharedDateNotes={state.notes}
-      currentParentId={currentParentId}
-      createSharedDateNoteAction={createSharedDateNoteAction}
-      updateSharedDateNoteAction={updateSharedDateNoteAction}
-      deleteSharedDateNoteAction={deleteSharedDateNoteAction}
-      readOnly
-      toolbar={
-        startDraftAction || canCreateInviteLink ? (
-          <AgreedCalendarToolbar
-            startDraftAction={startDraftAction}
-            createInviteLinkAction={
-              canCreateInviteLink ? createInviteLinkAction : undefined
-            }
-          />
-        ) : undefined
-      }
-      onUpdateScheduleData={() => undefined}
-    />
+    <>
+      {actionAlert}
+      <CalendarWorkspace
+        title="Custody Calendar"
+        today={today}
+        scheduleData={state.agreedCalendar.scheduleData}
+        noteDateKeys={noteDateKeys}
+        sharedDateNotes={state.notes}
+        currentParentId={currentParentId}
+        createSharedDateNoteAction={createSharedDateNoteAction}
+        updateSharedDateNoteAction={updateSharedDateNoteAction}
+        deleteSharedDateNoteAction={deleteSharedDateNoteAction}
+        readOnly
+        toolbar={
+          startDraftAction || canCreateInviteLink ? (
+            <AgreedCalendarToolbar
+              startDraftAction={startDraftAction}
+              createInviteLinkAction={
+                canCreateInviteLink ? createInviteLinkAction : undefined
+              }
+            />
+          ) : undefined
+        }
+        onUpdateScheduleData={() => undefined}
+      />
+    </>
   );
 }
 
+function ProposalActionAlert({
+  errorCode,
+}: {
+  errorCode?: ProposalActionErrorCode;
+}) {
+  if (!errorCode) return null;
+
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 pt-4">
+      <p
+        role="alert"
+        className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+      >
+        {
+          {
+            "proposal-conflict":
+              "The proposal changed or is no longer available. Reloaded the latest calendar; review it before trying again.",
+          }[errorCode]
+        }
+      </p>
+    </div>
+  );
+}
 function AgreedCalendarToolbar({
   startDraftAction,
   createInviteLinkAction,
