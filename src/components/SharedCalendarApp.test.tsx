@@ -362,6 +362,70 @@ describe("SharedCalendarApp", () => {
     ).toContain('"date":"2026-03-02"');
   });
 
+  it("shows carried proposal comments on the current parent's draft proposal", () => {
+    const draftScheduleData = {
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    };
+    const stateWithDraftComment: CustodyGroupState = {
+      ...state,
+      draftProposals: [
+        {
+          id: "proposal-1",
+          status: "draft",
+          createdByParentId: "parent-a",
+          currentAuthorParentId: "parent-a",
+          baseCalendarVersion: 1,
+          currentRevisionId: "revision-1",
+          revisions: [
+            {
+              id: "revision-1",
+              proposalId: "proposal-1",
+              revisionNumber: 1,
+              authorParentId: "parent-a",
+              baseCalendarVersion: 1,
+              scheduleData: draftScheduleData,
+              createdAt: "2026-05-16T00:00:00.000Z",
+            },
+          ],
+          comments: [
+            {
+              id: "comment-1",
+              proposalId: "proposal-1",
+              authorParentId: "parent-a",
+              date: "2026-03-03",
+              body: "Previous discussion",
+              createdAt: "2026-05-16T00:00:00.000Z",
+              updatedAt: "2026-05-16T00:00:00.000Z",
+            },
+          ],
+          createdAt: "2026-05-16T00:00:00.000Z",
+          updatedAt: "2026-05-16T00:00:00.000Z",
+        },
+      ],
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithDraftComment}
+        currentParentId="parent-a"
+        updateProposalCommentAction={jest.fn()}
+        deleteProposalCommentAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+
+    expect(screen.getByTestId("proposal-comment-indicator")).toBeInTheDocument();
+    expect(screen.getAllByText("Previous discussion").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("textbox", { name: "Edit proposal comment" })
+    ).toHaveValue("Previous discussion");
+  });
+
   it("renders an active proposal for receiver review", () => {
     const proposedScheduleData = {
       ...state.agreedCalendar.scheduleData,

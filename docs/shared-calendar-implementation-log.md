@@ -33,6 +33,7 @@ Current state:
 - Blocked stale proposal comment submissions when the active proposal is no longer present before writing or notifying.
 - Added selected-date agreed/proposed custody details for changed proposal dates.
 - Hardened proposal comment database policies and RPCs so new comments can only be added to draft or sent proposals while existing author-owned comments remain editable after status changes.
+- Show carried proposal comments on restored draft proposals, including date indicators and author edit/delete controls.
 
 Next likely slice:
 
