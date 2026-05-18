@@ -34,6 +34,7 @@ Current state:
 - Added selected-date agreed/proposed custody details for changed proposal dates.
 - Hardened proposal comment database policies and RPCs so new comments can only be added to draft or sent proposals while existing author-owned comments remain editable after status changes.
 - Show carried proposal comments on restored draft proposals, including date indicators and author edit/delete controls.
+- Added new proposal comment creation from draft proposals without sending active-proposal notification emails.
 
 Next likely slice:
 

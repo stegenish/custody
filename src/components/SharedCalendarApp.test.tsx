@@ -426,6 +426,61 @@ describe("SharedCalendarApp", () => {
     ).toHaveValue("Previous discussion");
   });
 
+  it("renders a proposal comment form on the current parent's draft proposal", () => {
+    const draftScheduleData = {
+      ...state.agreedCalendar.scheduleData,
+      overrides: [{ date: "2026-03-02", labelId: "dad" }],
+    };
+    const stateWithDraft: CustodyGroupState = {
+      ...state,
+      draftProposals: [
+        {
+          id: "proposal-1",
+          status: "draft",
+          createdByParentId: "parent-a",
+          currentAuthorParentId: "parent-a",
+          baseCalendarVersion: 1,
+          currentRevisionId: "revision-1",
+          revisions: [
+            {
+              id: "revision-1",
+              proposalId: "proposal-1",
+              revisionNumber: 1,
+              authorParentId: "parent-a",
+              baseCalendarVersion: 1,
+              scheduleData: draftScheduleData,
+              createdAt: "2026-05-16T00:00:00.000Z",
+            },
+          ],
+          comments: [],
+          createdAt: "2026-05-16T00:00:00.000Z",
+          updatedAt: "2026-05-16T00:00:00.000Z",
+        },
+      ],
+    };
+
+    render(
+      <SharedCalendarApp
+        state={stateWithDraft}
+        currentParentId="parent-a"
+        createProposalCommentAction={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "New proposal comment" })
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="proposalId"]')
+        ?.value
+    ).toBe("proposal-1");
+  });
+
   it("renders an active proposal for receiver review", () => {
     const proposedScheduleData = {
       ...state.agreedCalendar.scheduleData,

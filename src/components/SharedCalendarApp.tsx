@@ -159,6 +159,7 @@ export function SharedCalendarApp({
         createSharedDateNoteAction={createSharedDateNoteAction}
         updateSharedDateNoteAction={updateSharedDateNoteAction}
         deleteSharedDateNoteAction={deleteSharedDateNoteAction}
+        createProposalCommentAction={createProposalCommentAction}
         updateProposalCommentAction={updateProposalCommentAction}
         deleteProposalCommentAction={deleteProposalCommentAction}
         saveDraftAction={saveDraftAction}
@@ -467,6 +468,7 @@ interface EditableDraftProposalProps {
   createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
   updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
   deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
+  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
   saveDraftAction?: (formData: FormData) => void | Promise<void>;
@@ -487,6 +489,7 @@ function EditableDraftProposal({
   createSharedDateNoteAction,
   updateSharedDateNoteAction,
   deleteSharedDateNoteAction,
+  createProposalCommentAction,
   updateProposalCommentAction,
   deleteProposalCommentAction,
   saveDraftAction,
@@ -510,6 +513,7 @@ function EditableDraftProposal({
       createSharedDateNoteAction={createSharedDateNoteAction}
       updateSharedDateNoteAction={updateSharedDateNoteAction}
       deleteSharedDateNoteAction={deleteSharedDateNoteAction}
+      createProposalCommentAction={createProposalCommentAction}
       updateProposalCommentAction={updateProposalCommentAction}
       deleteProposalCommentAction={deleteProposalCommentAction}
       onUpdateProposedScheduleData={setDraftScheduleData}

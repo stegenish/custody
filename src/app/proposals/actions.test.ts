@@ -263,10 +263,41 @@ describe("proposal server note/comment actions", () => {
     });
 
     await expect(createProposalCommentAction(formData)).rejects.toThrow(
-      "Active proposal not found"
+      "Proposal is not open for comments"
     );
     expect(mockCreateProposalComment).not.toHaveBeenCalled();
     expect(mockSendEmailNotification).not.toHaveBeenCalled();
+  });
+
+  it("creates a proposal comment on the current parent's draft without emailing", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "draft-1");
+    formData.set("date", "2026-06-01");
+    formData.set("body", "Draft discussion");
+    mockLoadSharedCalendarState.mockResolvedValue({
+      ...stateWithActiveProposal,
+      activeProposal: null,
+      draftProposals: [
+        {
+          ...stateWithActiveProposal.activeProposal!,
+          id: "draft-1",
+          status: "draft",
+          receiverParentId: undefined,
+        },
+      ],
+    });
+
+    await createProposalCommentAction(formData);
+
+    expect(mockCreateProposalComment).toHaveBeenCalledWith(
+      supabase,
+      "group-1",
+      "draft-1",
+      "2026-06-01",
+      "Draft discussion"
+    );
+    expect(mockSendEmailNotification).not.toHaveBeenCalled();
+    expect(mockRedirect).toHaveBeenCalledWith("/");
   });
 
   it("parses shared note delete fields", async () => {

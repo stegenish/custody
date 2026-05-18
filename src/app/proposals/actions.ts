@@ -126,6 +126,22 @@ function getActiveProposal(
   return state.activeProposal?.id === proposalId ? state.activeProposal : null;
 }
 
+function getCommentableProposal(
+  state: CustodyGroupState,
+  proposalId: string,
+  currentParentId: string
+): CalendarProposal | null {
+  const activeProposal = getActiveProposal(state, proposalId);
+  if (activeProposal) return activeProposal;
+  return (
+    state.draftProposals.find(
+      (proposal) =>
+        proposal.id === proposalId &&
+        proposal.currentAuthorParentId === currentParentId
+    ) ?? null
+  );
+}
+
 async function notifyEmail(
   buildMessage: () => EmailMessage | null
 ): Promise<void> {
@@ -401,9 +417,14 @@ export async function createProposalCommentAction(
   const context = await getNotificationActionContext();
   const proposalId = requireFormString(formData, "proposalId");
   const state = await loadCurrentSharedState(context);
+  const proposal = getCommentableProposal(
+    state,
+    proposalId,
+    context.currentParentId
+  );
 
-  if (!getActiveProposal(state, proposalId)) {
-    throw new Error("Active proposal not found");
+  if (!proposal) {
+    throw new Error("Proposal is not open for comments");
   }
 
   await createProposalComment(
@@ -414,14 +435,19 @@ export async function createProposalCommentAction(
     requireFormString(formData, "body")
   );
 
-  await notifyProposalEmail(state, proposalId, ({ parents, proposal, appUrl }) =>
-    buildProposalCommentAddedEmail({
-      parents,
-      proposal,
-      commentAuthorParentId: context.currentParentId,
-      appUrl,
-    })
-  );
+  if (proposal.status === "sent") {
+    await notifyProposalEmail(
+      state,
+      proposalId,
+      ({ parents, proposal, appUrl }) =>
+        buildProposalCommentAddedEmail({
+          parents,
+          proposal,
+          commentAuthorParentId: context.currentParentId,
+          appUrl,
+        })
+    );
+  }
   redirect("/");
 }
 
