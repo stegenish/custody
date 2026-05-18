@@ -29,6 +29,7 @@ export interface SharedCalendarAppProps {
   counterProposalAction?: (formData: FormData) => void | Promise<void>;
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
   withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
+  discardProposalAction?: (formData: FormData) => void | Promise<void>;
   createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
   updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
   deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
@@ -62,6 +63,7 @@ export function SharedCalendarApp({
   counterProposalAction,
   rejectProposalAction,
   withdrawProposalAction,
+  discardProposalAction,
   createSharedDateNoteAction,
   updateSharedDateNoteAction,
   deleteSharedDateNoteAction,
@@ -151,6 +153,7 @@ export function SharedCalendarApp({
           counterProposalAction={counterProposalAction}
           rejectProposalAction={rejectProposalAction}
           withdrawProposalAction={withdrawProposalAction}
+          discardProposalAction={discardProposalAction}
         />
       </>
     );
@@ -326,6 +329,7 @@ interface ActiveProposalReviewProps {
   counterProposalAction?: (formData: FormData) => void | Promise<void>;
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
   withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
+  discardProposalAction?: (formData: FormData) => void | Promise<void>;
 }
 
 function ActiveProposalReview({
@@ -351,6 +355,7 @@ function ActiveProposalReview({
   counterProposalAction,
   rejectProposalAction,
   withdrawProposalAction,
+  discardProposalAction,
 }: ActiveProposalReviewProps) {
   const [counterScheduleData, setCounterScheduleData] =
     useState<ScheduleData>(proposedScheduleData);
@@ -387,6 +392,7 @@ function ActiveProposalReview({
           counterProposalAction={counterProposalAction}
           rejectProposalAction={rejectProposalAction}
           withdrawProposalAction={withdrawProposalAction}
+          discardProposalAction={discardProposalAction}
           onStartCounter={() => setIsCounterEditing(true)}
         />
       }
@@ -406,6 +412,7 @@ interface ActiveProposalToolbarProps {
   counterProposalAction?: (formData: FormData) => void | Promise<void>;
   rejectProposalAction?: (formData: FormData) => void | Promise<void>;
   withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
+  discardProposalAction?: (formData: FormData) => void | Promise<void>;
   onStartCounter: () => void;
 }
 
@@ -420,6 +427,7 @@ function ActiveProposalToolbar({
   counterProposalAction,
   rejectProposalAction,
   withdrawProposalAction,
+  discardProposalAction,
   onStartCounter,
 }: ActiveProposalToolbarProps) {
   const canReject = isReceiver && rejectProposalAction && !isCounterEditing;
@@ -429,13 +437,15 @@ function ActiveProposalToolbar({
   const canSendCounter =
     isReceiver && counterProposalAction && isCounterEditing;
   const canWithdraw = isSender && withdrawProposalAction;
+  const canDiscard = isSender && discardProposalAction;
 
   if (
     !canReject &&
     !canAccept &&
     !canStartCounter &&
     !canSendCounter &&
-    !canWithdraw
+    !canWithdraw &&
+    !canDiscard
   ) {
     return null;
   }
@@ -475,6 +485,13 @@ function ActiveProposalToolbar({
         <ToolbarActionForm
           action={withdrawProposalAction}
           label="Withdraw Proposal"
+          fields={{ proposalId, revisionId }}
+        />
+      )}
+      {canDiscard && (
+        <ToolbarActionForm
+          action={discardProposalAction}
+          label="Discard Proposal"
           fields={{ proposalId, revisionId }}
         />
       )}

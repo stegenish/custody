@@ -4,6 +4,7 @@ import {
   createProposalComment,
   createSharedDateNote,
   createSharedDraftProposal,
+  discardSharedProposal,
   deleteProposalComment,
   deleteSharedDateNote,
   loadSharedCalendarState,
@@ -408,6 +409,29 @@ describe("withdrawSharedProposal", () => {
         "revision-1"
       )
     ).rejects.toThrow("Unable to withdraw proposal");
+  });
+});
+
+describe("discardSharedProposal", () => {
+  it("discards the current active proposal", async () => {
+    const supabase = {
+      rpc: jest.fn().mockResolvedValue({ data: "proposal-1", error: null }),
+    };
+
+    await expect(
+      discardSharedProposal(
+        supabase,
+        "group-1",
+        "proposal-1",
+        "revision-1"
+      )
+    ).resolves.toBe("proposal-1");
+
+    expect(supabase.rpc).toHaveBeenCalledWith("discard_active_proposal", {
+      target_group_id: "group-1",
+      target_proposal_id: "proposal-1",
+      viewed_revision_id: "revision-1",
+    });
   });
 });
 

@@ -824,6 +824,7 @@ describe("SharedCalendarApp", () => {
         state={stateWithActiveProposal}
         currentParentId="parent-a"
         withdrawProposalAction={jest.fn()}
+        discardProposalAction={jest.fn()}
       />
     );
 
@@ -834,6 +835,9 @@ describe("SharedCalendarApp", () => {
     expect(screen.getByText("Sent Proposal")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Withdraw Proposal" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Discard Proposal" })
     ).toBeInTheDocument();
     expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
   });

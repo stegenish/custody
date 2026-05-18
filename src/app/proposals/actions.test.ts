@@ -7,6 +7,7 @@ import {
   createProposalComment,
   deleteProposalComment,
   deleteSharedDateNote,
+  discardSharedProposal,
   loadSharedCalendarState,
   rejectSharedProposal,
   sendSharedDraftProposal,
@@ -21,6 +22,7 @@ import {
   acceptSharedProposalAction,
   counterSharedProposalAction,
   createProposalCommentAction,
+  discardSharedProposalAction,
   rejectSharedProposalAction,
   sendSharedDraftProposalAction,
   updateProposalCommentAction,
@@ -51,6 +53,7 @@ jest.mock("@/lib/supabase/sharedCalendarRepository", () => ({
   createSharedDraftProposal: jest.fn(),
   deleteProposalComment: jest.fn(),
   deleteSharedDateNote: jest.fn(),
+  discardSharedProposal: jest.fn(),
   loadSharedCalendarState: jest.fn(),
   rejectSharedProposal: jest.fn(),
   resetSharedDraftProposal: jest.fn(),
@@ -68,6 +71,7 @@ const mockSendEmailNotification = jest.mocked(sendEmailNotification);
 const mockAcceptSharedProposal = jest.mocked(acceptSharedProposal);
 const mockCounterSharedProposal = jest.mocked(counterSharedProposal);
 const mockCreateProposalComment = jest.mocked(createProposalComment);
+const mockDiscardSharedProposal = jest.mocked(discardSharedProposal);
 const mockUpdateSharedDateNote = jest.mocked(updateSharedDateNote);
 const mockDeleteSharedDateNote = jest.mocked(deleteSharedDateNote);
 const mockLoadSharedCalendarState = jest.mocked(loadSharedCalendarState);
@@ -121,6 +125,7 @@ describe("proposal server note/comment actions", () => {
     mockAcceptSharedProposal.mockResolvedValue(2);
     mockCounterSharedProposal.mockResolvedValue("revision-2");
     mockCreateProposalComment.mockResolvedValue("comment-1");
+    mockDiscardSharedProposal.mockResolvedValue("proposal-1");
     mockLoadSharedCalendarState.mockResolvedValue(stateWithActiveProposal);
     mockRejectSharedProposal.mockResolvedValue("proposal-1");
     mockSendEmailNotification.mockResolvedValue(undefined);
@@ -237,6 +242,22 @@ describe("proposal server note/comment actions", () => {
       "/?proposalError=proposal-conflict"
     );
     expect(mockSendEmailNotification).not.toHaveBeenCalled();
+  });
+
+  it("parses active proposal discard fields", async () => {
+    const formData = new FormData();
+    formData.set("proposalId", "proposal-1");
+    formData.set("revisionId", "revision-1");
+
+    await discardSharedProposalAction(formData);
+
+    expect(mockDiscardSharedProposal).toHaveBeenCalledWith(
+      supabase,
+      "group-1",
+      "proposal-1",
+      "revision-1"
+    );
+    expect(mockRedirect).toHaveBeenCalledWith("/");
   });
 
   it("emails the sender when a proposal is rejected", async () => {

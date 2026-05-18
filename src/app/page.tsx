@@ -10,6 +10,7 @@ import {
   createSharedDateNoteAction,
   deleteProposalCommentAction,
   deleteSharedDateNoteAction,
+  discardSharedProposalAction,
   rejectSharedProposalAction,
   resetSharedDraftProposalAction,
   saveSharedDraftProposalAction,
@@ -90,6 +91,7 @@ export default async function Home({ searchParams }: HomeProps) {
       counterProposalAction={counterSharedProposalAction}
       rejectProposalAction={rejectSharedProposalAction}
       withdrawProposalAction={withdrawSharedProposalAction}
+      discardProposalAction={discardSharedProposalAction}
       createSharedDateNoteAction={createSharedDateNoteAction}
       updateSharedDateNoteAction={updateSharedDateNoteAction}
       deleteSharedDateNoteAction={deleteSharedDateNoteAction}

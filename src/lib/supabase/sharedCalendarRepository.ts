@@ -242,6 +242,22 @@ export async function withdrawSharedProposal(
   );
 }
 
+export async function discardSharedProposal(
+  supabase: RpcClient,
+  groupId: string,
+  proposalId: string,
+  revisionId: string
+): Promise<string> {
+  return runActiveProposalMutation(
+    supabase,
+    "discard_active_proposal",
+    groupId,
+    proposalId,
+    revisionId,
+    "Unable to discard proposal"
+  );
+}
+
 export async function rejectSharedProposal(
   supabase: RpcClient,
   groupId: string,

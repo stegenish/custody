@@ -4,6 +4,7 @@ import {
   addSharedDateNote,
   counterActiveProposal,
   createDraftProposal,
+  discardActiveProposal,
   deleteProposalComment,
   deleteSharedDateNote,
   rejectActiveProposal,
@@ -140,6 +141,18 @@ describe("shared calendar proposal workflow", () => {
     expect(state.draftProposals).toHaveLength(1);
     expect(state.draftProposals[0].id).toBe(activeProposalId);
     expect(state.draftProposals[0].currentAuthorParentId).toBe("parent-a");
+  });
+
+  it("discards a sent proposal without restoring a draft and keeps audit history", () => {
+    const ctx = makeContext();
+    let state = createDraftProposal(makeState(), "parent-a", changedSchedule, ctx);
+    state = sendDraftProposal(state, state.draftProposals[0].id, "parent-b", ctx);
+
+    state = discardActiveProposal(state, "parent-a", ctx);
+
+    expect(state.activeProposal).toBeNull();
+    expect(state.draftProposals).toHaveLength(0);
+    expect(state.proposalHistory[0].status).toBe("withdrawn");
   });
 
   it("rejects a proposal back to the sender draft", () => {

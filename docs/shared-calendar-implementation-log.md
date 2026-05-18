@@ -38,6 +38,7 @@ Current state:
 - Added a shared-calendar launch checklist for Vercel, Supabase, Google OAuth, email, and production smoke testing.
 - Added friendly invalid/full/used invite acceptance feedback and a copy control for generated invite links.
 - Added proposal conflict feedback so stale or no-longer-available proposal actions reload the calendar with a friendly review-before-retry message.
+- Added active proposal discard support so a sender can remove a pending proposal without restoring it as a draft, while preserving withdrawn history.
 
 Next likely slice:
 

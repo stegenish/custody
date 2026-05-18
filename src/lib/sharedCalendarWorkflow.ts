@@ -154,6 +154,27 @@ export function withdrawActiveProposal(
   };
 }
 
+export function discardActiveProposal(
+  state: CustodyGroupState,
+  parentId: string,
+  ctx: MutationContext
+): CustodyGroupState {
+  requireParent(state, parentId);
+  if (!state.activeProposal) {
+    throw new Error("No active proposal to discard");
+  }
+  if (state.activeProposal.currentAuthorParentId !== parentId) {
+    throw new Error("Only the current sender can discard this proposal");
+  }
+
+  const withdrawn = snapshotProposal(state.activeProposal, "withdrawn", ctx.now);
+  return {
+    ...state,
+    activeProposal: null,
+    proposalHistory: [...state.proposalHistory, withdrawn],
+  };
+}
+
 export function rejectActiveProposal(
   state: CustodyGroupState,
   parentId: string,

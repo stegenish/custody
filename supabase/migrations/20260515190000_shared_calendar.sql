@@ -900,6 +900,70 @@ begin
 end;
 $$;
 
+create or replace function public.discard_active_proposal(
+  target_group_id uuid,
+  target_proposal_id uuid,
+  viewed_revision_id uuid
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  active_proposal public.proposals%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_group_parent(target_group_id) then
+    raise exception 'Parent does not belong to this custody group';
+  end if;
+
+  select *
+    into active_proposal
+  from public.proposals
+  where id = target_proposal_id
+    and group_id = target_group_id
+    and status = 'sent'
+  limit 1;
+
+  if active_proposal.id is null then
+    raise exception 'No active proposal to discard';
+  end if;
+
+  if active_proposal.current_author_user_id <> current_user_id then
+    raise exception 'Only the current sender can discard this proposal';
+  end if;
+
+  if active_proposal.current_revision_id <> viewed_revision_id then
+    raise exception 'Proposal changed since it was viewed';
+  end if;
+
+  insert into public.proposal_status_events (
+    proposal_id,
+    status,
+    actor_user_id,
+    revision_id
+  )
+  values (
+    active_proposal.id,
+    'withdrawn',
+    current_user_id,
+    viewed_revision_id
+  );
+
+  update public.proposals
+  set status = 'withdrawn',
+      updated_at = now()
+  where id = active_proposal.id;
+
+  return active_proposal.id;
+end;
+$$;
+
 create or replace function public.reject_active_proposal(
   target_group_id uuid,
   target_proposal_id uuid,
@@ -1548,6 +1612,7 @@ grant execute on function public.save_draft_proposal(uuid, jsonb) to authenticat
 grant execute on function public.send_draft_proposal(uuid, jsonb) to authenticated;
 grant execute on function public.reset_draft_proposal(uuid) to authenticated;
 grant execute on function public.withdraw_active_proposal(uuid, uuid, uuid) to authenticated;
+grant execute on function public.discard_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.reject_active_proposal(uuid, uuid, uuid) to authenticated;
 grant execute on function public.counter_active_proposal(uuid, uuid, uuid, jsonb) to authenticated;
 grant execute on function public.accept_active_proposal(uuid, uuid, uuid, boolean) to authenticated;

@@ -25,6 +25,7 @@ import {
   createSharedDraftProposal,
   deleteProposalComment,
   deleteSharedDateNote,
+  discardSharedProposal,
   loadSharedCalendarState,
   rejectSharedProposal,
   resetSharedDraftProposal,
@@ -328,6 +329,21 @@ export async function withdrawSharedProposalAction(
   const revisionId = requireFormString(formData, "revisionId");
   const completed = await runProposalMutationOrRedirect(() =>
     withdrawSharedProposal(supabase, groupId, proposalId, revisionId)
+  );
+
+  if (completed) {
+    redirect("/");
+  }
+}
+
+export async function discardSharedProposalAction(
+  formData: FormData
+): Promise<void> {
+  const { supabase, groupId } = await getGroupActionContext();
+  const proposalId = requireFormString(formData, "proposalId");
+  const revisionId = requireFormString(formData, "revisionId");
+  const completed = await runProposalMutationOrRedirect(() =>
+    discardSharedProposal(supabase, groupId, proposalId, revisionId)
   );
 
   if (completed) {
