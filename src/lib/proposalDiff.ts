@@ -15,6 +15,21 @@ export function getChangedDateKeys(
 ): string[] {
   const agreedMap = buildColorMap(startDate, endDate, agreed);
   const proposedMap = buildColorMap(startDate, endDate, proposed);
+
+  return getChangedDateKeysFromColorMaps(
+    startDate,
+    endDate,
+    agreedMap,
+    proposedMap
+  );
+}
+
+export function getChangedDateKeysFromColorMaps(
+  startDate: Date,
+  endDate: Date,
+  agreedMap: Map<string, DayColorResult>,
+  proposedMap: Map<string, DayColorResult>
+): string[] {
   const changed: string[] = [];
   const cursor = startOfDay(startDate);
   const end = startOfDay(endDate);

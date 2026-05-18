@@ -56,7 +56,7 @@ describe("ProposalWorkspace", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
 
     expect(screen.getByText("Custody change")).toBeInTheDocument();
     expect(screen.getByText("Agreed")).toBeInTheDocument();

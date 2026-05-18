@@ -1,5 +1,8 @@
 import { getHolidaySet } from "./holidays";
-import { getBodoSchoolHolidaySet } from "./schoolHolidays";
+import {
+  getBodoSchoolHolidaySet,
+  warnIfBodoSchoolHolidayDataExpired,
+} from "./schoolHolidays";
 export { formatDateKey, parseDateKey } from "./dateKeys";
 import { formatDateKey } from "./dateKeys";
 
@@ -146,6 +149,7 @@ export function generateMonthGrid(
 }
 
 export function generateCalendar(today: Date): CalendarMonth[] {
+  warnIfBodoSchoolHolidayDataExpired(today);
   const months = getMonthRange(today);
   const years = [...new Set(months.map((m) => m.year))];
   const holidays = getHolidaySet(years);

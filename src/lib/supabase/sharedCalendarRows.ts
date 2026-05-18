@@ -102,18 +102,18 @@ function mapRevision(row: ProposalRevisionRow): ProposalRevision {
 
 function mapComment(row: ProposalCommentRow): ProposalComment {
   return {
-    id: row.id,
+    ...mapDatedAuthoredRow(row),
     proposalId: row.proposal_id,
-    authorParentId: row.author_user_id,
-    date: row.date_key,
-    body: row.body,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    deletedAt: row.deleted_at ?? undefined,
   };
 }
 
 function mapNote(row: SharedDateNoteRow): SharedDateNote {
+  return mapDatedAuthoredRow(row);
+}
+
+function mapDatedAuthoredRow(
+  row: ProposalCommentRow | SharedDateNoteRow
+) {
   return {
     id: row.id,
     authorParentId: row.author_user_id,

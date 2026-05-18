@@ -11,6 +11,7 @@ import {
   type EmailMessage,
 } from "@/lib/email/notificationEmails";
 import { sendEmailNotification } from "@/lib/email/sendEmail";
+import { PROMOTE_PROPOSAL_COMMENTS_FIELD } from "@/lib/formFields";
 import { parseScheduleDataJson } from "@/lib/scheduleDataValidation";
 import type {
   CalendarProposal,
@@ -55,6 +56,18 @@ function requireFormString(
     throw new Error(`Missing ${fieldName}`);
   }
   return value;
+}
+
+function requireFormStrings(
+  formData: FormData,
+  fieldNames: string[]
+): Record<string, string> {
+  return Object.fromEntries(
+    fieldNames.map((fieldName) => [
+      fieldName,
+      requireFormString(formData, fieldName),
+    ])
+  );
 }
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -187,6 +200,10 @@ async function runGroupAction(
   redirect("/");
 }
 
+/**
+ * Use only for proposal RPCs that may fail because the viewed revision is stale.
+ * Form validation and unexpected infrastructure errors should still bubble.
+ */
 async function runProposalMutationOrRedirect(
   mutation: () => Promise<unknown>
 ): Promise<void> {
@@ -230,95 +247,40 @@ async function runGroupScheduleAction(
   );
 }
 
-async function runDateBodyAction(
+async function runGroupFieldsAction(
   formData: FormData,
+  fieldNames: string[],
   mutation: (
-    supabase: SupabaseServerClient,
-    groupId: string,
-    date: string,
-    body: string
+    context: GroupActionContext,
+    fields: Record<string, string>
   ) => Promise<unknown>
 ): Promise<void> {
-  await runGroupAction((supabase, groupId) =>
-    mutation(
-      supabase,
-      groupId,
-      requireFormString(formData, "date"),
-      requireFormString(formData, "body")
-    )
-  );
+  const fields = requireFormStrings(formData, fieldNames);
+  const context = await getGroupActionContext();
+
+  await mutation(context, fields);
+  redirect("/");
 }
 
-async function runNoteBodyAction(
-  formData: FormData,
-  mutation: (
-    supabase: SupabaseServerClient,
-    groupId: string,
-    noteId: string,
-    body: string
-  ) => Promise<unknown>
-): Promise<void> {
-  await runGroupAction((supabase, groupId) =>
-    mutation(
-      supabase,
-      groupId,
-      requireFormString(formData, "noteId"),
-      requireFormString(formData, "body")
-    )
-  );
-}
-
-async function runNoteIdAction(
-  formData: FormData,
-  mutation: (
-    supabase: SupabaseServerClient,
-    groupId: string,
-    noteId: string
-  ) => Promise<unknown>
-): Promise<void> {
-  await runGroupAction((supabase, groupId) =>
-    mutation(supabase, groupId, requireFormString(formData, "noteId"))
-  );
-}
-
-async function runProposalCommentBodyAction(
+async function runActiveProposalAction(
   formData: FormData,
   mutation: (
     supabase: SupabaseServerClient,
     groupId: string,
     proposalId: string,
-    commentId: string,
-    body: string
+    revisionId: string
   ) => Promise<unknown>
 ): Promise<void> {
-  await runGroupAction((supabase, groupId) =>
-    mutation(
-      supabase,
-      groupId,
-      requireFormString(formData, "proposalId"),
-      requireFormString(formData, "commentId"),
-      requireFormString(formData, "body")
-    )
+  const { supabase, groupId } = await getGroupActionContext();
+  const { proposalId, revisionId } = requireFormStrings(formData, [
+    "proposalId",
+    "revisionId",
+  ]);
+  await runProposalMutationOrRedirect(() =>
+    mutation(supabase, groupId, proposalId, revisionId)
   );
-}
 
-async function runProposalCommentIdAction(
-  formData: FormData,
-  mutation: (
-    supabase: SupabaseServerClient,
-    groupId: string,
-    proposalId: string,
-    commentId: string
-  ) => Promise<unknown>
-): Promise<void> {
-  await runGroupAction((supabase, groupId) =>
-    mutation(
-      supabase,
-      groupId,
-      requireFormString(formData, "proposalId"),
-      requireFormString(formData, "commentId")
-    )
-  );
+  redirect("/");
 }
 
 export async function startSharedDraftProposal(): Promise<void> {
@@ -338,27 +300,13 @@ export async function resetSharedDraftProposalAction(): Promise<void> {
 export async function withdrawSharedProposalAction(
   formData: FormData
 ): Promise<void> {
-  const { supabase, groupId } = await getGroupActionContext();
-  const proposalId = requireFormString(formData, "proposalId");
-  const revisionId = requireFormString(formData, "revisionId");
-  await runProposalMutationOrRedirect(() =>
-    withdrawSharedProposal(supabase, groupId, proposalId, revisionId)
-  );
-
-  redirect("/");
+  await runActiveProposalAction(formData, withdrawSharedProposal);
 }
 
 export async function discardSharedProposalAction(
   formData: FormData
 ): Promise<void> {
-  const { supabase, groupId } = await getGroupActionContext();
-  const proposalId = requireFormString(formData, "proposalId");
-  const revisionId = requireFormString(formData, "revisionId");
-  await runProposalMutationOrRedirect(() =>
-    discardSharedProposal(supabase, groupId, proposalId, revisionId)
-  );
-
-  redirect("/");
+  await runActiveProposalAction(formData, discardSharedProposal);
 }
 
 export async function rejectSharedProposalAction(
@@ -367,6 +315,7 @@ export async function rejectSharedProposalAction(
   const context = await getNotificationActionContext();
   const proposalId = requireFormString(formData, "proposalId");
   const revisionId = requireFormString(formData, "revisionId");
+  // Outcome notifications use the proposal snapshot from before mutation.
   const state = await loadCurrentSharedState(context);
 
   await runProposalMutationOrRedirect(() =>
@@ -388,6 +337,7 @@ export async function acceptSharedProposalAction(
   const context = await getNotificationActionContext();
   const proposalId = requireFormString(formData, "proposalId");
   const revisionId = requireFormString(formData, "revisionId");
+  // Outcome notifications use the proposal snapshot from before mutation.
   const state = await loadCurrentSharedState(context);
 
   await runProposalMutationOrRedirect(() =>
@@ -396,7 +346,7 @@ export async function acceptSharedProposalAction(
       context.groupId,
       proposalId,
       revisionId,
-      formData.get("promoteProposalComments") === "on"
+      formData.get(PROMOTE_PROPOSAL_COMMENTS_FIELD) === "on"
     )
   );
 
@@ -422,6 +372,7 @@ export async function counterSharedProposalAction(
     )
   );
 
+  // Counter notifications use the post-mutation snapshot to find the new receiver.
   const state = await loadCurrentSharedState(context);
   await notifyProposalEmail(state, proposalId, buildProposalCounteredEmail);
   redirect("/");
@@ -441,6 +392,7 @@ export async function sendSharedDraftProposalAction(
     );
   });
 
+  // Sent notifications use the post-mutation snapshot to find the receiver.
   const state = await loadCurrentSharedState(context);
 
   await notifyProposalEmail(state, proposalId, buildProposalSentEmail);
@@ -450,7 +402,12 @@ export async function sendSharedDraftProposalAction(
 export async function createSharedDateNoteAction(
   formData: FormData
 ): Promise<void> {
-  await runDateBodyAction(formData, createSharedDateNote);
+  await runGroupFieldsAction(
+    formData,
+    ["date", "body"],
+    ({ supabase, groupId }, { date, body }) =>
+      createSharedDateNote(supabase, groupId, date, body)
+  );
 }
 
 export async function createProposalCommentAction(
@@ -496,23 +453,49 @@ export async function createProposalCommentAction(
 export async function updateSharedDateNoteAction(
   formData: FormData
 ): Promise<void> {
-  await runNoteBodyAction(formData, updateSharedDateNote);
+  await runGroupFieldsAction(
+    formData,
+    ["noteId", "body"],
+    ({ supabase, groupId }, { noteId, body }) =>
+      updateSharedDateNote(supabase, groupId, noteId, body)
+  );
 }
 
 export async function deleteSharedDateNoteAction(
   formData: FormData
 ): Promise<void> {
-  await runNoteIdAction(formData, deleteSharedDateNote);
+  await runGroupFieldsAction(
+    formData,
+    ["noteId"],
+    ({ supabase, groupId }, { noteId }) =>
+      deleteSharedDateNote(supabase, groupId, noteId)
+  );
 }
 
 export async function updateProposalCommentAction(
   formData: FormData
 ): Promise<void> {
-  await runProposalCommentBodyAction(formData, updateProposalComment);
+  await runGroupFieldsAction(
+    formData,
+    ["proposalId", "commentId", "body"],
+    ({ supabase, groupId }, { proposalId, commentId, body }) =>
+      updateProposalComment(
+        supabase,
+        groupId,
+        proposalId,
+        commentId,
+        body
+      )
+  );
 }
 
 export async function deleteProposalCommentAction(
   formData: FormData
 ): Promise<void> {
-  await runProposalCommentIdAction(formData, deleteProposalComment);
+  await runGroupFieldsAction(
+    formData,
+    ["proposalId", "commentId"],
+    ({ supabase, groupId }, { proposalId, commentId }) =>
+      deleteProposalComment(supabase, groupId, proposalId, commentId)
+  );
 }

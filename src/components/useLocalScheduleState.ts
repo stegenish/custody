@@ -21,6 +21,7 @@ export function useLocalScheduleState() {
   const isInitialDraftRender = useRef(true);
 
   useEffect(() => {
+    // Skip hydration's first effect so we do not rewrite the value just loaded.
     if (isInitialAgreedRender.current) {
       isInitialAgreedRender.current = false;
       return;
@@ -29,6 +30,7 @@ export function useLocalScheduleState() {
   }, [agreedScheduleData]);
 
   useEffect(() => {
+    // Skip hydration's first effect so we do not rewrite the value just loaded.
     if (isInitialDraftRender.current) {
       isInitialDraftRender.current = false;
       return;

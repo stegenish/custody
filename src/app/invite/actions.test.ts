@@ -7,9 +7,15 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import {
   acceptInvite,
+  acceptPendingInvite,
   createInviteLink,
   createInviteLinkAction,
 } from "./actions";
+import {
+  clearPendingInviteToken,
+  getPendingInviteToken,
+  storePendingInviteToken,
+} from "@/lib/auth/pendingInvite";
 
 jest.mock("next/navigation", () => ({
   redirect: jest.fn(),
@@ -25,11 +31,20 @@ jest.mock("@/lib/supabase/onboarding", () => ({
   regenerateInviteLink: jest.fn(),
 }));
 
+jest.mock("@/lib/auth/pendingInvite", () => ({
+  clearPendingInviteToken: jest.fn(),
+  getPendingInviteToken: jest.fn(),
+  storePendingInviteToken: jest.fn(),
+}));
+
 const mockCreateClient = jest.mocked(createClient);
 const mockGetMyGroupId = jest.mocked(getMyGroupId);
 const mockJoinGroupWithInvite = jest.mocked(joinGroupWithInvite);
 const mockRedirect = jest.mocked(redirect);
 const mockRegenerateInviteLink = jest.mocked(regenerateInviteLink);
+const mockClearPendingInviteToken = jest.mocked(clearPendingInviteToken);
+const mockGetPendingInviteToken = jest.mocked(getPendingInviteToken);
+const mockStorePendingInviteToken = jest.mocked(storePendingInviteToken);
 
 describe("invite server actions", () => {
   const supabase = {
@@ -46,6 +61,9 @@ describe("invite server actions", () => {
     mockRegenerateInviteLink.mockResolvedValue(
       "https://example.com/invite/token"
     );
+    mockGetPendingInviteToken.mockResolvedValue("private-token");
+    mockClearPendingInviteToken.mockResolvedValue(undefined);
+    mockStorePendingInviteToken.mockResolvedValue(undefined);
     supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: "parent-b" } },
     });
@@ -81,9 +99,8 @@ describe("invite server actions", () => {
 
     await acceptInvite("private-token");
 
-    expect(mockRedirect).toHaveBeenCalledWith(
-      "/login?next=%2Finvite%2Fprivate-token"
-    );
+    expect(mockStorePendingInviteToken).toHaveBeenCalledWith("private-token");
+    expect(mockRedirect).toHaveBeenCalledWith("/login?next=%2Finvite");
     expect(mockJoinGroupWithInvite).not.toHaveBeenCalled();
   });
 
@@ -95,6 +112,26 @@ describe("invite server actions", () => {
       "private-token"
     );
     expect(mockRedirect).toHaveBeenCalledWith("/");
+  });
+
+  it("accepts a pending invite from the cookie after OAuth", async () => {
+    await acceptPendingInvite();
+
+    expect(mockClearPendingInviteToken).toHaveBeenCalled();
+    expect(mockJoinGroupWithInvite).toHaveBeenCalledWith(
+      supabase,
+      "private-token"
+    );
+    expect(mockRedirect).toHaveBeenCalledWith("/");
+  });
+
+  it("redirects to login when there is no pending invite cookie", async () => {
+    mockGetPendingInviteToken.mockResolvedValue(null);
+
+    await acceptPendingInvite();
+
+    expect(mockRedirect).toHaveBeenCalledWith("/login?error=missing-invite");
+    expect(mockJoinGroupWithInvite).not.toHaveBeenCalled();
   });
 
   it("redirects back to the invite page with an error when acceptance fails", async () => {

@@ -66,6 +66,7 @@ describe("ScheduleEditor", () => {
     render(
       <ScheduleEditor
         scheduleData={scheduleData}
+        labelEditMode="personal"
         onUpdateScheduleData={onUpdate}
         onUpdateLabelPreference={onUpdateLabelPreference}
       />

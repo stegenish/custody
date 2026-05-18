@@ -54,7 +54,7 @@ describe("MonthGrid", () => {
     ]);
     render(<MonthGrid month={month} colorMap={colorMap} />);
     const mar2Cell = screen.getByText("Custody: Mom").closest("td");
-    expect(mar2Cell?.style.backgroundColor).toBeTruthy();
+    expect(mar2Cell?.style.backgroundColor).toBe("rgb(187, 247, 208)");
   });
 
   it("renders non-color custody text for colored days", () => {
@@ -122,21 +122,21 @@ describe("MonthGrid", () => {
     ]);
     const onClick = jest.fn();
     render(<MonthGrid month={month} colorMap={colorMap} onDayClick={onClick} />);
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
     expect(onClick).toHaveBeenCalledWith("2026-03-02");
   });
 
   it("calls onDayClick for uncolored days", () => {
     const onClick = jest.fn();
     render(<MonthGrid month={month} colorMap={new Map()} onDayClick={onClick} />);
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
     expect(onClick).toHaveBeenCalledWith("2026-03-02");
   });
 
   it("handles keyboard selection for days", () => {
     const onClick = jest.fn();
     render(<MonthGrid month={month} colorMap={new Map()} onDayClick={onClick} />);
-    const mar2 = screen.getByRole("button", { name: "2026-03-02" });
+    const mar2 = screen.getByRole("button", { name: /2026-03-02/ });
     fireEvent.keyDown(mar2, { key: "Enter" });
     expect(onClick).toHaveBeenCalledWith("2026-03-02");
   });
@@ -227,5 +227,41 @@ describe("MonthGrid", () => {
       />
     );
     expect(screen.getByTestId("proposal-comment-indicator")).toBeInTheDocument();
+  });
+
+  it("includes non-color date statuses in clickable day names", () => {
+    const colorMap = new Map<string, DayColorResult>([
+      [
+        "2026-03-02",
+        {
+          label: { id: "mom", name: "Mom", color: "#bbf7d0" },
+          isOverride: false,
+        },
+      ],
+    ]);
+    const monthWithSchoolHoliday = generateMonthGrid(
+      2026,
+      2,
+      today,
+      new Set(),
+      new Set(["2026-03-02"])
+    );
+
+    render(
+      <MonthGrid
+        month={monthWithSchoolHoliday}
+        colorMap={colorMap}
+        changedDateKeys={new Set(["2026-03-02"])}
+        noteDateKeys={new Set(["2026-03-02"])}
+        commentDateKeys={new Set(["2026-03-02"])}
+        onDayClick={jest.fn()}
+      />
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: /Custody: Mom.*School holiday.*Proposal changes this date.*Has shared note.*Has proposal comment/,
+      })
+    ).toBeInTheDocument();
   });
 });

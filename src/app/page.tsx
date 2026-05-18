@@ -1,8 +1,10 @@
-import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { createInviteLinkAction } from "@/app/invite/actions";
 import { LocalCalendarShell } from "@/components/LocalCalendarShell";
-import type { SharedCalendarAppProps } from "@/components/SharedCalendarApp";
+import {
+  SharedCalendarApp,
+  type SharedCalendarAppProps,
+} from "@/components/SharedCalendarApp";
 import {
   acceptSharedProposalAction,
   counterSharedProposalAction,
@@ -21,6 +23,7 @@ import {
   withdrawSharedProposalAction,
 } from "@/app/proposals/actions";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
+import { firstSearchParam } from "@/lib/searchParams";
 import { getMyGroupId } from "@/lib/supabase/onboarding";
 import {
   loadSharedCalendarState,
@@ -30,18 +33,9 @@ import { createClient } from "@/lib/supabase/server";
 
 // This entry point runs in local-only mode without Supabase env vars, and in
 // shared-calendar mode when Supabase is configured.
-const SharedCalendarApp = dynamic<SharedCalendarAppProps>(() =>
-  import("@/components/SharedCalendarApp").then(
-    (module) => module.SharedCalendarApp
-  )
-);
 
 interface HomeProps {
   searchParams: Promise<{ proposalError?: string | string[] }>;
-}
-
-function firstSearchParam(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
 }
 
 function proposalActionErrorFromParam(

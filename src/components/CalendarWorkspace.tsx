@@ -1,21 +1,30 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import {
+  type FormEvent,
+  type ReactNode,
+  useMemo,
+  useState,
+} from "react";
 import { CalendarGrid } from "@/components/CalendarGrid";
 import { DayOverrideBar } from "@/components/DayOverrideBar";
+import { HiddenFormFields } from "@/components/HiddenFormFields";
 import { ScheduleEditor } from "@/components/ScheduleEditor";
+import { dateKeysForDatedItems } from "@/lib/datedItems";
 import {
   type CalendarMonth,
+  formatDateKey,
   generateCalendar,
   getCalendarVisibleRange,
 } from "@/lib/dateUtils";
 import { buildColorMap } from "@/lib/scheduleResolver";
 import { removeDayOverride, setDayOverride } from "@/lib/scheduleMutations";
 import type {
+  FormAction,
   ProposalComment,
   SharedDateNote,
 } from "@/lib/sharedCalendarTypes";
-import type { ScheduleData } from "@/lib/scheduleTypes";
+import type { DayColorResult, ScheduleData } from "@/lib/scheduleTypes";
 
 export interface DateComparison {
   agreed: string;
@@ -28,6 +37,7 @@ interface CalendarWorkspaceProps {
   calendar?: CalendarMonth[];
   scheduleData: ScheduleData;
   displayScheduleData?: ScheduleData;
+  colorMap?: Map<string, DayColorResult>;
   changedDateKeys?: Set<string>;
   dateComparisons?: Map<string, DateComparison>;
   noteDateKeys?: Set<string>;
@@ -36,12 +46,12 @@ interface CalendarWorkspaceProps {
   proposalComments?: ProposalComment[];
   proposalId?: string;
   currentParentId?: string;
-  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  createSharedDateNoteAction?: FormAction;
+  updateSharedDateNoteAction?: FormAction;
+  deleteSharedDateNoteAction?: FormAction;
+  createProposalCommentAction?: FormAction;
+  updateProposalCommentAction?: FormAction;
+  deleteProposalCommentAction?: FormAction;
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateScheduleData: (data: ScheduleData) => void;
@@ -58,6 +68,7 @@ export function CalendarWorkspace({
   calendar,
   scheduleData,
   displayScheduleData,
+  colorMap: providedColorMap,
   changedDateKeys,
   dateComparisons,
   noteDateKeys,
@@ -80,10 +91,18 @@ export function CalendarWorkspace({
   const generatedCalendar = useMemo(() => generateCalendar(today), [today]);
   const visibleCalendar = calendar ?? generatedCalendar;
   const visibleScheduleData = displayScheduleData ?? scheduleData;
-  const colorMap = useMemo(() => {
-    const { firstDay, lastDay } = getCalendarVisibleRange(visibleCalendar);
-    return buildColorMap(firstDay, lastDay, visibleScheduleData);
-  }, [visibleCalendar, visibleScheduleData]);
+  const visibleRange = useMemo(
+    () => getCalendarVisibleRange(visibleCalendar),
+    [visibleCalendar]
+  );
+  const generatedColorMap = useMemo(() => {
+    return buildColorMap(
+      visibleRange.firstDay,
+      visibleRange.lastDay,
+      visibleScheduleData
+    );
+  }, [visibleRange, visibleScheduleData]);
+  const colorMap = providedColorMap ?? generatedColorMap;
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const selectedDayColor = selectedDate ? colorMap.get(selectedDate) : null;
   const selectedDateComparison = selectedDate
@@ -121,8 +140,16 @@ export function CalendarWorkspace({
         <ScheduleEditor
           scheduleData={scheduleData}
           displayScheduleData={visibleScheduleData}
+          labelEditMode={onUpdateLabelPreference ? "personal" : "shared"}
           onUpdateScheduleData={onUpdateScheduleData}
           onUpdateLabelPreference={onUpdateLabelPreference}
+        />
+      )}
+      {(readOnly ? hasDateDetails || canCreateDateDetails : true) && (
+        <DateJumpForm
+          minDateKey={formatDateKey(visibleRange.firstDay)}
+          maxDateKey={formatDateKey(visibleRange.lastDay)}
+          onSelectDate={setSelectedDate}
         />
       )}
       <CalendarGrid
@@ -173,6 +200,50 @@ export function CalendarWorkspace({
   );
 }
 
+function DateJumpForm({
+  minDateKey,
+  maxDateKey,
+  onSelectDate,
+}: {
+  minDateKey: string;
+  maxDateKey: string;
+  onSelectDate: (dateKey: string) => void;
+}) {
+  const [dateKey, setDateKey] = useState("");
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (dateKey) {
+      onSelectDate(dateKey);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mb-3 flex flex-wrap items-end gap-2"
+    >
+      <label className="text-sm font-medium text-gray-700">
+        Jump to date
+        <input
+          type="date"
+          value={dateKey}
+          min={minDateKey}
+          max={maxDateKey}
+          onChange={(event) => setDateKey(event.target.value)}
+          className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
+        />
+      </label>
+      <button
+        type="submit"
+        className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-800 hover:bg-gray-50"
+      >
+        Go
+      </button>
+    </form>
+  );
+}
+
 function SelectedDateDetails({
   dateKey,
   notes,
@@ -194,12 +265,12 @@ function SelectedDateDetails({
   comparison?: DateComparison;
   proposalId?: string;
   currentParentId?: string;
-  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  createSharedDateNoteAction?: FormAction;
+  updateSharedDateNoteAction?: FormAction;
+  deleteSharedDateNoteAction?: FormAction;
+  createProposalCommentAction?: FormAction;
+  updateProposalCommentAction?: FormAction;
+  deleteProposalCommentAction?: FormAction;
   onClose: () => void;
 }) {
   const canCreateProposalComment =
@@ -315,8 +386,8 @@ function DateTextList({
   saveLabel: string;
   deleteLabel: string;
   fields?: Record<string, string>;
-  updateAction?: (formData: FormData) => void | Promise<void>;
-  deleteAction?: (formData: FormData) => void | Promise<void>;
+  updateAction?: FormAction;
+  deleteAction?: FormAction;
 }) {
   if (items.length === 0) return null;
 
@@ -370,18 +441,14 @@ function DateTextEditControls({
   saveLabel: string;
   deleteLabel: string;
   fields?: Record<string, string>;
-  updateAction?: (formData: FormData) => void | Promise<void>;
-  deleteAction?: (formData: FormData) => void | Promise<void>;
+  updateAction?: FormAction;
+  deleteAction?: FormAction;
 }) {
   return (
     <div className="space-y-2">
       {updateAction && (
         <form action={updateAction} className="space-y-2">
-          <DateTextHiddenFields
-            idFieldName={idFieldName}
-            itemId={itemId}
-            fields={fields}
-          />
+          <HiddenFormFields fields={{ [idFieldName]: itemId, ...fields }} />
           <label className="block text-sm font-medium text-gray-700">
             {editLabel}
             <textarea
@@ -401,11 +468,7 @@ function DateTextEditControls({
       )}
       {deleteAction && (
         <form action={deleteAction}>
-          <DateTextHiddenFields
-            idFieldName={idFieldName}
-            itemId={itemId}
-            fields={fields}
-          />
+          <HiddenFormFields fields={{ [idFieldName]: itemId, ...fields }} />
           <button
             type="submit"
             className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
@@ -418,25 +481,6 @@ function DateTextEditControls({
   );
 }
 
-function DateTextHiddenFields({
-  idFieldName,
-  itemId,
-  fields,
-}: {
-  idFieldName: string;
-  itemId: string;
-  fields: Record<string, string>;
-}) {
-  return (
-    <>
-      <input type="hidden" name={idFieldName} value={itemId} />
-      {Object.entries(fields).map(([name, value]) => (
-        <input key={name} type="hidden" name={name} value={value} />
-      ))}
-    </>
-  );
-}
-
 function DateTextForm({
   action,
   dateKey,
@@ -444,7 +488,7 @@ function DateTextForm({
   submitLabel,
   fields = {},
 }: {
-  action: (formData: FormData) => void | Promise<void>;
+  action: FormAction;
   dateKey: string;
   label: string;
   submitLabel: string;
@@ -453,9 +497,7 @@ function DateTextForm({
   return (
     <form action={action} className="mt-3 space-y-2">
       <input type="hidden" name="date" value={dateKey} />
-      {Object.entries(fields).map(([name, value]) => (
-        <input key={name} type="hidden" name={name} value={value} />
-      ))}
+      <HiddenFormFields fields={fields} />
       <label className="block text-sm font-medium text-gray-700">
         {label}
         <textarea
@@ -472,8 +514,4 @@ function DateTextForm({
       </button>
     </form>
   );
-}
-
-function dateKeysForDatedItems(items: Array<{ date: string }>): Set<string> {
-  return new Set(items.map((item) => item.date));
 }

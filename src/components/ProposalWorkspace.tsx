@@ -6,9 +6,10 @@ import {
   type DateComparison,
 } from "./CalendarWorkspace";
 import { generateCalendar, getCalendarVisibleRange } from "@/lib/dateUtils";
-import { getChangedDateKeys } from "@/lib/proposalDiff";
+import { getChangedDateKeysFromColorMaps } from "@/lib/proposalDiff";
 import { buildColorMap } from "@/lib/scheduleResolver";
 import type {
+  FormAction,
   ProposalComment,
   SharedDateNote,
 } from "@/lib/sharedCalendarTypes";
@@ -27,12 +28,12 @@ interface ProposalWorkspaceProps {
   proposalComments?: ProposalComment[];
   proposalId?: string;
   currentParentId?: string;
-  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  createSharedDateNoteAction?: FormAction;
+  updateSharedDateNoteAction?: FormAction;
+  deleteSharedDateNoteAction?: FormAction;
+  createProposalCommentAction?: FormAction;
+  updateProposalCommentAction?: FormAction;
+  deleteProposalCommentAction?: FormAction;
   toolbar?: ReactNode;
   readOnly?: boolean;
   onUpdateProposedScheduleData: (data: ScheduleData) => void;
@@ -72,29 +73,29 @@ export function ProposalWorkspace({
     displayAgreedScheduleData ?? agreedScheduleData;
   const visibleProposedScheduleData =
     displayProposedScheduleData ?? proposedScheduleData;
+  const { firstDay, lastDay } = useMemo(
+    () => getCalendarVisibleRange(calendar),
+    [calendar]
+  );
+  const agreedColorMap = useMemo(
+    () => buildColorMap(firstDay, lastDay, visibleAgreedScheduleData),
+    [firstDay, lastDay, visibleAgreedScheduleData]
+  );
+  const proposedColorMap = useMemo(
+    () => buildColorMap(firstDay, lastDay, visibleProposedScheduleData),
+    [firstDay, lastDay, visibleProposedScheduleData]
+  );
   const changedDateKeys = useMemo(() => {
-    const { firstDay, lastDay } = getCalendarVisibleRange(calendar);
     return new Set(
-      getChangedDateKeys(
+      getChangedDateKeysFromColorMaps(
         firstDay,
         lastDay,
-        agreedScheduleData,
-        proposedScheduleData
+        agreedColorMap,
+        proposedColorMap
       )
     );
-  }, [agreedScheduleData, calendar, proposedScheduleData]);
+  }, [agreedColorMap, firstDay, lastDay, proposedColorMap]);
   const dateComparisons = useMemo(() => {
-    const { firstDay, lastDay } = getCalendarVisibleRange(calendar);
-    const agreedColorMap = buildColorMap(
-      firstDay,
-      lastDay,
-      visibleAgreedScheduleData
-    );
-    const proposedColorMap = buildColorMap(
-      firstDay,
-      lastDay,
-      visibleProposedScheduleData
-    );
     const comparisons = new Map<string, DateComparison>();
 
     for (const dateKey of changedDateKeys) {
@@ -105,12 +106,7 @@ export function ProposalWorkspace({
     }
 
     return comparisons;
-  }, [
-    calendar,
-    changedDateKeys,
-    visibleAgreedScheduleData,
-    visibleProposedScheduleData,
-  ]);
+  }, [agreedColorMap, changedDateKeys, proposedColorMap]);
 
   return (
     <CalendarWorkspace
@@ -119,6 +115,7 @@ export function ProposalWorkspace({
       calendar={calendar}
       scheduleData={proposedScheduleData}
       displayScheduleData={visibleProposedScheduleData}
+      colorMap={proposedColorMap}
       changedDateKeys={changedDateKeys}
       dateComparisons={dateComparisons}
       noteDateKeys={noteDateKeys}

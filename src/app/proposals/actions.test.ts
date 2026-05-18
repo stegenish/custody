@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getMyGroupId } from "@/lib/supabase/onboarding";
 import { sendEmailNotification } from "@/lib/email/sendEmail";
+import { PROMOTE_PROPOSAL_COMMENTS_FIELD } from "@/lib/formFields";
 import {
   acceptSharedProposal,
   counterSharedProposal,
@@ -156,7 +157,7 @@ describe("proposal server note/comment actions", () => {
     const formData = new FormData();
     formData.set("proposalId", "proposal-1");
     formData.set("revisionId", "revision-1");
-    formData.set("promoteProposalComments", "on");
+    formData.set(PROMOTE_PROPOSAL_COMMENTS_FIELD, "on");
 
     await acceptSharedProposalAction(formData);
 

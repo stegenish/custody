@@ -13,6 +13,7 @@ import { ScheduleList } from "./ScheduleList";
 interface ScheduleEditorProps {
   scheduleData: ScheduleData;
   displayScheduleData?: ScheduleData;
+  labelEditMode?: "shared" | "personal";
   onUpdateScheduleData: (data: ScheduleData) => void;
   onUpdateLabelPreference?: (
     id: string,
@@ -24,6 +25,7 @@ interface ScheduleEditorProps {
 export function ScheduleEditor({
   scheduleData,
   displayScheduleData,
+  labelEditMode = "shared",
   onUpdateScheduleData,
   onUpdateLabelPreference,
 }: ScheduleEditorProps) {
@@ -58,7 +60,7 @@ export function ScheduleEditor({
               onUpdateScheduleData(addLabel(scheduleData, name, color))
             }
             onUpdateLabel={(id, name, color) =>
-              onUpdateLabelPreference
+              labelEditMode === "personal" && onUpdateLabelPreference
                 ? onUpdateLabelPreference(id, name, color)
                 : onUpdateScheduleData(
                     updateLabel(scheduleData, id, name, color)

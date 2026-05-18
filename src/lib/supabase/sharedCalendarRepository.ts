@@ -35,6 +35,7 @@ interface QueryBuilder<T> extends PromiseLike<SupabaseResult<T>> {
 }
 
 export interface SharedCalendarSupabaseClient {
+  // Structural subset used so repository tests can pass lightweight fake clients.
   from<T>(table: string): { select(columns?: string): QueryBuilder<T> };
 }
 

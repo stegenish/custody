@@ -36,7 +36,7 @@ describe("LocalCalendarApp", () => {
   it("allows editing the agreed calendar without starting a draft", () => {
     render(<LocalCalendarApp today={new Date(2026, 2, 1)} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
     fireEvent.click(within(screen.getByTestId("day-override-bar")).getByText("Dad"));
 
     expect(loadScheduleData().overrides).toEqual([
@@ -67,7 +67,7 @@ describe("LocalCalendarApp", () => {
     render(<LocalCalendarApp today={new Date(2026, 2, 1)} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Start Draft" }));
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
     fireEvent.click(within(screen.getByTestId("day-override-bar")).getByText("Dad"));
     fireEvent.click(screen.getByRole("button", { name: "Apply Draft Locally" }));
 

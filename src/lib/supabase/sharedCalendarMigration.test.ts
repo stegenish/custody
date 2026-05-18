@@ -1,15 +1,14 @@
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import path from "path";
 
-const migrationSql = readFileSync(
-  path.join(
-    process.cwd(),
-    "supabase",
-    "migrations",
-    "20260515190000_shared_calendar.sql"
-  ),
-  "utf8"
-);
+const migrationsDir = path.join(process.cwd(), "supabase", "migrations");
+const migrationSql = readdirSync(migrationsDir)
+  .filter((fileName) => fileName.endsWith(".sql"))
+  .sort()
+  .map((fileName) =>
+    readFileSync(path.join(migrationsDir, fileName), "utf8")
+  )
+  .join("\n");
 
 function getFunctionSql(functionName: string): string {
   const start = migrationSql.indexOf(

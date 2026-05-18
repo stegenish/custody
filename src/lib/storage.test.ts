@@ -10,6 +10,11 @@ import type { ScheduleData } from "./scheduleTypes";
 
 beforeEach(() => {
   localStorage.clear();
+  jest.spyOn(console, "warn").mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe("createDefaultScheduleData", () => {
@@ -27,11 +32,19 @@ describe("loadScheduleData", () => {
   it("returns default data when localStorage contains invalid JSON", () => {
     localStorage.setItem("custody-calendar-schedules", "not-json{{{");
     expect(loadScheduleData()).toEqual(createDefaultScheduleData());
+    expect(console.warn).toHaveBeenCalledWith(
+      "Ignoring invalid localStorage value for custody-calendar-schedules",
+      expect.any(SyntaxError)
+    );
   });
 
   it("returns default data when localStorage contains the wrong shape", () => {
     localStorage.setItem("custody-calendar-schedules", "{}");
     expect(loadScheduleData()).toEqual(createDefaultScheduleData());
+    expect(console.warn).toHaveBeenCalledWith(
+      "Ignoring invalid localStorage value for custody-calendar-schedules",
+      undefined
+    );
   });
 
   it("returns default data when nested schedule data is malformed", () => {
@@ -52,6 +65,10 @@ describe("loadScheduleData", () => {
     );
 
     expect(loadScheduleData()).toEqual(createDefaultScheduleData());
+    expect(console.warn).toHaveBeenCalledWith(
+      "Ignoring invalid localStorage value for custody-calendar-schedules",
+      undefined
+    );
   });
 });
 
@@ -91,11 +108,19 @@ describe("draft schedule storage", () => {
   it("returns null when draft storage contains the wrong shape", () => {
     localStorage.setItem("custody-calendar-draft-schedule", "{}");
     expect(loadDraftScheduleData()).toBeNull();
+    expect(console.warn).toHaveBeenCalledWith(
+      "Ignoring invalid localStorage value for custody-calendar-draft-schedule",
+      undefined
+    );
   });
 
   it("returns null when draft storage contains invalid JSON", () => {
     localStorage.setItem("custody-calendar-draft-schedule", "not-json{{{");
     expect(loadDraftScheduleData()).toBeNull();
+    expect(console.warn).toHaveBeenCalledWith(
+      "Ignoring invalid localStorage value for custody-calendar-draft-schedule",
+      expect.any(SyntaxError)
+    );
   });
 
   it("returns null when nested draft schedule data is malformed", () => {
@@ -109,6 +134,10 @@ describe("draft schedule storage", () => {
     );
 
     expect(loadDraftScheduleData()).toBeNull();
+    expect(console.warn).toHaveBeenCalledWith(
+      "Ignoring invalid localStorage value for custody-calendar-draft-schedule",
+      undefined
+    );
   });
 
   it("round-trips a draft", () => {

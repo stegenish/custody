@@ -3,6 +3,7 @@ import {
   BODO_SCHOOL_HOLIDAYS_SOURCE_CHECKED_AT,
   getBodoSchoolHolidaySet,
   getBodoSchoolHolidays,
+  warnIfBodoSchoolHolidayDataExpired,
 } from "./schoolHolidays";
 
 describe("getBodoSchoolHolidays", () => {
@@ -35,5 +36,29 @@ describe("getBodoSchoolHolidaySet", () => {
     const set = getBodoSchoolHolidaySet([2027]);
     expect(set.has("2027-02-22")).toBe(true);
     expect(set.has("2026-09-28")).toBe(false);
+  });
+});
+
+describe("warnIfBodoSchoolHolidayDataExpired", () => {
+  beforeEach(() => {
+    jest.spyOn(console, "warn").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("warns when the runtime date is past the known Bodo school holiday data", () => {
+    warnIfBodoSchoolHolidayDataExpired(new Date(2028, 4, 27));
+
+    expect(console.warn).toHaveBeenCalledWith(
+      "Bodo school holiday data is past its known coverage date: 2028-05-26"
+    );
+  });
+
+  it("does not warn before the known coverage date", () => {
+    warnIfBodoSchoolHolidayDataExpired(new Date(2028, 4, 26));
+
+    expect(console.warn).not.toHaveBeenCalled();
   });
 });

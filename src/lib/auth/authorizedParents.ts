@@ -1,3 +1,4 @@
+// Initial-parent enforcement currently happens through Supabase onboarding/RLS.
 export const DEFAULT_INITIAL_PARENT_EMAIL = "thomas.stegen@gmail.com";
 
 export function normalizeEmail(email: string): string {

@@ -24,6 +24,9 @@ describe("DayOverrideBar", () => {
     expect(
       screen.getByRole("dialog", { name: "Override 2026-03-05" })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Override 2026-03-05" })
+    ).toHaveAttribute("aria-modal", "true");
     expect(screen.getByRole("button", { name: "Mom" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Dad" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mom" })).toHaveAttribute(
@@ -95,6 +98,78 @@ describe("DayOverrideBar", () => {
     );
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onClose when Escape is pressed outside the dialog focus", () => {
+    const onClose = jest.fn();
+    render(
+      <DayOverrideBar
+        dateKey="2026-03-05"
+        currentLabelId="a"
+        isOverride={false}
+        labels={labels}
+        onSetOverride={jest.fn()}
+        onRemoveOverride={jest.fn()}
+        onClose={onClose}
+      />
+    );
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("traps Tab focus within dialog controls", () => {
+    render(
+      <DayOverrideBar
+        dateKey="2026-03-05"
+        currentLabelId="b"
+        isOverride={true}
+        labels={labels}
+        onSetOverride={jest.fn()}
+        onRemoveOverride={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    const closeButton = screen.getByRole("button", { name: "Close" });
+    const clearButton = screen.getByRole("button", { name: "Clear Override" });
+
+    clearButton.focus();
+    fireEvent.keyDown(
+      screen.getByRole("dialog", { name: "Override 2026-03-05" }),
+      { key: "Tab" }
+    );
+    expect(closeButton).toHaveFocus();
+
+    fireEvent.keyDown(
+      screen.getByRole("dialog", { name: "Override 2026-03-05" }),
+      { key: "Tab", shiftKey: true }
+    );
+    expect(clearButton).toHaveFocus();
+  });
+
+  it("restores focus to the previously focused element on unmount", () => {
+    const opener = document.createElement("button");
+    opener.textContent = "Open";
+    document.body.append(opener);
+    opener.focus();
+
+    const { unmount } = render(
+      <DayOverrideBar
+        dateKey="2026-03-05"
+        currentLabelId="a"
+        isOverride={false}
+        labels={labels}
+        onSetOverride={jest.fn()}
+        onRemoveOverride={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+
+    unmount();
+    expect(opener).toHaveFocus();
+    opener.remove();
   });
 
   it("calls onSetOverride when a label button is clicked", () => {

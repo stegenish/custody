@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { signInWithGoogle } from "@/app/auth/actions";
 import { sanitizeNextPath } from "@/lib/auth/redirects";
+import { firstSearchParam } from "@/lib/searchParams";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 export const metadata: Metadata = {
@@ -12,10 +13,6 @@ interface LoginPageProps {
     error?: string | string[];
     next?: string | string[];
   }>;
-}
-
-function firstSearchParam(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {

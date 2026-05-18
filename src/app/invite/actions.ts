@@ -7,6 +7,11 @@ import {
   joinGroupWithInvite,
   regenerateInviteLink,
 } from "@/lib/supabase/onboarding";
+import {
+  clearPendingInviteToken,
+  getPendingInviteToken,
+  storePendingInviteToken,
+} from "@/lib/auth/pendingInvite";
 
 interface InviteLinkActionState {
   inviteLink?: string;
@@ -38,7 +43,8 @@ export async function acceptInvite(token: string): Promise<void> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    redirect(`/login?next=${encodeURIComponent(`/invite/${token}`)}`);
+    await storePendingInviteToken(token);
+    redirect("/login?next=%2Finvite");
     return;
   }
   try {
@@ -47,5 +53,34 @@ export async function acceptInvite(token: string): Promise<void> {
     redirect(`/invite/${encodeURIComponent(token)}?error=invalid-invite`);
     return;
   }
+  await clearPendingInviteToken();
+  redirect("/");
+}
+
+export async function acceptPendingInvite(): Promise<void> {
+  const token = await getPendingInviteToken();
+  if (!token) {
+    redirect("/login?error=missing-invite");
+    return;
+  }
+
+  await clearPendingInviteToken();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    await storePendingInviteToken(token);
+    redirect("/login?next=%2Finvite");
+    return;
+  }
+
+  try {
+    await joinGroupWithInvite(supabase, token);
+  } catch {
+    redirect("/invite?error=invalid-invite");
+    return;
+  }
+
   redirect("/");
 }

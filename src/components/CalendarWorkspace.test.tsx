@@ -20,7 +20,7 @@ const scheduleData: ScheduleData = {
 
 describe("CalendarWorkspace", () => {
   function clickMarchSecond() {
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
   }
 
   it("renders the title, editor, and calendar", () => {
@@ -70,6 +70,24 @@ describe("CalendarWorkspace", () => {
     expect(screen.getByTestId("day-override-bar")).toBeInTheDocument();
   });
 
+  it("can jump directly to a date with the keyboard-friendly date control", () => {
+    render(
+      <CalendarWorkspace
+        title="Custody Calendar"
+        today={new Date(2026, 2, 1)}
+        scheduleData={scheduleData}
+        onUpdateScheduleData={jest.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Jump to date"), {
+      target: { value: "2026-03-02" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Go" }));
+
+    expect(screen.getByTestId("day-override-bar")).toBeInTheDocument();
+  });
+
   it("can render read-only without editor or override bar", () => {
     render(
       <CalendarWorkspace
@@ -83,7 +101,7 @@ describe("CalendarWorkspace", () => {
 
     expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "2026-03-02" })
+      screen.queryByRole("button", { name: /2026-03-02/ })
     ).not.toBeInTheDocument();
     expect(screen.queryByTestId("day-override-bar")).not.toBeInTheDocument();
   });

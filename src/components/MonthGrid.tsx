@@ -23,6 +23,28 @@ function custodyDescription(dayColor?: DayColorResult): string | null {
   return `Custody: ${dayColor.label.name}`;
 }
 
+function dateStatusDescriptions({
+  dayColor,
+  isSchoolHoliday,
+  isChanged,
+  hasSharedNote,
+  hasProposalComment,
+}: {
+  dayColor?: DayColorResult;
+  isSchoolHoliday: boolean;
+  isChanged: boolean;
+  hasSharedNote: boolean;
+  hasProposalComment: boolean;
+}): string[] {
+  return [
+    custodyDescription(dayColor),
+    isSchoolHoliday ? "School holiday" : null,
+    isChanged ? "Proposal changes this date" : null,
+    hasSharedNote ? "Has shared note" : null,
+    hasProposalComment ? "Has proposal comment" : null,
+  ].filter((description): description is string => Boolean(description));
+}
+
 function labelInitial(labelName: string): string {
   return labelName.trim().slice(0, 1).toUpperCase() || "?";
 }
@@ -49,11 +71,21 @@ function DayIndicators({
   hasSharedNote: boolean;
   hasProposalComment: boolean;
 }) {
-  const description = custodyDescription(dayColor);
+  const descriptions = dateStatusDescriptions({
+    dayColor,
+    isSchoolHoliday,
+    isChanged,
+    hasSharedNote,
+    hasProposalComment,
+  });
   const indicator = custodyIndicator(dayColor);
   return (
     <>
-      {description && <span className="sr-only">{description}</span>}
+      {descriptions.map((description) => (
+        <span key={description} className="sr-only">
+          {description}
+        </span>
+      ))}
       {indicator && (
         <span
           aria-hidden="true"
@@ -65,6 +97,7 @@ function DayIndicators({
       )}
       {isSchoolHoliday && (
         <span
+          aria-hidden="true"
           data-testid="school-holiday-indicator"
           className="absolute bottom-0 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-sky-500"
         />
@@ -85,6 +118,7 @@ function DayIndicators({
       )}
       {isChanged && (
         <span
+          aria-hidden="true"
           data-testid="proposal-change-indicator"
           className="absolute inset-0 rounded-sm ring-2 ring-inset ring-gray-900/40"
         />
@@ -133,13 +167,28 @@ function DayCell({
 }) {
   const dateKey = formatDateKey(day.date);
   const clickable = Boolean(onDayClick);
+  const isSchoolHoliday = day.isCurrentMonth && day.isSchoolHoliday;
+  const isCurrentMonthChanged = day.isCurrentMonth && isChanged;
+  const hasCurrentMonthSharedNote = day.isCurrentMonth && hasSharedNote;
+  const hasCurrentMonthProposalComment =
+    day.isCurrentMonth && hasProposalComment;
+  const accessibleName = [
+    dateKey,
+    ...dateStatusDescriptions({
+      dayColor,
+      isSchoolHoliday,
+      isChanged: isCurrentMonthChanged,
+      hasSharedNote: hasCurrentMonthSharedNote,
+      hasProposalComment: hasCurrentMonthProposalComment,
+    }),
+  ].join(". ");
   const indicators = (
     <DayIndicators
       dayColor={dayColor}
-      isSchoolHoliday={day.isCurrentMonth && day.isSchoolHoliday}
-      isChanged={day.isCurrentMonth && isChanged}
-      hasSharedNote={day.isCurrentMonth && hasSharedNote}
-      hasProposalComment={day.isCurrentMonth && hasProposalComment}
+      isSchoolHoliday={isSchoolHoliday}
+      isChanged={isCurrentMonthChanged}
+      hasSharedNote={hasCurrentMonthSharedNote}
+      hasProposalComment={hasCurrentMonthProposalComment}
     />
   );
 
@@ -152,7 +201,7 @@ function DayCell({
       {clickable ? (
         <button
           type="button"
-          aria-label={dateKey}
+          aria-label={accessibleName}
           onClick={() => onDayClick?.(dateKey)}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {

@@ -10,15 +10,12 @@ describe("CalendarGrid", () => {
 
   it("renders all 15 months", () => {
     render(<CalendarGrid months={calendar} />);
+    expect(
+      screen.getByRole("region", { name: "15-month custody calendar" })
+    ).toBeInTheDocument();
     expect(screen.getByText("December 2025")).toBeInTheDocument();
     expect(screen.getByText("March 2026")).toBeInTheDocument();
     expect(screen.getByText("February 2027")).toBeInTheDocument();
-  });
-
-  it("uses a responsive grid container", () => {
-    render(<CalendarGrid months={calendar} />);
-    const grid = screen.getByTestId("calendar-grid");
-    expect(grid).toBeInTheDocument();
   });
 
   it("passes colorMap through to MonthGrid children", () => {
@@ -54,7 +51,7 @@ describe("CalendarGrid", () => {
     render(
       <CalendarGrid months={calendar} colorMap={colorMap} onDayClick={onClick} />
     );
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
     expect(onClick).toHaveBeenCalledWith("2026-03-02");
   });
 

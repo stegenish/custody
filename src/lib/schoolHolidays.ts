@@ -56,3 +56,13 @@ export function getBodoSchoolHolidaySet(years: number[]): Set<string> {
     )
   );
 }
+
+export function warnIfBodoSchoolHolidayDataExpired(today: Date): void {
+  if (formatDateKey(today) <= BODO_SCHOOL_HOLIDAYS_LAST_KNOWN_DATE) {
+    return;
+  }
+
+  console.warn(
+    `Bodo school holiday data is past its known coverage date: ${BODO_SCHOOL_HOLIDAYS_LAST_KNOWN_DATE}`
+  );
+}

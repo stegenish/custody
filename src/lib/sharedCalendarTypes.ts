@@ -1,5 +1,7 @@
 import type { ScheduleData } from "./scheduleTypes";
 
+export type FormAction = (formData: FormData) => void | Promise<void>;
+
 export type ProposalStatus =
   | "draft"
   | "sent"

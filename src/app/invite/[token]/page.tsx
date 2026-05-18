@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { signInWithGoogle } from "@/app/auth/actions";
 import { acceptInvite } from "@/app/invite/actions";
+import { firstSearchParam } from "@/lib/searchParams";
 
 export const metadata: Metadata = {
   referrer: "no-referrer",
@@ -9,10 +10,6 @@ export const metadata: Metadata = {
 interface InvitePageProps {
   params: Promise<{ token: string }>;
   searchParams: Promise<{ error?: string | string[] }>;
-}
-
-function firstSearchParam(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
 }
 
 export default async function InvitePage({

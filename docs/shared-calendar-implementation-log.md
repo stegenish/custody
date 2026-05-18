@@ -47,3 +47,17 @@ Current remaining work:
 
 - No known implementation items remain from `docs/shared-calendar-design.md`.
 - Production setup still needs the external checklist in `docs/shared-calendar-launch-checklist.md`: Supabase project/migration, Google OAuth, Vercel environment variables, Resend, and smoke testing.
+
+## 2026-05-18
+
+Completed:
+
+- Evaluated and implemented validated findings from `docs/multi-agent-review-2026-05-18.md`.
+- Hardened proposal mutation error handling, schedule-data validation, personal label preference parsing, ISO week handling, and SQL draft-comment ownership checks.
+- Extracted shared helpers for form actions, hidden fields, search params, dated item keys, and personal label preferences.
+- Made shared vs personal label editing explicit in `ScheduleEditor`.
+- Reduced proposal calendar color-map recomputation by passing precomputed maps through the proposal workspace.
+- Improved calendar accessibility with date jumping, richer screen-reader status text, modal override-bar behavior, accept-comment helper text, and a labelled calendar region.
+- Moved invite OAuth flow to a pending-invite cookie so Google/Supabase redirects no longer carry raw private invite tokens.
+- Added localStorage corruption warnings, Bodø school-holiday data expiry warnings, and least-surprise comments for dormant/spec and structural-shim code.
+- Tightened selected tests and removed the trivial CalendarGrid container assertion.

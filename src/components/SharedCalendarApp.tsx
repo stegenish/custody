@@ -2,7 +2,6 @@
 
 import {
   useActionState,
-  useCallback,
   useMemo,
   useState,
 } from "react";
@@ -12,17 +11,21 @@ import {
   AppToolbarSubmitButton,
 } from "./AppToolbar";
 import { CalendarWorkspace } from "./CalendarWorkspace";
+import { HiddenFormFields } from "./HiddenFormFields";
 import { ProposalWorkspace } from "./ProposalWorkspace";
 import { useClientToday } from "./useClientToday";
+import { usePersonalLabelPreferences } from "./usePersonalLabelPreferences";
+import { dateKeysForDatedItems } from "@/lib/datedItems";
+import { PROMOTE_PROPOSAL_COMMENTS_FIELD } from "@/lib/formFields";
 import { getCurrentRevision } from "@/lib/sharedCalendarWorkflowHelpers";
 import {
   applyLabelPreferences,
-  parsePersonalLabelPreferences,
   type PersonalLabelPreferences,
 } from "@/lib/personalLabels";
 import type { ScheduleData } from "@/lib/scheduleTypes";
 import type {
   CustodyGroupState,
+  FormAction,
   ProposalComment,
   SharedDateNote,
 } from "@/lib/sharedCalendarTypes";
@@ -31,21 +34,23 @@ export interface SharedCalendarAppProps {
   state: CustodyGroupState;
   currentParentId: string;
   proposalActionError?: ProposalActionErrorCode;
+  // Actions are optional only to keep unit-test renders ergonomic;
+  // production in app/page.tsx wires the full shared-calendar action set.
   startDraftAction?: () => void | Promise<void>;
-  saveDraftAction?: (formData: FormData) => void | Promise<void>;
-  sendDraftAction?: (formData: FormData) => void | Promise<void>;
+  saveDraftAction?: FormAction;
+  sendDraftAction?: FormAction;
   resetDraftAction?: () => void | Promise<void>;
-  acceptProposalAction?: (formData: FormData) => void | Promise<void>;
-  counterProposalAction?: (formData: FormData) => void | Promise<void>;
-  rejectProposalAction?: (formData: FormData) => void | Promise<void>;
-  withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
-  discardProposalAction?: (formData: FormData) => void | Promise<void>;
-  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  acceptProposalAction?: FormAction;
+  counterProposalAction?: FormAction;
+  rejectProposalAction?: FormAction;
+  withdrawProposalAction?: FormAction;
+  discardProposalAction?: FormAction;
+  createSharedDateNoteAction?: FormAction;
+  updateSharedDateNoteAction?: FormAction;
+  deleteSharedDateNoteAction?: FormAction;
+  createProposalCommentAction?: FormAction;
+  updateProposalCommentAction?: FormAction;
+  deleteProposalCommentAction?: FormAction;
   createInviteLinkAction?: CreateInviteLinkAction;
 }
 
@@ -104,20 +109,20 @@ export function SharedCalendarApp({
     [state.activeProposal]
   );
   const noteDateKeys = useMemo(
-    () => dateKeysForNotes(state.notes),
+    () => dateKeysForDatedItems(state.notes),
     [state.notes]
   );
   const activeProposalCommentDateKeys = useMemo(
     () =>
       state.activeProposal
-        ? dateKeysForProposalComments(state.activeProposal.comments)
+        ? dateKeysForDatedItems(state.activeProposal.comments)
         : undefined,
     [state.activeProposal]
   );
   const currentDraftCommentDateKeys = useMemo(
     () =>
       currentDraft
-        ? dateKeysForProposalComments(currentDraft.comments)
+        ? dateKeysForDatedItems(currentDraft.comments)
         : undefined,
     [currentDraft]
   );
@@ -246,44 +251,6 @@ export function SharedCalendarApp({
   );
 }
 
-function usePersonalLabelPreferences(
-  groupId: string,
-  currentParentId: string
-): [
-  PersonalLabelPreferences,
-  (id: string, name: string, color: string) => void,
-] {
-  const storageKey = `custody:personal-labels:${groupId}:${currentParentId}`;
-  const [preferences, setPreferences] = useState<PersonalLabelPreferences>(() =>
-    readPersonalLabelPreferences(storageKey)
-  );
-
-  const updatePreference = useCallback(
-    (id: string, name: string, color: string) => {
-      const next = { ...preferences, [id]: { name, color } };
-      localStorage.setItem(storageKey, JSON.stringify(next));
-      setPreferences(next);
-    },
-    [preferences, storageKey]
-  );
-
-  return [preferences, updatePreference];
-}
-
-function readPersonalLabelPreferences(
-  storageKey: string
-): PersonalLabelPreferences {
-  if (typeof localStorage === "undefined") return {};
-
-  try {
-    return parsePersonalLabelPreferences(
-      JSON.parse(localStorage.getItem(storageKey) ?? "{}")
-    );
-  } catch {
-    return {};
-  }
-}
-
 function ProposalActionAlert({
   errorCode,
 }: {
@@ -383,21 +350,21 @@ interface ActiveProposalReviewProps {
   sharedDateNotes?: SharedDateNote[];
   proposalComments?: ProposalComment[];
   currentParentId?: string;
-  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
+  createSharedDateNoteAction?: FormAction;
+  updateSharedDateNoteAction?: FormAction;
+  deleteSharedDateNoteAction?: FormAction;
+  createProposalCommentAction?: FormAction;
+  updateProposalCommentAction?: FormAction;
+  deleteProposalCommentAction?: FormAction;
   proposalId: string;
   revisionId: string;
   isReceiver: boolean;
   isSender: boolean;
-  acceptProposalAction?: (formData: FormData) => void | Promise<void>;
-  counterProposalAction?: (formData: FormData) => void | Promise<void>;
-  rejectProposalAction?: (formData: FormData) => void | Promise<void>;
-  withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
-  discardProposalAction?: (formData: FormData) => void | Promise<void>;
+  acceptProposalAction?: FormAction;
+  counterProposalAction?: FormAction;
+  rejectProposalAction?: FormAction;
+  withdrawProposalAction?: FormAction;
+  discardProposalAction?: FormAction;
   onUpdateLabelPreference?: (
     id: string,
     name: string,
@@ -491,11 +458,11 @@ interface ActiveProposalToolbarProps {
   isCounterEditing: boolean;
   isReceiver: boolean;
   isSender: boolean;
-  acceptProposalAction?: (formData: FormData) => void | Promise<void>;
-  counterProposalAction?: (formData: FormData) => void | Promise<void>;
-  rejectProposalAction?: (formData: FormData) => void | Promise<void>;
-  withdrawProposalAction?: (formData: FormData) => void | Promise<void>;
-  discardProposalAction?: (formData: FormData) => void | Promise<void>;
+  acceptProposalAction?: FormAction;
+  counterProposalAction?: FormAction;
+  rejectProposalAction?: FormAction;
+  withdrawProposalAction?: FormAction;
+  discardProposalAction?: FormAction;
   onStartCounter: () => void;
 }
 
@@ -586,22 +553,28 @@ function AcceptProposalForm({
   action,
   fields,
 }: {
-  action: (formData: FormData) => void | Promise<void>;
+  action: FormAction;
   fields: Record<string, string>;
 }) {
+  const helperId = "promote-proposal-comments-help";
+
   return (
     <form action={action} className="flex flex-wrap items-center gap-2">
-      {Object.entries(fields).map(([name, value]) => (
-        <input key={name} type="hidden" name={name} value={value} />
-      ))}
-      <label className="flex items-center gap-2 text-sm text-gray-700">
-        <input
-          type="checkbox"
-          name="promoteProposalComments"
-          className="h-4 w-4 rounded border-gray-300"
-        />
-        Save proposal comments as shared notes
-      </label>
+      <HiddenFormFields fields={fields} />
+      <div>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            name={PROMOTE_PROPOSAL_COMMENTS_FIELD}
+            aria-describedby={helperId}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+          Save proposal comments as shared notes
+        </label>
+        <p id={helperId} className="mt-1 text-xs text-gray-500">
+          Checked comments become date notes on the agreed calendar.
+        </p>
+      </div>
       <AppToolbarSubmitButton>Accept Proposal</AppToolbarSubmitButton>
     </form>
   );
@@ -619,14 +592,14 @@ interface EditableDraftProposalProps {
   proposalComments?: ProposalComment[];
   proposalId?: string;
   currentParentId?: string;
-  createSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  updateSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  deleteSharedDateNoteAction?: (formData: FormData) => void | Promise<void>;
-  createProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  updateProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  deleteProposalCommentAction?: (formData: FormData) => void | Promise<void>;
-  saveDraftAction?: (formData: FormData) => void | Promise<void>;
-  sendDraftAction?: (formData: FormData) => void | Promise<void>;
+  createSharedDateNoteAction?: FormAction;
+  updateSharedDateNoteAction?: FormAction;
+  deleteSharedDateNoteAction?: FormAction;
+  createProposalCommentAction?: FormAction;
+  updateProposalCommentAction?: FormAction;
+  deleteProposalCommentAction?: FormAction;
+  saveDraftAction?: FormAction;
+  sendDraftAction?: FormAction;
   resetDraftAction?: () => void | Promise<void>;
   onUpdateLabelPreference?: (
     id: string,
@@ -716,16 +689,8 @@ function EditableDraftProposal({
   );
 }
 
-function dateKeysForNotes(notes: SharedDateNote[]): Set<string> {
-  return new Set(notes.map((note) => note.date));
-}
-
-function dateKeysForProposalComments(comments: ProposalComment[]): Set<string> {
-  return new Set(comments.map((comment) => comment.date));
-}
-
 interface ToolbarActionFormProps {
-  action: (formData: FormData) => void | Promise<void>;
+  action: FormAction;
   label: string;
   fields?: Record<string, string>;
 }
@@ -737,9 +702,7 @@ function ToolbarActionForm({
 }: ToolbarActionFormProps) {
   return (
     <form action={action}>
-      {Object.entries(fields).map(([name, value]) => (
-        <input key={name} type="hidden" name={name} value={value} />
-      ))}
+      <HiddenFormFields fields={fields} />
       <AppToolbarSubmitButton>{label}</AppToolbarSubmitButton>
     </form>
   );

@@ -95,7 +95,7 @@ describe("SharedCalendarApp", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Schedule Editor")).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "2026-03-02" })
+      screen.queryByRole("button", { name: /2026-03-02/ })
     ).not.toBeInTheDocument();
   });
 
@@ -262,7 +262,7 @@ describe("SharedCalendarApp", () => {
     act(() => {
       jest.runOnlyPendingTimers();
     });
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
 
     expect(screen.getByText("Remember school event")).toBeInTheDocument();
   });
@@ -291,7 +291,7 @@ describe("SharedCalendarApp", () => {
     act(() => {
       jest.runOnlyPendingTimers();
     });
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
 
     expect(
       screen.getByRole("textbox", { name: "New shared note" })
@@ -333,7 +333,7 @@ describe("SharedCalendarApp", () => {
     act(() => {
       jest.runOnlyPendingTimers();
     });
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-02" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-02/ }));
 
     expect(
       screen.getByRole("textbox", { name: "Edit shared note" })
@@ -506,7 +506,7 @@ describe("SharedCalendarApp", () => {
     act(() => {
       jest.runOnlyPendingTimers();
     });
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-03/ }));
 
     expect(screen.getByTestId("proposal-comment-indicator")).toBeInTheDocument();
     expect(screen.getAllByText("Previous discussion").length).toBeGreaterThan(0);
@@ -559,7 +559,7 @@ describe("SharedCalendarApp", () => {
     act(() => {
       jest.runOnlyPendingTimers();
     });
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-03/ }));
 
     expect(
       screen.getByRole("textbox", { name: "New proposal comment" })
@@ -689,7 +689,7 @@ describe("SharedCalendarApp", () => {
     act(() => {
       jest.runOnlyPendingTimers();
     });
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-03/ }));
 
     expect(screen.getByText("Can we swap this date?")).toBeInTheDocument();
   });
@@ -728,7 +728,7 @@ describe("SharedCalendarApp", () => {
     act(() => {
       jest.runOnlyPendingTimers();
     });
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-03/ }));
 
     expect(
       screen.getByRole("textbox", { name: "New proposal comment" })
@@ -785,7 +785,7 @@ describe("SharedCalendarApp", () => {
     act(() => {
       jest.runOnlyPendingTimers();
     });
-    fireEvent.click(screen.getByRole("button", { name: "2026-03-03" }));
+    fireEvent.click(screen.getByRole("button", { name: /2026-03-03/ }));
 
     expect(
       screen.getByRole("textbox", { name: "Edit proposal comment" })
